@@ -1,0 +1,143 @@
+import type {
+  AccountAddress,
+  ChainAddress,
+  ChainsConfig,
+  Contracts,
+  Network,
+  Platform,
+} from "@wormhole-foundation/sdk-connect";
+import {
+  circle,
+  nativeChainIds,
+  toChainId,
+} from "@wormhole-foundation/sdk-connect";
+
+import type { EvmChains } from "@wormhole-foundation/sdk-evm";
+import {
+  EvmAddress,
+  EvmPlatform,
+  EvmUnsignedTransaction,
+  addChainId,
+  addFrom,
+} from "@wormhole-foundation/sdk-evm";
+import type { Provider, TransactionRequest } from "ethers";
+import { Contract } from "ethers";
+import { CCTPW7Executor } from "../types";
+import { shimContracts } from "../consts";
+
+export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
+  implements CCTPW7Executor<N, C>
+{
+  readonly chainId: bigint;
+  readonly shimContract: string;
+
+  constructor(
+    readonly network: N,
+    readonly chain: C,
+    readonly provider: Provider,
+    readonly contracts: Contracts
+  ) {
+    if (network === "Devnet")
+      throw new Error("CCTPW7Executor not supported on Devnet");
+
+    this.chainId = nativeChainIds.networkChainToNativeChainId.get(
+      network,
+      chain
+    ) as bigint;
+
+    const shimContract = shimContracts.get(network, chain);
+    if (!shimContract) throw new Error(`Shim contract for ${chain} not found`);
+    this.shimContract = shimContract;
+  }
+
+  static async fromRpc<N extends Network>(
+    provider: Provider,
+    config: ChainsConfig<N, Platform>
+  ): Promise<EvmCCTPW7Executor<N, EvmChains>> {
+    const [network, chain] = await EvmPlatform.chainFromRpc(provider);
+    const conf = config[chain]!;
+    if (conf.network !== network)
+      throw new Error(`Network mismatch: ${conf.network} != ${network}`);
+    return new EvmCCTPW7Executor(network as N, chain, provider, conf.contracts);
+  }
+
+  async *transfer(
+    sender: AccountAddress<C>,
+    recipient: ChainAddress,
+    amount: bigint,
+    signedQuote: Uint8Array,
+    relayInstructions: Uint8Array,
+    estimatedCost: bigint
+  ): AsyncGenerator<EvmUnsignedTransaction<N, C>> {
+    const senderAddr = new EvmAddress(sender).toString();
+    const recipientAddress = recipient.address
+      .toUniversalAddress()
+      .toUint8Array();
+
+    const tokenAddr = circle.usdcContract.get(this.network, this.chain)!;
+
+    const tokenContract = EvmPlatform.getTokenImplementation(
+      this.provider,
+      tokenAddr
+    );
+
+    const allowance = await tokenContract.allowance(
+      senderAddr,
+      this.shimContract
+    );
+
+    if (allowance < amount) {
+      const txReq = await tokenContract.approve.populateTransaction(
+        this.shimContract,
+        amount
+      );
+      yield this.createUnsignedTx(
+        addFrom(txReq, senderAddr),
+        "ERC20.approve of shim",
+        false
+      );
+    }
+
+    // TODO: better type for this
+    const shimAbi = [
+      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs) external payable returns (uint64 nonce)",
+    ];
+
+    const shim = new Contract(this.shimContract, shimAbi, this.provider);
+
+    const txReq = await shim
+      .getFunction("depositForBurn")
+      .populateTransaction(
+        amount,
+        toChainId(recipient.chain),
+        circle.circleChainId.get(this.network, recipient.chain)!,
+        recipientAddress,
+        tokenAddr,
+        {
+          refundAddress: senderAddr,
+          signedQuote: signedQuote,
+          instructions: relayInstructions,
+        }
+      );
+    txReq.value = estimatedCost;
+
+    yield this.createUnsignedTx(
+      addFrom(txReq, senderAddr),
+      "shim.depositForBurn"
+    );
+  }
+
+  private createUnsignedTx(
+    txReq: TransactionRequest,
+    description: string,
+    parallelizable: boolean = false
+  ): EvmUnsignedTransaction<N, C> {
+    return new EvmUnsignedTransaction(
+      addChainId(txReq, this.chainId),
+      this.network,
+      this.chain,
+      description,
+      parallelizable
+    );
+  }
+}

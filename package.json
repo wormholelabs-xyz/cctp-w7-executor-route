@@ -1,0 +1,45 @@
+{
+  "name": "@wormhole-labs/cctp-w7-executor-route",
+  "version": "0.0.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "description": "This package implements an AutomaticRoute for use with the Wormhole Typescript SDK",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "wormhole",
+    "sdk",
+    "typescript",
+    "connect"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "sideEffects": true,
+  "scripts": {
+    "build:cjs": "tsc -p ./tsconfig.cjs.json",
+    "build:esm": "tsc -p ./tsconfig.esm.json",
+    "build": "npm run build:cjs && npm run build:esm",
+    "example:transfer": "npx tsx examples/transfer.ts"
+  },
+  "peerDependencies": {
+    "@wormhole-foundation/sdk-connect": "^1.12.0",
+    "@wormhole-foundation/sdk-evm": "^1.12.0",
+    "@wormhole-foundation/sdk-evm-cctp": "^1.12.0",
+    "@wormhole-foundation/sdk-evm-tokenbridge": "^1.12.0",
+    "@wormhole-foundation/sdk-solana": "^1.12.0",
+    "@wormhole-foundation/sdk-solana-cctp": "^1.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.6",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "binary-layout": "^1.2.0"
+  }
+}
