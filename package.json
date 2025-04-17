@@ -30,10 +30,7 @@
     "@solana/web3.js": "^1.95.8",
     "@wormhole-foundation/sdk-connect": "^1.12.0",
     "@wormhole-foundation/sdk-evm": "^1.12.0",
-    "@wormhole-foundation/sdk-evm-cctp": "^1.12.0",
-    "@wormhole-foundation/sdk-evm-tokenbridge": "^1.12.0",
-    "@wormhole-foundation/sdk-solana": "^1.12.0",
-    "@wormhole-foundation/sdk-solana-cctp": "^1.12.0"
+    "@wormhole-foundation/sdk-solana": "^1.12.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.6",

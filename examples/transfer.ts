@@ -5,9 +5,6 @@ import { SolanaPlatform } from "@wormhole-foundation/sdk-solana";
 import { getStuff } from "./utils";
 import { CCTPW7ExecutorRoute } from "../src";
 
-import "@wormhole-foundation/sdk-evm-cctp";
-import "@wormhole-foundation/sdk-solana-cctp";
-
 (async function () {
   // Setup
   const wh = new Wormhole("Testnet", [EvmPlatform, SolanaPlatform]);
@@ -74,8 +71,7 @@ import "@wormhole-foundation/sdk-solana-cctp";
   }
   console.log("Quote: ", quote);
 
-  let imSure = false;
-  if (imSure) {
+  if (process.env["SEND_TRANSFER"] === "true") {
     // initiate the transfer
     const receipt = await bestRoute.initiate(
       tr,
@@ -92,6 +88,8 @@ import "@wormhole-foundation/sdk-solana-cctp";
       15 * 60 * 1000
     );
   } else {
-    console.log("Not doing the transfer, just showing the quote.");
+    console.log(
+      "Not doing the transfer, just showing the quote. Pass SEND_TRANSFER=true to do it."
+    );
   }
 })();
