@@ -29,9 +29,10 @@ import { fetchCapabilities, fetchSignedQuote } from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
 import { CCTPW7Executor } from "./types";
 
-// TODO: move elsewhere?
+// TODO: I don't really like having to import these here. Can we move the elsewhere?
 // IMPORTANT: import these packages so the protocol gets registered
 import "./evm/index.js";
+import "./svm/index.js";
 
 export namespace CCTPW7ExecutorRoute {
   export type Options = {
