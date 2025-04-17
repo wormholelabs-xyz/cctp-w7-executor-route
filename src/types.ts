@@ -16,6 +16,8 @@ export interface CCTPW7Executor<
     amount: bigint,
     signedQuote: Uint8Array,
     relayInstructions: Uint8Array,
+    dbpsFee: bigint, // the fee in tenths of basis points
+    referrer: ChainAddress, // to whom the fee should be paid
     estimatedCost: bigint
   ): AsyncGenerator<UnsignedTransaction<N, C>>;
 }

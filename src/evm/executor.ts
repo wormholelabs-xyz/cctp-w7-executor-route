@@ -67,9 +67,11 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
     amount: bigint,
     signedQuote: Uint8Array,
     relayInstructions: Uint8Array,
+    dBpsFee: bigint,
+    referrer: ChainAddress,
     estimatedCost: bigint
   ): AsyncGenerator<EvmUnsignedTransaction<N, C>> {
-    const senderAddr = new EvmAddress(sender).toString();
+    const senderAddress = new EvmAddress(sender).toString();
     const recipientAddress = recipient.address
       .toUniversalAddress()
       .toUint8Array();
@@ -82,7 +84,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
     );
 
     const allowance = await tokenContract.allowance(
-      senderAddr,
+      senderAddress,
       this.shimContract
     );
 
@@ -92,37 +94,39 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
         amount
       );
       yield this.createUnsignedTx(
-        addFrom(txReq, senderAddr),
+        addFrom(txReq, senderAddress),
         "ERC20.approve of shim",
         false
       );
     }
 
-    // TODO: better type for this
+    // TODO: type safety. use viem?
     const shimAbi = [
-      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs) external payable returns (uint64 nonce)",
+      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint16 dbps, address payee) feeArgs) external payable returns (uint64 nonce)",
     ];
 
     const shim = new Contract(this.shimContract, shimAbi, this.provider);
 
-    const txReq = await shim
-      .getFunction("depositForBurn")
-      .populateTransaction(
-        amount,
-        toChainId(recipient.chain),
-        circle.circleChainId.get(this.network, recipient.chain)!,
-        recipientAddress,
-        tokenAddr,
-        {
-          refundAddress: senderAddr,
-          signedQuote: signedQuote,
-          instructions: relayInstructions,
-        }
-      );
+    const txReq = await shim.getFunction("depositForBurn").populateTransaction(
+      amount,
+      toChainId(recipient.chain),
+      circle.circleChainId.get(this.network, recipient.chain)!,
+      recipientAddress,
+      tokenAddr,
+      {
+        refundAddress: senderAddress,
+        signedQuote: signedQuote,
+        instructions: relayInstructions,
+      },
+      {
+        dbps: dBpsFee,
+        payee: referrer.address.toString(),
+      }
+    );
     txReq.value = estimatedCost;
 
     yield this.createUnsignedTx(
-      addFrom(txReq, senderAddr),
+      addFrom(txReq, senderAddress),
       "shim.depositForBurn"
     );
   }

@@ -6,21 +6,20 @@ import {
 } from "@wormhole-foundation/sdk-connect";
 
 // prettier-ignore
-const shimContract = [
+const _shimContracts = [
   [
     "Testnet",
     [
-      ["Sepolia",     "0x57861330Ff78dB78E95dD792306E52286C444302"],
-      ["BaseSepolia", "0xC280F102d2D7EC1390A456700F3471a883059F42"],
-      ["Avalanche",   "0x5C91b5dcd7DCd6a04cc2290e0420A8644402C7CC"],
+      ["Sepolia",     "0x4Cbf94024Ff07a7cd69d687084d67773Fc6ef925"],
+      ["BaseSepolia", "0x17166DEC8502769eBD6D30112098a4588eA2e88A"],
+      ["Avalanche",   "0x0254356716c59a3DA3C0e19EFf58511ba7f0002F"],
     ],
   ],
 ] as const satisfies MapLevel<Network, MapLevel<Chain, string>>;
-
-export const shimContracts = constMap(shimContract);
+export const shimContracts = constMap(_shimContracts);
 
 // prettier-ignore
-const gasLimit = [
+const _gasLimits = [
   [
     "Testnet",
     [
@@ -32,11 +31,27 @@ const gasLimit = [
     ],
   ],
 ] as const satisfies MapLevel<Network, MapLevel<Chain, bigint>>;
-
-export const gasLimits = constMap(gasLimit);
+export const gasLimits = constMap(_gasLimits);
 
 export const apiBaseUrl = {
   Mainnet: "",
   Testnet: "https://executor-testnet.labsapis.com",
   Devnet: "",
 } as const;
+
+// Referrer fee in tenths of basis points
+export const REFERRER_FEE_DBPS = 10n;
+
+// prettier-ignore
+// To whom the referrer fee should be paid
+const _referrers = [
+  [
+    "Testnet",
+    [
+      ["Sepolia",     "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7"],
+      ["BaseSepolia", "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7"],
+      ["Avalanche",   "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7"],
+    ],
+  ],
+] as const satisfies MapLevel<Network, MapLevel<Chain, string>>;
+export const referrers = constMap(_referrers);

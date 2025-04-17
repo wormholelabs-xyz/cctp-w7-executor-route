@@ -30,6 +30,7 @@ import {
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
 import {
+  calculateReferrerFee,
   fetchCapabilities,
   fetchSignedQuote,
   fetchStatus as fetchTxStatus,
@@ -37,7 +38,7 @@ import {
 } from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
 import { CCTPW7Executor } from "./types";
-import { gasLimits } from "./consts";
+import { gasLimits, REFERRER_FEE_DBPS, referrers } from "./consts";
 
 // TODO: I don't really like having to import these here. Can we move them elsewhere?
 // make sure that the protocol gets registered and works in Connect if moving these.
@@ -53,8 +54,6 @@ export namespace CCTPW7ExecutorRoute {
 
   export type NormalizedParams = {
     amount: amount.Amount;
-    // fee: amount.Amount;
-    // nativeGasAmount: amount.Amount;
   };
 
   export interface ValidatedParams
@@ -73,6 +72,8 @@ type D = {
   signedQuote: Uint8Array;
   relayInstructions: Uint8Array;
   estimatedCost: bigint;
+  dBpsFee: bigint;
+  referrer: ChainAddress;
 };
 
 type Q = routes.Quote<Op, Vp, D>;
@@ -87,7 +88,8 @@ export class CCTPW7ExecutorRoute<N extends Network>
   extends routes.AutomaticRoute<N, Op, Vp, R>
   implements routes.StaticRouteMethods<typeof CCTPW7ExecutorRoute>
 {
-  static NATIVE_GAS_DROPOFF_SUPPORTED = true;
+  // TODO: support gas-dropoff
+  static NATIVE_GAS_DROPOFF_SUPPORTED = false;
 
   static meta = {
     name: "CCTPW7ExecutorRoute",
@@ -142,38 +144,15 @@ export class CCTPW7ExecutorRoute<N extends Network>
     request: routes.RouteTransferRequest<N>,
     params: Tp
   ): Promise<Vr> {
-    const amt = request.parseAmount(params.amount);
-
     const validatedParams: Vp = {
       normalizedParams: {
-        amount: amt,
-        // fee: ,
-        // nativeGasAmount: params.options?.nativeGas ?? 0n
+        amount: request.parseAmount(params.amount),
       },
       options: params.options ?? this.getDefaultOptions(),
       ...params,
     };
 
     return { valid: true, params: validatedParams };
-
-    //try {
-    //  const options = params.options ?? this.getDefaultOptions();
-    //  const normalizedParams = await this.normalizeTransferParams(request, params);
-
-    //  const validatedParams: Vp = {
-    //    normalizedParams,
-    //    options,
-    //    ...params,
-    //  };
-
-    //  return { valid: true, params: validatedParams };
-    //} catch (e) {
-    //  return {
-    //    valid: false,
-    //    params,
-    //    error: e as Error,
-    //  };
-    //}
   }
 
   async quote(
@@ -196,6 +175,23 @@ export class CCTPW7ExecutorRoute<N extends Network>
     if (!dstUsdcAddress)
       throw new Error("Invalid transfer, no USDC contract on destination");
 
+    const dBpsFee = REFERRER_FEE_DBPS;
+    const { remainingAmount } = calculateReferrerFee(
+      amount.units(params.normalizedParams.amount),
+      dBpsFee
+    );
+    if (remainingAmount <= 0n) {
+      return {
+        success: false,
+        error: new Error("Amount must be greater than fee"),
+      };
+    }
+
+    const referrer = Wormhole.parseAddress(
+      fromChain.chain,
+      referrers.get(fromChain.network, fromChain.chain)!
+    );
+
     const capabilities = await fetchCapabilities(fromChain.network);
     if (!capabilities[toChainId(fromChain.chain)]) {
       return {
@@ -214,8 +210,12 @@ export class CCTPW7ExecutorRoute<N extends Network>
     }
 
     const gasLimit = gasLimits.get(fromChain.network, fromChain.chain);
-    if (!gasLimit)
-      throw new Error(`Gas limit not found for ${fromChain.chain}`);
+    if (!gasLimit) {
+      return {
+        success: false,
+        error: new Error("Gas limit not found"),
+      };
+    }
 
     const relayInstructions = serializeLayout(relayInstructionsLayout, {
       requests: [
@@ -254,11 +254,15 @@ export class CCTPW7ExecutorRoute<N extends Network>
       },
       destinationToken: {
         token: request.destination.id,
-        amount: params.normalizedParams.amount,
+        amount: amount.fromBaseUnits(
+          remainingAmount,
+          request.destination.decimals
+        ),
       },
       relayFee: {
         token: nativeTokenId(fromChain.chain),
         amount: amount.fromBaseUnits(
+          // TODO: should we throw if the estimatedCost is undefined?
           quote.estimatedCost ?? 0n,
           srcNativeDecimals
         ),
@@ -275,6 +279,8 @@ export class CCTPW7ExecutorRoute<N extends Network>
         signedQuote: encoding.hex.decode(quote.signedQuote),
         relayInstructions: relayInstructions,
         estimatedCost: quote.estimatedCost,
+        dBpsFee,
+        referrer,
       },
     };
   }
@@ -299,6 +305,8 @@ export class CCTPW7ExecutorRoute<N extends Network>
       amt,
       quote.details.signedQuote,
       quote.details.relayInstructions,
+      quote.details.dBpsFee,
+      quote.details.referrer,
       quote.details.estimatedCost
     );
 
@@ -369,7 +377,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
         }
       }
 
-      // Sleep for 3 seconds so we don't spam the endpoint
+      // Sleep so we don't spam the endpoint
       await new Promise((resolve) => setTimeout(resolve, 3000));
       leftover -= Date.now() - start;
     }

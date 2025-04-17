@@ -114,3 +114,19 @@ export async function fetchStatus(
     throw new Error(`Failed to fetch status for txHash: ${txHash}.`);
   }
 }
+
+const MAX_U16 = BigInt(65_535);
+export function calculateReferrerFee(
+  amount: bigint,
+  dBps: bigint
+): { referrerFee: bigint; remainingAmount: bigint } {
+  if (dBps > MAX_U16) {
+    throw new Error("dBps exceeds max u16");
+  }
+  if (dBps > 0) {
+    let referrerFee = (amount * dBps) / BigInt(100000);
+    const remainingAmount = amount - referrerFee;
+    return { referrerFee, remainingAmount };
+  }
+  return { referrerFee: BigInt(0), remainingAmount: amount };
+}
