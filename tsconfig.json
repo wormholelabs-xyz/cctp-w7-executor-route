@@ -2,7 +2,7 @@
   "compilerOptions": {
     "lib": ["es2022"],
     "target": "es2022",
-    "types": ["node"],
+    "types": ["node", "vitest/globals"],
     "esModuleInterop": true,
     "strict": true,
     "resolveJsonModule": true,
@@ -44,6 +44,6 @@
     "noImplicitUseStrict": false,
     "suppressExcessPropertyErrors": false,
     "suppressImplicitAnyIndexErrors": false,
-    "noStrictGenericChecks": false,
+    "noStrictGenericChecks": false
   }
 }

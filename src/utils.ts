@@ -115,7 +115,7 @@ export async function fetchStatus(
   }
 }
 
-const MAX_U16 = BigInt(65_535);
+const MAX_U16 = 65_535n;
 export function calculateReferrerFee(
   amount: bigint,
   dBps: bigint
@@ -124,9 +124,9 @@ export function calculateReferrerFee(
     throw new Error("dBps exceeds max u16");
   }
   if (dBps > 0) {
-    let referrerFee = (amount * dBps) / BigInt(100000);
+    let referrerFee = (amount * dBps) / 10_0000n;
     const remainingAmount = amount - referrerFee;
     return { referrerFee, remainingAmount };
   }
-  return { referrerFee: BigInt(0), remainingAmount: amount };
+  return { referrerFee: 0n, remainingAmount: amount };
 }

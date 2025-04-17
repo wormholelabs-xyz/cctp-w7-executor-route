@@ -24,7 +24,8 @@
     "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "build:esm": "tsc -p ./tsconfig.esm.json",
     "build": "npm run build:cjs && npm run build:esm",
-    "examples:transfer": "npx tsx examples/transfer.ts"
+    "examples:transfer": "npx tsx examples/transfer.ts",
+    "test": "vitest"
   },
   "peerDependencies": {
     "@solana/web3.js": "^1.95.8",
@@ -35,7 +36,8 @@
   "devDependencies": {
     "@types/node": "^20.11.6",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^3.1.1"
   },
   "dependencies": {
     "binary-layout": "^1.2.0"
