@@ -19,18 +19,28 @@ import {
   type TokenId,
 } from "@wormhole-foundation/sdk-definitions";
 import {
-  CircleTransfer,
+  isAttested,
+  isCompleted,
+  isFailed,
+  isSourceFinalized,
+  isSourceInitiated,
   routes,
   signSendWait,
   TransferState,
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
-import { fetchCapabilities, fetchSignedQuote } from "./utils";
+import {
+  fetchCapabilities,
+  fetchSignedQuote,
+  fetchStatus as fetchTxStatus,
+  RelayStatus,
+} from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
 import { CCTPW7Executor } from "./types";
 import { gasLimits } from "./consts";
 
-// TODO: I don't really like having to import these here. Can we move the elsewhere?
+// TODO: I don't really like having to import these here. Can we move them elsewhere?
+// make sure that the protocol gets registered and works in Connect if moving these.
 // IMPORTANT: import these packages so the protocol gets registered
 import "./evm/index.js";
 import "./svm/index.js";
@@ -67,7 +77,11 @@ type D = {
 
 type Q = routes.Quote<Op, Vp, D>;
 type QR = routes.QuoteResult<Op, Vp>;
-type R = routes.Receipt<CircleTransfer.AttestationReceipt>;
+
+// TODO: do we even need to set the circle attestation? we don't use it
+// adding that would require a dependency on the circle protocol
+type AT = { id: string; attestation: {} };
+type R = routes.Receipt<AT>;
 
 export class CCTPW7ExecutorRoute<N extends Network>
   extends routes.AutomaticRoute<N, Op, Vp, R>
@@ -242,7 +256,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
         token: request.destination.id,
         amount: params.normalizedParams.amount,
       },
-      // TODO: what to set the relayFee to? how does gas drop-off affect this?
       relayFee: {
         token: nativeTokenId(fromChain.chain),
         amount: amount.fromBaseUnits(
@@ -291,58 +304,77 @@ export class CCTPW7ExecutorRoute<N extends Network>
 
     const txids = await signSendWait(request.fromChain, xfer, signer);
 
-    const msg = await CircleTransfer.getTransferMessage(
-      request.fromChain,
-      txids.at(-1)!.txid
-    );
-
     return {
       from: request.fromChain.chain,
       to: request.toChain.chain,
-      state: TransferState.SourceFinalized,
+      state: TransferState.SourceInitiated,
       originTxs: txids,
-      attestation: { id: msg.id, attestation: { message: msg.message } },
     };
   }
 
-  // TOOD: what should the state be if the relay endpoint returns a failure state?
-  // the user can always resume the transfer and redeem it through the manual cctp route?
   public override async *track(receipt: R, timeout?: number) {
-    yield* CircleTransfer.track(this.wh, receipt, timeout);
+    if (isCompleted(receipt) || isFailed(receipt)) return receipt;
 
-    // throw new Error("Not implemented");
+    let leftover = timeout ? timeout : 60 * 60 * 1000;
+    while (leftover > 0) {
+      const start = Date.now();
 
-    //Pending = "pending",
-    //Failed = "failed",
-    //Unsupported = "unsupported",
-    //Submitted = "submitted",
-    //Underpaid = "underpaid",
-    //Aborted = "aborted",
+      if (
+        isSourceInitiated(receipt) ||
+        isSourceFinalized(receipt) ||
+        isAttested(receipt)
+      ) {
+        const [txStatus] = await fetchTxStatus(
+          this.wh.network,
+          receipt.originTxs.at(-1)!.txid,
+          receipt.from
+        );
 
-    //if (isSourceInitiated(receipt) || isSourceFinalized(receipt)) {
-    //  const { txid } = receipt.originTxs.at(-1)!;
+        if (!txStatus) {
+          throw new Error("No transaction status found");
+        }
 
-    //  const status = await fetchStatus(txid, receipt.from);
-    //  if (
-    //    status.status === RelayStatus.Failed ||
-    //    status.status === RelayStatus.Unsupported ||
-    //    status.status === RelayStatus.Underpaid ||
-    //    status.status === RelayStatus.Aborted
-    //  ) {
-    //    console.log(`Transfer failed: ${status.status}`);
-    //    return {
-    //      ...receipt,
-    //      // TODO: handle failed state in Connect
-    //      state: TransferState.Failed,
-    //      error: `Transfer failed: ${status}`,
-    //    } satisfies FailedTransferReceipt<CircleTransfer.AttestationReceipt>;
-    //  }
-    //}
+        const relayStatus = txStatus.status;
 
-    ////if (isAttested(receipt)) {
-    ////}
+        // TODO: how to handle failure states in Connect?
+        // Transfers could be resumed through the manual CCTP
+        // route if the relay fails
+        if (
+          relayStatus === RelayStatus.Failed ||
+          relayStatus === RelayStatus.Underpaid ||
+          relayStatus === RelayStatus.Unsupported ||
+          relayStatus === RelayStatus.Aborted
+        ) {
+          receipt = {
+            ...receipt,
+            state: TransferState.Failed,
+            error: `Transfer failed: ${txStatus}`,
+          };
+        }
 
-    //yield receipt;
+        if (relayStatus === RelayStatus.Submitted) {
+          receipt = {
+            ...receipt,
+            state: TransferState.DestinationFinalized,
+            attestation: { id: txStatus.id, attestation: {} },
+          };
+        }
+
+        // Important to yield before checking for completion
+        // so the caller can update the receipt state
+        yield receipt;
+
+        if (isCompleted(receipt) || isFailed(receipt)) {
+          return receipt;
+        }
+      }
+
+      // Sleep for 3 seconds so we don't spam the endpoint
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      leftover -= Date.now() - start;
+    }
+
+    return receipt;
   }
 }
 

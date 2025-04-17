@@ -57,7 +57,13 @@ export async function fetchCapabilities(
   network: Network
 ): Promise<CapabilitiesResponse> {
   const url = `${apiBaseUrl[network]}/v0/capabilities`;
-  return (await axios.get<CapabilitiesResponse>(url)).data;
+
+  try {
+    const response = await axios.get<CapabilitiesResponse>(url);
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch capabilities for network: ${network}.`);
+  }
 }
 
 export interface QuoteResponse {
@@ -72,13 +78,17 @@ export async function fetchSignedQuote(
   relayInstructions: string // TODO: `0x:${string}`
 ): Promise<QuoteResponse> {
   const url = `${apiBaseUrl[network]}/v0/quote`;
-  return (
-    await axios.post(url, {
+
+  try {
+    const response = await axios.post<QuoteResponse>(url, {
       srcChain: toChainId(srcChain),
       dstChain: toChainId(dstChain),
       relayInstructions,
-    })
-  ).data;
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch signed quote.`);
+  }
 }
 
 export interface StatusResponse extends RelayData {
@@ -86,16 +96,21 @@ export interface StatusResponse extends RelayData {
   estimatedCost: bigint;
 }
 
+// Fetch Status
 export async function fetchStatus(
   network: Network,
   txHash: string,
   chain: Chain
-): Promise<StatusResponse> {
+): Promise<StatusResponse[]> {
   const url = `${apiBaseUrl[network]}/v0/status/tx`;
-  return (
-    await axios.post(url, {
+
+  try {
+    const response = await axios.post<StatusResponse[]>(url, {
       txHash,
       chainId: toChainId(chain),
-    })
-  ).data;
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(`Failed to fetch status for txHash: ${txHash}.`);
+  }
 }
