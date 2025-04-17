@@ -74,19 +74,24 @@ import "@wormhole-foundation/sdk-solana-cctp";
   }
   console.log("Quote: ", quote);
 
-  // initiate the transfer
-  const receipt = await bestRoute.initiate(
-    tr,
-    sender.signer,
-    quote,
-    receiver.address
-  );
-  console.log("Initiated transfer with receipt: ", receipt);
+  let imSure = false;
+  if (imSure) {
+    // initiate the transfer
+    const receipt = await bestRoute.initiate(
+      tr,
+      sender.signer,
+      quote,
+      receiver.address
+    );
+    console.log("Initiated transfer with receipt: ", receipt);
 
-  await routes.checkAndCompleteTransfer(
-    bestRoute,
-    receipt,
-    receiver.signer,
-    15 * 60 * 1000
-  );
+    await routes.checkAndCompleteTransfer(
+      bestRoute,
+      receipt,
+      receiver.signer,
+      15 * 60 * 1000
+    );
+  } else {
+    console.log("Not doing the transfer, just showing the quote.");
+  }
 })();

@@ -28,6 +28,7 @@ import {
 import { fetchCapabilities, fetchSignedQuote } from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
 import { CCTPW7Executor } from "./types";
+import { gasLimits } from "./consts";
 
 // TODO: I don't really like having to import these here. Can we move the elsewhere?
 // IMPORTANT: import these packages so the protocol gets registered
@@ -181,7 +182,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
     if (!dstUsdcAddress)
       throw new Error("Invalid transfer, no USDC contract on destination");
 
-    const capabilities = await fetchCapabilities();
+    const capabilities = await fetchCapabilities(fromChain.network);
     if (!capabilities[toChainId(fromChain.chain)]) {
       return {
         success: false,
@@ -198,7 +199,9 @@ export class CCTPW7ExecutorRoute<N extends Network>
       };
     }
 
-    const gasLimit = 300_000n; // TODO: what to set gas limit to, make this tunable?
+    const gasLimit = gasLimits.get(fromChain.network, fromChain.chain);
+    if (!gasLimit)
+      throw new Error(`Gas limit not found for ${fromChain.chain}`);
 
     const relayInstructions = serializeLayout(relayInstructionsLayout, {
       requests: [
@@ -208,6 +211,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
     });
 
     const quote = await fetchSignedQuote(
+      fromChain.network,
       fromChain.chain,
       toChain.chain,
       // TODO: should serialize convert to a `0x${string}` for us?

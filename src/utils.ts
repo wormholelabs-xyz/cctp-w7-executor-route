@@ -1,6 +1,7 @@
-import { Chain, toChainId } from "@wormhole-foundation/sdk-base";
+import { Chain, Network, toChainId } from "@wormhole-foundation/sdk-base";
 import { RequestPrefix, SignedQuote } from "./layouts";
 import axios from "axios";
+import { apiBaseUrl } from "./consts";
 
 export enum RelayStatus {
   Pending = "pending",
@@ -10,8 +11,6 @@ export enum RelayStatus {
   Underpaid = "underpaid",
   Aborted = "aborted",
 }
-
-const executorBaseUrl = "https://executor-testnet.labsapis.com"; // TODO: make this configurable by network
 
 export type RequestForExecution = {
   quoterAddress: `0x${string}`;
@@ -54,8 +53,10 @@ export interface CapabilitiesResponse {
   [chainId: string]: Capabilities;
 }
 
-export async function fetchCapabilities(): Promise<CapabilitiesResponse> {
-  const url = `${executorBaseUrl}/v0/capabilities`;
+export async function fetchCapabilities(
+  network: Network
+): Promise<CapabilitiesResponse> {
+  const url = `${apiBaseUrl[network]}/v0/capabilities`;
   return (await axios.get<CapabilitiesResponse>(url)).data;
 }
 
@@ -65,11 +66,12 @@ export interface QuoteResponse {
 }
 
 export async function fetchSignedQuote(
+  network: Network,
   srcChain: Chain,
   dstChain: Chain,
   relayInstructions: string // TODO: `0x:${string}`
 ): Promise<QuoteResponse> {
-  const url = `${executorBaseUrl}/v0/quote`;
+  const url = `${apiBaseUrl[network]}/v0/quote`;
   return (
     await axios.post(url, {
       srcChain: toChainId(srcChain),
@@ -85,10 +87,11 @@ export interface StatusResponse extends RelayData {
 }
 
 export async function fetchStatus(
+  network: Network,
   txHash: string,
   chain: Chain
 ): Promise<StatusResponse> {
-  const url = `${executorBaseUrl}/v0/status/tx`;
+  const url = `${apiBaseUrl[network]}/v0/status/tx`;
   return (
     await axios.post(url, {
       txHash,
