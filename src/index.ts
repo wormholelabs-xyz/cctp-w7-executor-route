@@ -68,15 +68,15 @@ type Vp = CCTPW7ExecutorRoute.ValidatedParams;
 type Tp = routes.TransferParams<Op>;
 type Vr = routes.ValidationResult<Op>;
 
-type D = {
+export type QuoteDetails = {
   signedQuote: Uint8Array;
   relayInstructions: Uint8Array;
   estimatedCost: bigint;
-  dBpsFee: bigint;
   referrer: ChainAddress;
+  referrerFee: bigint;
 };
 
-type Q = routes.Quote<Op, Vp, D>;
+type Q = routes.Quote<Op, Vp, QuoteDetails>;
 type QR = routes.QuoteResult<Op, Vp>;
 
 // TODO: do we even need to set the circle attestation? we don't use it
@@ -175,19 +175,19 @@ export class CCTPW7ExecutorRoute<N extends Network>
     if (!dstUsdcAddress)
       throw new Error("Invalid transfer, no USDC contract on destination");
 
-    const dBpsFee = REFERRER_FEE_DBPS;
-    const { remainingAmount } = calculateReferrerFee(
+    const { referrerFee, remainingAmount } = calculateReferrerFee(
       amount.units(params.normalizedParams.amount),
-      dBpsFee
+      REFERRER_FEE_DBPS
     );
+
     if (remainingAmount <= 0n) {
       return {
         success: false,
-        error: new Error("Amount must be greater than fee"),
+        error: new Error("Amount after fee <= 0"),
       };
     }
 
-    const referrer = Wormhole.parseAddress(
+    const referrer = Wormhole.chainAddress(
       fromChain.chain,
       referrers.get(fromChain.network, fromChain.chain)!
     );
@@ -232,6 +232,14 @@ export class CCTPW7ExecutorRoute<N extends Network>
       encoding.hex.encode(relayInstructions, true)
     );
 
+    // TODO: should we require this?
+    if (!quote.estimatedCost) {
+      return {
+        success: false,
+        error: new Error("No estimated cost"),
+      };
+    }
+
     const signedQuote = deserializeLayout(
       signedQuoteLayout,
       encoding.hex.decode(quote.signedQuote)
@@ -244,6 +252,14 @@ export class CCTPW7ExecutorRoute<N extends Network>
         : finality.estimateFinalityTime(fromChain.chain);
 
     const srcNativeDecimals = await fromChain.getDecimals("native");
+
+    const details: QuoteDetails = {
+      signedQuote: encoding.hex.decode(quote.signedQuote),
+      relayInstructions: relayInstructions,
+      estimatedCost: quote.estimatedCost,
+      referrer,
+      referrerFee,
+    };
 
     return {
       success: true,
@@ -261,11 +277,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       },
       relayFee: {
         token: nativeTokenId(fromChain.chain),
-        amount: amount.fromBaseUnits(
-          // TODO: should we throw if the estimatedCost is undefined?
-          quote.estimatedCost ?? 0n,
-          srcNativeDecimals
-        ),
+        amount: amount.fromBaseUnits(quote.estimatedCost, srcNativeDecimals),
       },
       // TODO: Solana gas drop-off
       // NOTES:
@@ -275,13 +287,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       // destinationNativeGas: amount.units
       eta,
       expires: signedQuote.quote.expiryTime,
-      details: {
-        signedQuote: encoding.hex.decode(quote.signedQuote),
-        relayInstructions: relayInstructions,
-        estimatedCost: quote.estimatedCost,
-        dBpsFee,
-        referrer,
-      },
+      details,
     };
   }
 
@@ -299,16 +305,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
     const sender = Wormhole.parseAddress(signer.chain(), signer.address());
     const amt = amount.units(quote.params.normalizedParams.amount);
 
-    const xfer = await executor.transfer(
-      sender,
-      to,
-      amt,
-      quote.details.signedQuote,
-      quote.details.relayInstructions,
-      quote.details.dBpsFee,
-      quote.details.referrer,
-      quote.details.estimatedCost
-    );
+    const xfer = await executor.transfer(sender, to, amt, quote.details);
 
     const txids = await signSendWait(request.fromChain, xfer, signer);
 

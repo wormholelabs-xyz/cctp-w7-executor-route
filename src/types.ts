@@ -5,6 +5,7 @@ import {
   UnsignedTransaction,
   Network,
 } from "@wormhole-foundation/sdk-connect";
+import { QuoteDetails } from ".";
 
 export interface CCTPW7Executor<
   N extends Network = Network,
@@ -14,10 +15,6 @@ export interface CCTPW7Executor<
     sender: AccountAddress<C>,
     recipient: ChainAddress,
     amount: bigint,
-    signedQuote: Uint8Array,
-    relayInstructions: Uint8Array,
-    dbpsFee: bigint, // the fee in tenths of basis points
-    referrer: ChainAddress, // to whom the fee should be paid
-    estimatedCost: bigint
+    details: QuoteDetails
   ): AsyncGenerator<UnsignedTransaction<N, C>>;
 }

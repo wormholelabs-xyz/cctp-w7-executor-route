@@ -14,6 +14,7 @@ import {
 import { CCTPW7Executor } from "../types";
 import { shimContracts } from "../consts";
 import { Connection } from "@solana/web3.js";
+import { QuoteDetails } from "..";
 
 export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
   implements CCTPW7Executor<N, C>
@@ -49,9 +50,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
     sender: AccountAddress<C>,
     recipient: ChainAddress,
     amount: bigint,
-    signedQuote: Uint8Array,
-    relayInstructions: Uint8Array,
-    estimatedCost: bigint
+    details: QuoteDetails
   ): AsyncGenerator<SolanaUnsignedTransaction<N, C>> {
     throw new Error("Not implemented");
   }

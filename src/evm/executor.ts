@@ -23,7 +23,8 @@ import {
 import type { Provider, TransactionRequest } from "ethers";
 import { Contract } from "ethers";
 import { CCTPW7Executor } from "../types";
-import { shimContracts } from "../consts";
+import { REFERRER_FEE_DBPS, shimContracts } from "../consts";
+import { QuoteDetails } from "..";
 
 export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
   implements CCTPW7Executor<N, C>
@@ -65,11 +66,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
     sender: AccountAddress<C>,
     recipient: ChainAddress,
     amount: bigint,
-    signedQuote: Uint8Array,
-    relayInstructions: Uint8Array,
-    dBpsFee: bigint,
-    referrer: ChainAddress,
-    estimatedCost: bigint
+    details: QuoteDetails
   ): AsyncGenerator<EvmUnsignedTransaction<N, C>> {
     const senderAddress = new EvmAddress(sender).toString();
     const recipientAddress = recipient.address
@@ -115,15 +112,15 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
       tokenAddr,
       {
         refundAddress: senderAddress,
-        signedQuote: signedQuote,
-        instructions: relayInstructions,
+        signedQuote: details.signedQuote,
+        instructions: details.relayInstructions,
       },
       {
-        dbps: dBpsFee,
-        payee: referrer.address.toString(),
+        dbps: REFERRER_FEE_DBPS,
+        payee: details.referrer.address.toString(),
       }
     );
-    txReq.value = estimatedCost;
+    txReq.value = details.estimatedCost;
 
     yield this.createUnsignedTx(
       addFrom(txReq, senderAddress),
