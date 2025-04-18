@@ -5,6 +5,12 @@ import {
   Network,
 } from "@wormhole-foundation/sdk-connect";
 
+export const apiBaseUrl = {
+  Mainnet: "",
+  Testnet: "https://executor-testnet.labsapis.com",
+  Devnet: "",
+} as const;
+
 // prettier-ignore
 const _shimContracts = [
   [
@@ -33,12 +39,6 @@ const _gasLimits = [
   ],
 ] as const satisfies MapLevel<Network, MapLevel<Chain, bigint>>;
 export const gasLimits = constMap(_gasLimits);
-
-export const apiBaseUrl = {
-  Mainnet: "",
-  Testnet: "https://executor-testnet.labsapis.com",
-  Devnet: "",
-} as const;
 
 // Referrer fee in tenths of basis points
 export const REFERRER_FEE_DBPS = 10n;
