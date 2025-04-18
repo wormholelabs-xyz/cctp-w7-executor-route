@@ -58,4 +58,6 @@ const _referrers = [
 ] as const satisfies MapLevel<Network, MapLevel<Chain, string>>;
 export const referrers = constMap(_referrers);
 
-export const SOLANA_MSG_VALUE = 9_000_000n; // lamports
+// Estimated lamport value to cover worst-case Solana tx costs (base fee + rent for used_nonces + ATA rent)
+// Used to prevent relay wallet drain due to non-deterministic rent charges (e.g., first nonce in batch, missing ATA)
+export const SOLANA_MSG_VALUE = 9_000_000n;
