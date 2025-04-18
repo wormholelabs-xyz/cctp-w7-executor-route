@@ -57,3 +57,5 @@ const _referrers = [
   ],
 ] as const satisfies MapLevel<Network, MapLevel<Chain, string>>;
 export const referrers = constMap(_referrers);
+
+export const SOLANA_MSG_VALUE = 9_000_000n; // lamports

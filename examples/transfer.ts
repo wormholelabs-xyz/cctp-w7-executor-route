@@ -9,8 +9,8 @@ import { CCTPW7ExecutorRoute } from "../src";
   // Setup
   const wh = new Wormhole("Testnet", [EvmPlatform, SolanaPlatform]);
 
-  const sendChain = wh.getChain("Solana");
-  const destChain = wh.getChain("Avalanche");
+  const sendChain = wh.getChain("Avalanche");
+  const destChain = wh.getChain("Solana");
 
   // Doing transfer of USDC on Avalanche to USDC on Sepolia
   const source = Wormhole.tokenId(

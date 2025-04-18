@@ -38,7 +38,12 @@ import {
 } from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
 import { CCTPW7Executor } from "./types";
-import { gasLimits, REFERRER_FEE_DBPS, referrers } from "./consts";
+import {
+  gasLimits,
+  REFERRER_FEE_DBPS,
+  referrers,
+  SOLANA_MSG_VALUE,
+} from "./consts";
 
 // TODO: I don't really like having to import these here. Can we move them elsewhere?
 // make sure that the protocol gets registered and works in Connect if moving these.
@@ -224,8 +229,8 @@ export class CCTPW7ExecutorRoute<N extends Network>
           request: {
             type: "GasInstruction",
             gasLimit /* CU budget. Sui: the budget in mist */,
-            msgValue:
-              0n /* TODO: solana: how many lamports wallet gets charged. potentially 3 accounts can be created? new ATA, Circle nonce acct, what else? (can be 0 for EVM and Sui)*/,
+            // TODO: explain why this is different for Solana (account creation)
+            msgValue: toChain.chain === "Solana" ? SOLANA_MSG_VALUE : 0n,
           },
         },
       ],
@@ -309,11 +314,24 @@ export class CCTPW7ExecutorRoute<N extends Network>
       throw new Error("Missing quote details");
     }
 
+    // When transferring to Solana, the recipient address is the associated token account
+    let recipient = to;
+    if (to.chain === "Solana") {
+      const usdcAddress = Wormhole.parseAddress(
+        "Solana",
+        circle.usdcContract.get(request.toChain.network, request.toChain.chain)!
+      );
+      recipient = await request.toChain.getTokenAccount(
+        to.address,
+        usdcAddress
+      );
+    }
+
     const executor = await request.fromChain.getProtocol("CCTPW7Executor");
     const sender = Wormhole.parseAddress(signer.chain(), signer.address());
     const amt = amount.units(quote.params.normalizedParams.amount);
 
-    const xfer = await executor.transfer(sender, to, amt, quote.details);
+    const xfer = await executor.transfer(sender, recipient, amt, quote.details);
 
     const txids = await signSendWait(request.fromChain, xfer, signer);
 
@@ -361,7 +379,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
           receipt = {
             ...receipt,
             state: TransferState.Failed,
-            error: `Transfer failed: ${txStatus}`,
+            error: `Transfer failed: ${relayStatus}`,
           };
         }
 
