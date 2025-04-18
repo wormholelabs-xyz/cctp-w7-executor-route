@@ -39,4 +39,4 @@ SEND_TRANSFER=true npm run examples:test
 >
 > - This example currently supports **EVM** and **Solana** chains only.
 > - **Gas drop-off is not supported.**
-> - Referrer fee and contract definitions are set to **1 BPS** in `src/consts`.
+> - Referrer fee is set to **1 BPS** in `src/consts`.
