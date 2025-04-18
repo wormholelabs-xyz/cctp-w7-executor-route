@@ -42,9 +42,10 @@ import { gasLimits, REFERRER_FEE_DBPS, referrers } from "./consts";
 
 // TODO: I don't really like having to import these here. Can we move them elsewhere?
 // make sure that the protocol gets registered and works in Connect if moving these.
-// IMPORTANT: import these packages so the protocol gets registered
+// IMPORTANT: import these packages so the protocol gets registered via registerProtocol
 import "./evm/index.js";
 import "./svm/index.js";
+import "./sui/index.js";
 
 export namespace CCTPW7ExecutorRoute {
   export type Options = {
@@ -223,7 +224,8 @@ export class CCTPW7ExecutorRoute<N extends Network>
           request: {
             type: "GasInstruction",
             gasLimit /* CU budget. Sui: the budget in mist */,
-            msgValue: 0n /* TODO: solana: how many lamports wallet gets charged. potentially 3 accounts can be created? new ATA, Circle nonce acct, what else? (can be 0 for EVM and Sui)*/,
+            msgValue:
+              0n /* TODO: solana: how many lamports wallet gets charged. potentially 3 accounts can be created? new ATA, Circle nonce acct, what else? (can be 0 for EVM and Sui)*/,
           },
         },
       ],

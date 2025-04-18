@@ -31,7 +31,8 @@
     "@wormhole-foundation/sdk-connect": "^1.15.2",
     "@wormhole-foundation/sdk-evm": "^1.15.2",
     "@wormhole-foundation/sdk-solana": "^1.15.2",
-    "@wormhole-foundation/sdk-solana-cctp": "^1.15.2"
+    "@wormhole-foundation/sdk-solana-cctp": "^1.15.2",
+    "@wormhole-foundation/sdk-sui": "^1.15.2"
   },
   "devDependencies": {
     "@types/node": "^20.11.6",
@@ -41,6 +42,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
+    "@mysten/sui": "^1.21.2",
     "@solana/spl-token": "^0.3.9",
     "@solana/web3.js": "^1.95.8",
     "binary-layout": "^1.2.0"
