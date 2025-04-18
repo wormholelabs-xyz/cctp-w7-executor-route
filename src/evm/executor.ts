@@ -97,7 +97,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
       );
     }
 
-    // TODO: type safety. use viem?
+    // TODO: type safety. typechain brings in so much boilerplate code and is soft deprecated. use viem?
     const shimAbi = [
       "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint16 dbps, address payee) feeArgs) external payable returns (uint64 nonce)",
     ];

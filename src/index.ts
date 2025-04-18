@@ -219,9 +219,16 @@ export class CCTPW7ExecutorRoute<N extends Network>
 
     const relayInstructions = serializeLayout(relayInstructionsLayout, {
       requests: [
-        { request: { type: "GasInstruction", gasLimit, msgValue: 0n } },
+        {
+          request: {
+            type: "GasInstruction",
+            gasLimit /* CU budget. Sui: the budget in mist */,
+            msgValue: 0n /* TODO: solana: how many lamports wallet gets charged. potentially 3 accounts can be created? new ATA, Circle nonce acct, what else? (can be 0 for EVM and Sui)*/,
+          },
+        },
       ],
       // TODO: add gas drop-off instruction
+      // TODO: always include the gas drop-off instruction for Solana even if it's with 0 msgValue so the relayer can create the ATA
     });
 
     const quote = await fetchSignedQuote(
@@ -232,7 +239,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
       encoding.hex.encode(relayInstructions, true)
     );
 
-    // TODO: should we require this?
     if (!quote.estimatedCost) {
       return {
         success: false,
@@ -345,10 +351,10 @@ export class CCTPW7ExecutorRoute<N extends Network>
         // Transfers could be resumed through the manual CCTP
         // route if the relay fails
         if (
-          relayStatus === RelayStatus.Failed ||
-          relayStatus === RelayStatus.Underpaid ||
-          relayStatus === RelayStatus.Unsupported ||
-          relayStatus === RelayStatus.Aborted
+          relayStatus === RelayStatus.Failed || // TODO: how can this happen?
+          relayStatus === RelayStatus.Underpaid || // only happens if you don't pay at least the costEstimate
+          relayStatus === RelayStatus.Unsupported || // capabilities check didn't pass
+          relayStatus === RelayStatus.Aborted // TODO: how can this happen?
         ) {
           receipt = {
             ...receipt,
