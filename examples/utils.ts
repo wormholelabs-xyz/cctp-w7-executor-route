@@ -10,6 +10,7 @@ import {
 // Importing from src so we dont have to rebuild to see debug stuff in signer
 import { getEvmSignerForKey } from "@wormhole-foundation/sdk-evm";
 import { getSolanaSigner } from "@wormhole-foundation/sdk-solana";
+import { getSuiSigner } from "@wormhole-foundation/sdk-sui";
 
 function getEnv(key: string): string {
   // If we're in the browser, return empty string
@@ -40,13 +41,19 @@ export async function getStuff<N extends Network, C extends Chain>(
     case "Solana":
       signer = await getSolanaSigner(
         await chain.getRpc(),
-        getEnv("SOL_PRIVATE_KEY")
+        getEnv("SVM_PRIVATE_KEY")
       );
       break;
     case "Evm":
       signer = await getEvmSignerForKey(
         await chain.getRpc(),
-        getEnv("ETH_PRIVATE_KEY")
+        getEnv("EVM_PRIVATE_KEY")
+      );
+      break;
+    case "Sui":
+      signer = await getSuiSigner(
+        await chain.getRpc(),
+        getEnv("SUI_PRIVATE_KEY")
       );
       break;
     default:

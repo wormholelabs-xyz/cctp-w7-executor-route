@@ -5,11 +5,9 @@ import {
   Network,
 } from "@wormhole-foundation/sdk-connect";
 
-export const apiBaseUrl = {
-  Mainnet: "",
+export const apiBaseUrl: Partial<Record<Network, string>> = {
   Testnet: "https://executor-testnet.labsapis.com",
-  Devnet: "",
-} as const;
+};
 
 // prettier-ignore
 const _shimContracts = [
@@ -24,6 +22,16 @@ const _shimContracts = [
   ],
 ] as const satisfies MapLevel<Network, MapLevel<Chain, string>>;
 export const shimContracts = constMap(_shimContracts);
+
+export type SuiExecutorIds = { executorId: string; executorRequestsId: string };
+export const suiExecutorIds: Partial<Record<Network, SuiExecutorIds>> = {
+  Testnet: {
+    executorId:
+      "0x4000cfe2955d8355b3d3cf186f854fea9f787a457257056926fde1ec977670eb",
+    executorRequestsId:
+      "0x2d9ccf3cce3f7dce408e5455e90b80a8161ad9673d1366c2a5def60ad93657a8",
+  },
+};
 
 // prettier-ignore
 const _gasLimits = [
@@ -52,7 +60,8 @@ const _referrers = [
       ["Sepolia",     "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7"],
       ["BaseSepolia", "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7"],
       ["Avalanche",   "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7"],
-      ["Solana",      "9r6q2iEg4MBevjC8reaLmQUDxueF3vabUoqDkZ2LoAYe"]
+      ["Solana",      "9r6q2iEg4MBevjC8reaLmQUDxueF3vabUoqDkZ2LoAYe"],
+      ["Sui",         "0x30bd9b3d5ad00f38fd0c314139ba47ccb3c78353d99880d81125ca0c370b415e"]
     ],
   ],
 ] as const satisfies MapLevel<Network, MapLevel<Chain, string>>;

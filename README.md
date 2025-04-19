@@ -17,8 +17,9 @@ npm ci && npm run build
 Set your private keys as environment variables:
 
 ```bash
-export ETH_PRIVATE_KEY=<your_ethereum_private_key>
-export SOLANA_PRIVATE_KEY=<your_solana_private_key>
+export EVM_PRIVATE_KEY=<your_evm_private_key>
+export SVM_PRIVATE_KEY=<your_svm_private_key>
+export SUI_PRIVATE_KEY=<your_sui_private_key>
 ```
 
 ## Run the Example
@@ -37,6 +38,5 @@ SEND_TRANSFER=true npm run examples:test
 
 > ⚠️ **Note:**
 >
-> - This example currently supports **EVM** and **Solana** chains only.
-> - **Gas drop-off is not supported.**
+> - **Gas drop-off is not supported yet.**
 > - Referrer fee is set to **1 BPS** in `src/consts`.

@@ -80,6 +80,7 @@ export type QuoteDetails = {
   estimatedCost: bigint;
   referrer: ChainAddress;
   referrerFee: bigint;
+  remainingAmount: bigint;
 };
 
 type Q = routes.Quote<Op, Vp, QuoteDetails>;
@@ -272,6 +273,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       estimatedCost: quote.estimatedCost,
       referrer,
       referrerFee,
+      remainingAmount,
     };
 
     return {

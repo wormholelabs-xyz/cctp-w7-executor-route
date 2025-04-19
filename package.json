@@ -32,7 +32,8 @@
     "@wormhole-foundation/sdk-evm": "^1.15.2",
     "@wormhole-foundation/sdk-solana": "^1.15.2",
     "@wormhole-foundation/sdk-solana-cctp": "^1.15.2",
-    "@wormhole-foundation/sdk-sui": "^1.15.2"
+    "@wormhole-foundation/sdk-sui": "^1.15.2",
+    "@wormhole-foundation/sdk-sui-cctp": "^1.15.2"
   },
   "devDependencies": {
     "@types/node": "^20.11.6",

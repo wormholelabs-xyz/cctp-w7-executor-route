@@ -1,16 +1,21 @@
 import { Wormhole, circle, routes } from "@wormhole-foundation/sdk-connect";
 import { EvmPlatform } from "@wormhole-foundation/sdk-evm";
 import { SolanaPlatform } from "@wormhole-foundation/sdk-solana";
+import { SuiPlatform } from "@wormhole-foundation/sdk-sui";
 
 import { getStuff } from "./utils";
 import { CCTPW7ExecutorRoute } from "../src";
 
 (async function () {
   // Setup
-  const wh = new Wormhole("Testnet", [EvmPlatform, SolanaPlatform]);
+  const wh = new Wormhole("Testnet", [
+    EvmPlatform,
+    SolanaPlatform,
+    SuiPlatform,
+  ]);
 
-  const sendChain = wh.getChain("Avalanche");
-  const destChain = wh.getChain("Solana");
+  const sendChain = wh.getChain("Sui");
+  const destChain = wh.getChain("Avalanche");
 
   // Doing transfer of USDC on Avalanche to USDC on Sepolia
   const source = Wormhole.tokenId(

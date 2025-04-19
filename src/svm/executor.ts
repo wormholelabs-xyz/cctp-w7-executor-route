@@ -187,7 +187,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
 
     yield this.createUnsignedTx(
       { transaction, signers: [msgSendEvent] },
-      "CircleBridge.Transfer"
+      "SvmCCTPW7Executor.Transfer"
     );
   }
 
