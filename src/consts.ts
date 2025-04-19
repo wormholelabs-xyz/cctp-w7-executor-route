@@ -34,6 +34,9 @@ export const suiExecutorIds: Partial<Record<Network, SuiExecutorIds>> = {
 };
 
 // prettier-ignore
+// The gas limits must be high enough to cover the worst-case scenario for each chain
+// to avoid relay failures. However, they should not be too high to avoid the perceived
+// cost to the user.
 const _gasLimits = [
   [
     "Testnet",
