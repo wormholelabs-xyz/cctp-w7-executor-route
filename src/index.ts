@@ -45,9 +45,7 @@ import {
   SOLANA_MSG_VALUE,
 } from "./consts";
 
-// TODO: I don't really like having to import these here. Can we move them elsewhere?
-// make sure that the protocol gets registered and works in Connect if moving these.
-// IMPORTANT: import these packages so the protocol gets registered via registerProtocol
+// IMPORTANT: register the platform specific implementations of the protocol
 import "./evm/index.js";
 import "./svm/index.js";
 import "./sui/index.js";
@@ -216,7 +214,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       };
     }
 
-    const gasLimit = gasLimits.get(fromChain.network, fromChain.chain);
+    const gasLimit = gasLimits.get(fromChain.network, toChain.chain);
     if (!gasLimit) {
       return {
         success: false,
@@ -316,7 +314,12 @@ export class CCTPW7ExecutorRoute<N extends Network>
       throw new Error("Missing quote details");
     }
 
-    // When transferring to Solana, the recipient address is the associated token account
+    // Make sure the quote has not expired and is not too close to expiry
+    if (!quote.expires || quote.expires.getTime() < Date.now() + 30_000) {
+      throw new Error("Quote expired");
+    }
+
+    // When transferring to Solana, the recipient address is the associated token account for CCTP transfers
     let recipient = to;
     if (to.chain === "Solana") {
       const usdcAddress = Wormhole.parseAddress(

@@ -42,7 +42,7 @@ const _gasLimits = [
       ["BaseSepolia", 200_000n],
       ["Avalanche",   200_000n],
       ["Solana",      250_000n],
-      ["Sui",         800_000n],
+      ["Sui",         8_000_000n],
     ],
   ],
 ] as const satisfies MapLevel<Network, MapLevel<Chain, bigint>>;
