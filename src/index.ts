@@ -192,22 +192,17 @@ export class CCTPW7ExecutorRoute<N extends Network>
       };
     }
 
-    const referrer = Wormhole.chainAddress(
-      fromChain.chain,
-      referrers.get(fromChain.network, fromChain.chain)!
-    );
-
     const capabilities = await fetchCapabilities(fromChain.network);
-    if (!capabilities[toChainId(fromChain.chain)]) {
+    const srcCapabilities = capabilities[toChainId(fromChain.chain)];
+    if (!srcCapabilities) {
       return {
         success: false,
         error: new Error("Unsupported source chain"),
       };
     }
 
-    if (
-      !capabilities[toChainId(toChain.chain)]?.requestPrefixes.includes("ERC1")
-    ) {
+    const dstCapabilities = capabilities[toChainId(toChain.chain)];
+    if (!dstCapabilities || !dstCapabilities.requestPrefixes.includes("ERC1")) {
       return {
         success: false,
         error: new Error("Unsupported destination chain"),
@@ -222,19 +217,30 @@ export class CCTPW7ExecutorRoute<N extends Network>
       };
     }
 
+    const gasInstruction = {
+      type: "GasInstruction" as const,
+      gasLimit,
+      msgValue: toChain.chain === "Solana" ? SOLANA_MSG_VALUE : 0n,
+    };
+
+    //// TODO: we need the recipient address for the gas drop-off instruction
+    //// but it's not available in the quote request
+    //// always include the gas drop-off instruction to Solana even (even w/ 0 dropOff) so the ATA is created
+    //const gasDropOffInstruction = {
+    //  type: "GasDropOffInstruction" as const,
+    //  dropOff: 0n,
+    //  // recipient: params.normalizedParams.
+    //};
+
     const relayInstructions = serializeLayout(relayInstructionsLayout, {
       requests: [
         {
-          request: {
-            type: "GasInstruction",
-            gasLimit /* CU budget. Sui: the budget in mist */,
-            // TODO: explain why this is different for Solana (account creation)
-            msgValue: toChain.chain === "Solana" ? SOLANA_MSG_VALUE : 0n,
-          },
+          request: gasInstruction,
         },
+        //{
+        //  request: gasDropOffInstruction,
+        //},
       ],
-      // TODO: add gas drop-off instruction
-      // TODO: always include the gas drop-off instruction for Solana even if it's with 0 msgValue so the relayer can create the ATA
     });
 
     const quote = await fetchSignedQuote(
@@ -263,7 +269,10 @@ export class CCTPW7ExecutorRoute<N extends Network>
         ? 2_000 * 200
         : finality.estimateFinalityTime(fromChain.chain);
 
-    const srcNativeDecimals = await fromChain.getDecimals("native");
+    const referrer = Wormhole.chainAddress(
+      fromChain.chain,
+      referrers.get(fromChain.network, fromChain.chain)!
+    );
 
     const details: QuoteDetails = {
       signedQuote: encoding.hex.decode(quote.signedQuote),
@@ -273,6 +282,8 @@ export class CCTPW7ExecutorRoute<N extends Network>
       referrerFee,
       remainingAmount,
     };
+
+    const srcNativeDecimals = await fromChain.getDecimals("native");
 
     return {
       success: true,
@@ -292,12 +303,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
         token: nativeTokenId(fromChain.chain),
         amount: amount.fromBaseUnits(quote.estimatedCost, srcNativeDecimals),
       },
-      // TODO: Solana gas drop-off
-      // NOTES:
-      // Before sending, check if the associated token account exists. If it does not, add a zero value GasDropOffInstruction to the wallet so the relayer can create it automatically.
-      // If using a non-zero GasDropOffInstruction to a new wallet, the drop-off amount must be greater than the getMinimumBalanceForRentExemption lamports.
-      // Our relayer will ignore drop-offs to new accounts if they are less than the minimum as otherwise the transaction would fail.
-      // destinationNativeGas: amount.units
       eta,
       expires: signedQuote.quote.expiryTime,
       details,

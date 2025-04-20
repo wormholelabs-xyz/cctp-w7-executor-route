@@ -124,7 +124,7 @@ export function calculateReferrerFee(
     throw new Error("dBps exceeds max u16");
   }
   if (dBps > 0) {
-    let referrerFee = (amount * dBps) / 10_0000n;
+    const referrerFee = (amount * dBps) / 100_000n;
     const remainingAmount = amount - referrerFee;
     return { referrerFee, remainingAmount };
   }
