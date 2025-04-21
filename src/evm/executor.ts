@@ -46,7 +46,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
       chain
     ) as bigint;
 
-    const shimContract = shimContracts.get(network, chain);
+    const shimContract = shimContracts[network]?.[chain];
     if (!shimContract) throw new Error(`Shim contract for ${chain} not found`);
     this.shimContract = shimContract;
   }

@@ -38,5 +38,5 @@ SEND_TRANSFER=true npm run examples:test
 
 > ⚠️ **Note:**
 >
-> - All relevant contract addresses and constants are set in `src/consts`.
+> - All relevant contract addresses and constants are defined in `src/consts`.
 > - Referrer fee is set to **1 BPS** in `src/consts`.

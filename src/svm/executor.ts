@@ -67,7 +67,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
       );
     this.messageTransmitterProgramId = new PublicKey(messageTransmitterAddress);
 
-    const shimContract = shimContracts.get(network, chain);
+    const shimContract = shimContracts[network]?.[chain];
     if (!shimContract) throw new Error(`Shim contract for ${chain} not found`);
     this.shimProgramId = new PublicKey(shimContract);
   }

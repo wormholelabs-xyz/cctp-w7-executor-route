@@ -14,8 +14,8 @@ import { CCTPW7ExecutorRoute } from "../src";
     SuiPlatform,
   ]);
 
-  const sendChain = wh.getChain("Sui");
-  const destChain = wh.getChain("Avalanche");
+  const sendChain = wh.getChain("Avalanche");
+  const destChain = wh.getChain("Sui");
 
   // Doing transfer of USDC on Avalanche to USDC on Sepolia
   const source = Wormhole.tokenId(
@@ -61,7 +61,7 @@ import { CCTPW7ExecutorRoute } from "../src";
     amount: "0.01",
     options: {
       // 0.0 - 1.0 percentage
-      // nativeGas: 0.05,
+      nativeGas: 0.05,
     },
   };
 

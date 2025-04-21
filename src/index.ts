@@ -79,6 +79,7 @@ export type QuoteDetails = {
   referrer: ChainAddress;
   referrerFee: bigint;
   remainingAmount: bigint;
+  gasDropOffLimit: bigint;
 };
 
 type Q = routes.Quote<Op, Vp, QuoteDetails>;
@@ -151,6 +152,17 @@ export class CCTPW7ExecutorRoute<N extends Network>
     request: routes.RouteTransferRequest<N>,
     params: Tp
   ): Promise<Vr> {
+    if (
+      params.options?.nativeGas &&
+      (params.options.nativeGas < 0 || params.options.nativeGas > 1)
+    ) {
+      return {
+        valid: false,
+        error: new Error("Invalid native gas percentage"),
+        params,
+      };
+    }
+
     const validatedParams: Vp = {
       normalizedParams: {
         amount: request.parseAmount(params.amount),
@@ -172,15 +184,17 @@ export class CCTPW7ExecutorRoute<N extends Network>
       fromChain.network,
       fromChain.chain
     );
-    if (!srcUsdcAddress)
+    if (!srcUsdcAddress) {
       throw new Error("Invalid transfer, no USDC contract on source");
+    }
 
     const dstUsdcAddress = circle.usdcContract.get(
       toChain.network,
       toChain.chain
     );
-    if (!dstUsdcAddress)
+    if (!dstUsdcAddress) {
       throw new Error("Invalid transfer, no USDC contract on destination");
+    }
 
     const { referrerFee, remainingAmount } = calculateReferrerFee(
       amount.units(params.normalizedParams.amount),
@@ -211,7 +225,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       };
     }
 
-    const gasLimit = gasLimits.get(fromChain.network, toChain.chain);
+    const gasLimit = gasLimits[fromChain.network]?.[toChain.chain];
     if (!gasLimit) {
       return {
         success: false,
@@ -230,11 +244,12 @@ export class CCTPW7ExecutorRoute<N extends Network>
       },
     });
 
-    // Calculate the dropOff value
+    // Calculate the gas dropOff value
+    const gasDropOffLimit = BigInt(dstCapabilities.gasDropOffLimit);
     const dropOff =
-      params.options.nativeGas && dstCapabilities.gasDropOffLimit
-        ? (BigInt(params.options.nativeGas) *
-            BigInt(dstCapabilities.gasDropOffLimit)) /
+      params.options.nativeGas && gasDropOffLimit > 0n
+        ? (BigInt(Math.round(params.options.nativeGas * 100)) *
+            gasDropOffLimit) /
           100n
         : 0n;
 
@@ -253,7 +268,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
       });
     }
 
-    // Serialize the relayInstructions
     const relayInstructions = serializeLayout(relayInstructionsLayout, {
       requests: relayRequests,
     });
@@ -281,18 +295,25 @@ export class CCTPW7ExecutorRoute<N extends Network>
         ? 2_000 * 200
         : finality.estimateFinalityTime(fromChain.chain);
 
-    const referrer = Wormhole.chainAddress(
-      fromChain.chain,
-      referrers.get(fromChain.network, fromChain.chain)!
-    );
+    const referrerAddress = referrers[fromChain.network]?.[fromChain.chain];
+    if (!referrerAddress) {
+      return {
+        success: false,
+        error: new Error("No referrer address found"),
+      };
+    }
+    const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
+
+    const estimatedCost = BigInt(quote.estimatedCost);
 
     const details: QuoteDetails = {
       signedQuote: signedQuoteBytes,
       relayInstructions: relayInstructions,
-      estimatedCost: quote.estimatedCost,
+      estimatedCost,
       referrer,
       referrerFee,
       remainingAmount,
+      gasDropOffLimit,
     };
 
     const [srcNativeDecimals, dstNativeDecimals] = await Promise.all([
@@ -316,7 +337,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       },
       relayFee: {
         token: nativeTokenId(fromChain.chain),
-        amount: amount.fromBaseUnits(quote.estimatedCost, srcNativeDecimals),
+        amount: amount.fromBaseUnits(estimatedCost, srcNativeDecimals),
       },
       destinationNativeGas: amount.fromBaseUnits(dropOff, dstNativeDecimals),
       eta,

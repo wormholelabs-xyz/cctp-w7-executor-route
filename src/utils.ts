@@ -14,7 +14,7 @@ export enum RelayStatus {
 
 export type RequestForExecution = {
   quoterAddress: `0x${string}`;
-  amtPaid: bigint;
+  amtPaid: string;
   dstChain: number;
   dstAddr: `0x${string}`;
   refundAddr: `0x${string}`;
@@ -27,9 +27,9 @@ export type RequestForExecution = {
 export type TxInfo = {
   txHash: string;
   chainId: number;
-  blockNumber: bigint;
+  blockNumber: string;
   blockTime: Date | null;
-  cost: bigint;
+  cost: string;
 };
 
 export type RelayData = {
@@ -37,7 +37,7 @@ export type RelayData = {
   txHash: string;
   chainId: number;
   status: string;
-  estimatedCost: bigint;
+  estimatedCost: string;
   requestForExecution: RequestForExecution;
   instruction?: Request;
   txs?: TxInfo[];
@@ -46,7 +46,7 @@ export type RelayData = {
 
 export type Capabilities = {
   requestPrefixes: Array<keyof typeof RequestPrefix>;
-  gasDropOffLimit: bigint;
+  gasDropOffLimit: string;
 };
 
 export interface CapabilitiesResponse {
@@ -68,7 +68,7 @@ export async function fetchCapabilities(
 
 export interface QuoteResponse {
   signedQuote: `0x${string}`;
-  estimatedCost?: bigint;
+  estimatedCost?: string;
 }
 
 export async function fetchSignedQuote(
@@ -93,7 +93,7 @@ export async function fetchSignedQuote(
 
 export interface StatusResponse extends RelayData {
   signedQuote: SignedQuote;
-  estimatedCost: bigint;
+  estimatedCost: string;
 }
 
 // Fetch Status
