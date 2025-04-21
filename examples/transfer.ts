@@ -59,7 +59,10 @@ import { CCTPW7ExecutorRoute } from "../src";
   // Specify the amount as a decimal string
   const transferParams = {
     amount: "0.01",
-    options: bestRoute.getDefaultOptions(),
+    options: {
+      // 0.0 - 1.0 percentage
+      // nativeGas: 0.05,
+    },
   };
 
   let validated = await bestRoute.validate(tr, transferParams);

@@ -38,5 +38,5 @@ SEND_TRANSFER=true npm run examples:test
 
 > ⚠️ **Note:**
 >
-> - **Gas drop-off is not supported yet.**
+> - All relevant contract addresses and constants are set in `src/consts`.
 > - Referrer fee is set to **1 BPS** in `src/consts`.
