@@ -388,6 +388,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
             request: {
               ...relayInstruction.request,
               // Replace the dummy recipient address with the actual recipient address
+              // For Solana, use recipient's wallet address (not ATA) so relayer can create the correct ATA
               recipient: to.address.toUniversalAddress().toUint8Array(),
             },
           };
