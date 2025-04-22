@@ -93,7 +93,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
       );
       yield this.createUnsignedTx(
         addFrom(txReq, senderAddress),
-        "ERC20.approve of shim",
+        "ERC20.approve of EvmCCTPW7Executor",
         false
       );
     }
@@ -125,7 +125,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
 
     yield this.createUnsignedTx(
       addFrom(txReq, senderAddress),
-      "shim.depositForBurn"
+      "EvmCCTPW7Executor.depositForBurn"
     );
   }
 

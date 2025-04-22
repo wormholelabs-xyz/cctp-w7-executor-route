@@ -4,7 +4,7 @@ export const apiBaseUrl: Partial<Record<Network, string>> = {
   Testnet: "https://executor-testnet.labsapis.com",
 };
 
-// Shim Contracts
+// Shim Contract Addresses
 export const shimContracts: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
@@ -16,7 +16,7 @@ export const shimContracts: Partial<
   },
 };
 
-// Sui Executor IDs
+// Sui Executor Package IDs
 export type SuiExecutorIds = { executorId: string; executorRequestsId: string };
 export const suiExecutorIds: Partial<Record<Network, SuiExecutorIds>> = {
   Testnet: {
@@ -26,6 +26,15 @@ export const suiExecutorIds: Partial<Record<Network, SuiExecutorIds>> = {
       "0x2d9ccf3cce3f7dce408e5455e90b80a8161ad9673d1366c2a5def60ad93657a8",
   },
 };
+
+// Solana Executor Program IDs
+export const solanaExecutorId: Partial<Record<Network, string>> = {
+  Testnet: "Ax7mtQPbNPQmghd7C3BHrMdwwmkAXBDq7kNGfXNcc7dg",
+};
+
+// Estimated lamport value to cover worst-case Solana tx costs (base fee + rent for used_nonces + ATA rent)
+// Used to prevent relay wallet drain due to non-deterministic rent charges (e.g., first nonce in batch, missing ATA)
+export const SOLANA_MSG_VALUE = 9_000_000n;
 
 // Gas limits must be high enough to cover the worst-case scenario for each chain
 // to avoid relay failures. However, they should not be too high to reduce the
@@ -57,7 +66,3 @@ export const referrers: Partial<
     Sui: "0x30bd9b3d5ad00f38fd0c314139ba47ccb3c78353d99880d81125ca0c370b415e",
   },
 };
-
-// Estimated lamport value to cover worst-case Solana tx costs (base fee + rent for used_nonces + ATA rent)
-// Used to prevent relay wallet drain due to non-deterministic rent charges (e.g., first nonce in batch, missing ATA)
-export const SOLANA_MSG_VALUE = 9_000_000n;

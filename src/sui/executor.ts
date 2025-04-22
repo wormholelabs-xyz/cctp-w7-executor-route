@@ -45,42 +45,48 @@ export class SuiCCTPW7Executor<N extends Network, C extends SuiChains>
     if (network === "Devnet")
       throw new Error("CCTPW7Executor not supported on Devnet");
 
-    const usdcId = circle.usdcContract.get(this.network, this.chain);
-    if (!usdcId) {
-      throw new Error(
-        `No USDC contract configured for network=${this.network} chain=${this.chain}`
-      );
-    }
+    const getContractAddress = (
+      contract: string | undefined,
+      errorMessage: string
+    ) => {
+      if (!contract) {
+        throw new Error(errorMessage);
+      }
+      return contract;
+    };
+
+    this.usdcId = getContractAddress(
+      circle.usdcContract.get(this.network, this.chain),
+      `No USDC contract configured for network=${this.network} chain=${this.chain}`
+    );
 
     const { tokenMessengerState, messageTransmitterState, usdcTreasury } =
       suiCircleObjects(network as "Mainnet" | "Testnet");
 
-    if (!contracts.cctp?.tokenMessenger)
-      throw new Error(
-        `Circle Token Messenger contract for domain ${chain} not found`
-      );
-
-    if (!contracts.cctp?.messageTransmitter)
-      throw new Error(
-        `Circle Message Transmitter contract for domain ${chain} not found`
-      );
-
-    this.usdcId = usdcId;
     this.usdcTreasuryId = usdcTreasury;
-    this.tokenMessengerId = contracts.cctp?.tokenMessenger;
-    this.messageTransmitterId = contracts.cctp?.messageTransmitter;
+
+    this.tokenMessengerId = getContractAddress(
+      contracts.cctp?.tokenMessenger,
+      `Circle Token Messenger contract for domain ${chain} not found`
+    );
+
+    this.messageTransmitterId = getContractAddress(
+      contracts.cctp?.messageTransmitter,
+      `Circle Message Transmitter contract for domain ${chain} not found`
+    );
+
     this.tokenMessengerStateId = tokenMessengerState;
     this.messageTransmitterStateId = messageTransmitterState;
 
-    const executorId = suiExecutorIds[network]?.executorId;
-    if (!executorId)
-      throw new Error(`Executor contract for ${network} not found`);
-    this.executorId = executorId;
+    this.executorId = getContractAddress(
+      suiExecutorIds[network]?.executorId,
+      `Executor contract for ${network} not found`
+    );
 
-    const executorRequestsId = suiExecutorIds[network]?.executorRequestsId;
-    if (!executorRequestsId)
-      throw new Error(`Executor requests contract for ${network} not found`);
-    this.executorRequestsId = executorRequestsId;
+    this.executorRequestsId = getContractAddress(
+      suiExecutorIds[network]?.executorRequestsId,
+      `Executor requests contract for ${network} not found`
+    );
   }
 
   static async fromRpc<N extends Network>(

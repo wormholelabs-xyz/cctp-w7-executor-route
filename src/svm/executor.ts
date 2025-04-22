@@ -20,7 +20,7 @@ import {
   SolanaUnsignedTransaction,
 } from "@wormhole-foundation/sdk-solana";
 import { CCTPW7Executor } from "../types";
-import { shimContracts } from "../consts";
+import { shimContracts, solanaExecutorId } from "../consts";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { QuoteDetails } from "..";
 import {
@@ -43,6 +43,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
   readonly messageTransmitterProgramId: PublicKey;
 
   readonly shimProgramId: PublicKey;
+  readonly executorProgramId: PublicKey;
 
   constructor(
     readonly network: N,
@@ -53,23 +54,33 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
     if (network === "Devnet")
       throw new Error("CCTPW7Executor not supported on Devnet");
 
-    const tokenMessengerAddress = contracts.cctp?.tokenMessenger;
-    if (!tokenMessengerAddress)
-      throw new Error(
-        `Circle Token Messenger contract for domain ${chain} not found`
-      );
-    this.tokenMessengerProgramId = new PublicKey(tokenMessengerAddress);
+    const getContractAddress = (
+      contract: string | undefined,
+      errorMessage: string
+    ) => {
+      if (!contract) throw new Error(errorMessage);
+      return new PublicKey(contract);
+    };
 
-    const messageTransmitterAddress = contracts.cctp?.messageTransmitter;
-    if (!messageTransmitterAddress)
-      throw new Error(
-        `Circle Message Transmitter contract for domain ${chain} not found`
-      );
-    this.messageTransmitterProgramId = new PublicKey(messageTransmitterAddress);
+    this.tokenMessengerProgramId = getContractAddress(
+      contracts.cctp?.tokenMessenger,
+      `Circle Token Messenger contract for domain ${chain} not found`
+    );
 
-    const shimContract = shimContracts[network]?.[chain];
-    if (!shimContract) throw new Error(`Shim contract for ${chain} not found`);
-    this.shimProgramId = new PublicKey(shimContract);
+    this.messageTransmitterProgramId = getContractAddress(
+      contracts.cctp?.messageTransmitter,
+      `Circle Message Transmitter contract for domain ${chain} not found`
+    );
+
+    this.shimProgramId = getContractAddress(
+      shimContracts[network]?.[chain],
+      `Shim contract for ${chain} not found`
+    );
+
+    this.executorProgramId = getContractAddress(
+      solanaExecutorId[network],
+      `Executor contract for ${network} not found`
+    );
   }
 
   static async fromRpc<N extends Network>(
@@ -149,8 +160,6 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
     const shimProgram = new Program<ExampleCctpWithExecutor>(
       ExampleCctpWithExecutorIdl,
       this.shimProgramId,
-      // TODO: why do we have to pass null connection here?
-      // we do this in the CCTP route, too
       { connection: null } as any
     );
 
@@ -176,10 +185,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
           payer: senderPk,
           messageTransmitter,
           payee: new PublicKey(signedQuote.quote.payeeAddress),
-          executorProgram: new PublicKey(
-            // TODO: store in map by network
-            "Ax7mtQPbNPQmghd7C3BHrMdwwmkAXBDq7kNGfXNcc7dg"
-          ),
+          executorProgram: this.executorProgramId,
         })
         .instruction()
     );
