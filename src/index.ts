@@ -301,7 +301,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
     const eta =
       fromChain.chain === "Polygon"
         ? 2_000 * 200
-        : finality.estimateFinalityTime(fromChain.chain);
+        : finality.estimateFinalityTime(fromChain.chain) + 5_000; // 5 seconds buffer for the relayer
 
     const estimatedCost = BigInt(quote.estimatedCost);
 
