@@ -2,7 +2,7 @@
 
 # Transfer Example
 
-This project includes an example script for testing a USDC token transfer between chains using the CCTPv1 Executor route. You can change the source and destination chains in the `examples/transfer.ts` file.
+This project includes a script for testing a USDC token transfer using the CCTPv1 Executor route with a referrer fee. You can change the source and destination chains in the `examples/transfer.ts` file.
 
 ## Prerequisites
 
@@ -39,4 +39,4 @@ SEND_TRANSFER=true npm run examples:test
 > ⚠️ **Note:**
 >
 > - All relevant contract addresses and constants are defined in `src/consts`.
-> - Referrer fee is set to **1 BPS** in `src/consts`.
+> - Referrer fee is set to **1 basis point** in `src/consts`.

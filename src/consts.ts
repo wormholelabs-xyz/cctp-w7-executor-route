@@ -28,8 +28,8 @@ export const suiExecutorIds: Partial<Record<Network, SuiExecutorIds>> = {
 };
 
 // Gas limits must be high enough to cover the worst-case scenario for each chain
-// to avoid relay failures. However, they should not be too high to avoid the perceived
-// cost to the user.
+// to avoid relay failures. However, they should not be too high to reduce the
+// `estimatedCost` returned by the quote endpoint.
 export const gasLimits: Partial<
   Record<Network, Partial<Record<Chain, bigint>>>
 > = {
