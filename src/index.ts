@@ -73,13 +73,12 @@ type Tp = routes.TransferParams<Op>;
 type Vr = routes.ValidationResult<Op>;
 
 export type QuoteDetails = {
-  signedQuote: Uint8Array;
-  relayInstructions: Uint8Array;
-  estimatedCost: bigint;
-  referrer: ChainAddress;
-  referrerFee: bigint;
-  remainingAmount: bigint;
-  gasDropOffLimit: bigint;
+  signedQuote: Uint8Array; // The signed quote from the /v0/quote endpoint
+  relayInstructions: Uint8Array; // The relay instructions for the transfer
+  estimatedCost: bigint; // The estimated cost of the transfer
+  referrer: ChainAddress; // The referrer address (to whom the referrer fee should be paid)
+  referrerFee: bigint; // The referrer fee in USDC
+  remainingAmount: bigint; // The remaining amount after the referrer fee in USDC
 };
 
 type Q = routes.Quote<Op, Vp, QuoteDetails>;
@@ -196,6 +195,15 @@ export class CCTPW7ExecutorRoute<N extends Network>
       throw new Error("Invalid transfer, no USDC contract on destination");
     }
 
+    const referrerAddress = referrers[fromChain.network]?.[fromChain.chain];
+    if (!referrerAddress) {
+      return {
+        success: false,
+        error: new Error("No referrer address found"),
+      };
+    }
+    const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
+
     const { referrerFee, remainingAmount } = calculateReferrerFee(
       amount.units(params.normalizedParams.amount),
       REFERRER_FEE_DBPS
@@ -204,6 +212,14 @@ export class CCTPW7ExecutorRoute<N extends Network>
       return {
         success: false,
         error: new Error("Amount after fee <= 0"),
+      };
+    }
+
+    const gasLimit = gasLimits[fromChain.network]?.[toChain.chain];
+    if (!gasLimit) {
+      return {
+        success: false,
+        error: new Error("Gas limit not found"),
       };
     }
 
@@ -221,14 +237,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
       return {
         success: false,
         error: new Error("Unsupported destination chain"),
-      };
-    }
-
-    const gasLimit = gasLimits[fromChain.network]?.[toChain.chain];
-    if (!gasLimit) {
-      return {
-        success: false,
-        error: new Error("Gas limit not found"),
       };
     }
 
@@ -261,7 +269,8 @@ export class CCTPW7ExecutorRoute<N extends Network>
           type: "GasDropOffInstruction" as const,
           dropOff,
           // Since we don't know the recipient address yet, we use a dummy address
-          // This will be replaced in the `initiate` method
+          // This will be replaced with the actual recipient address
+          // in the `initiate` method at transfer time
           recipient: new Uint8Array(32),
         },
       });
@@ -294,15 +303,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
         ? 2_000 * 200
         : finality.estimateFinalityTime(fromChain.chain);
 
-    const referrerAddress = referrers[fromChain.network]?.[fromChain.chain];
-    if (!referrerAddress) {
-      return {
-        success: false,
-        error: new Error("No referrer address found"),
-      };
-    }
-    const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
-
     const estimatedCost = BigInt(quote.estimatedCost);
 
     const details: QuoteDetails = {
@@ -312,7 +312,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
       referrer,
       referrerFee,
       remainingAmount,
-      gasDropOffLimit,
     };
 
     const [srcNativeDecimals, dstNativeDecimals] = await Promise.all([
@@ -358,14 +357,14 @@ export class CCTPW7ExecutorRoute<N extends Network>
     const executor = await request.fromChain.getProtocol("CCTPW7Executor");
     const sender = Wormhole.parseAddress(signer.chain(), signer.address());
 
-    // When transferring to Solana, the recipient address is the associated token account for CCTP transfers
-    let recipient = to;
+    // When transferring to Solana, the recipient address is the ATA for CCTP transfers
+    let cctpRecipient = to;
     if (to.chain === "Solana") {
       const usdcAddress = Wormhole.parseAddress(
         "Solana",
         circle.usdcContract.get(request.toChain.network, request.toChain.chain)!
       );
-      recipient = await request.toChain.getTokenAccount(
+      cctpRecipient = await request.toChain.getTokenAccount(
         to.address,
         usdcAddress
       );
@@ -407,7 +406,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       updatedRelayInstructions
     );
 
-    const xfer = await executor.transfer(sender, recipient, quoteDetails);
+    const xfer = await executor.transfer(sender, cctpRecipient, quoteDetails);
 
     const txids = await signSendWait(request.fromChain, xfer, signer);
 
