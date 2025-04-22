@@ -133,7 +133,6 @@ export class SuiCCTPW7Executor<N extends Network, C extends SuiChains>
   async *transfer(
     sender: AccountAddress<C>,
     recipient: ChainAddress,
-    amount: bigint,
     details: QuoteDetails
   ): AsyncGenerator<SuiUnsignedTransaction<N, C>> {
     const tx = new Transaction();
@@ -171,7 +170,9 @@ export class SuiCCTPW7Executor<N extends Network, C extends SuiChains>
       coin = txCoin;
       tx.transferObjects([referrerFeeCoin], canonicalAddress(details.referrer));
     } else {
-      const [txCoin] = tx.splitCoins(primaryCoinInput, [amount]);
+      const [txCoin] = tx.splitCoins(primaryCoinInput, [
+        details.remainingAmount,
+      ]);
       coin = txCoin;
     }
 

@@ -14,7 +14,6 @@ export interface CCTPW7Executor<
   transfer(
     sender: AccountAddress<C>,
     recipient: ChainAddress,
-    amount: bigint,
     details: QuoteDetails
   ): AsyncGenerator<UnsignedTransaction<N, C>>;
 }

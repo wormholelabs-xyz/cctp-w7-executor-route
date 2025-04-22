@@ -85,9 +85,9 @@ export type QuoteDetails = {
 type Q = routes.Quote<Op, Vp, QuoteDetails>;
 type QR = routes.QuoteResult<Op, Vp>;
 
-// TODO: do we even need to set the circle attestation? we don't use it
-// adding that would require a dependency on the circle protocol
-// to fetch the attestation
+// Note: The attestation could be the Circle message.
+// However, fetching it would introduce a dependency on the Circle protocol,
+// and the attestation is not needed for the route to work.
 type AT = { id: string; attestation: {} };
 type R = routes.Receipt<AT>;
 
@@ -95,9 +95,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
   extends routes.AutomaticRoute<N, Op, Vp, R>
   implements routes.StaticRouteMethods<typeof CCTPW7ExecutorRoute>
 {
-  // TODO: set this to true to enable gas-dropoff
-  // it should work but we need to test it
-  static NATIVE_GAS_DROPOFF_SUPPORTED = false;
+  static NATIVE_GAS_DROPOFF_SUPPORTED = true;
 
   static meta = {
     name: "CCTPW7ExecutorRoute",
@@ -125,11 +123,13 @@ export class CCTPW7ExecutorRoute<N extends Network>
       fromChain.network,
       fromChain.chain
     );
-    if (!sourceChainUsdcContract) return [];
     if (
-      !isSameToken(
-        sourceToken,
-        Wormhole.tokenId(fromChain.chain, sourceChainUsdcContract)
+      !(
+        sourceChainUsdcContract &&
+        isSameToken(
+          sourceToken,
+          Wormhole.tokenId(fromChain.chain, sourceChainUsdcContract)
+        )
       )
     ) {
       return [];
@@ -200,7 +200,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
       amount.units(params.normalizedParams.amount),
       REFERRER_FEE_DBPS
     );
-
     if (remainingAmount <= 0n) {
       return {
         success: false,
@@ -358,7 +357,6 @@ export class CCTPW7ExecutorRoute<N extends Network>
 
     const executor = await request.fromChain.getProtocol("CCTPW7Executor");
     const sender = Wormhole.parseAddress(signer.chain(), signer.address());
-    const amt = amount.units(quote.params.normalizedParams.amount);
 
     // When transferring to Solana, the recipient address is the associated token account for CCTP transfers
     let recipient = to;
@@ -408,7 +406,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       updatedRelayInstructions
     );
 
-    const xfer = await executor.transfer(sender, recipient, amt, quoteDetails);
+    const xfer = await executor.transfer(sender, recipient, quoteDetails);
 
     const txids = await signSendWait(request.fromChain, xfer, signer);
 

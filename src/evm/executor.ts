@@ -65,13 +65,14 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
   async *transfer(
     sender: AccountAddress<C>,
     recipient: ChainAddress,
-    amount: bigint,
     details: QuoteDetails
   ): AsyncGenerator<EvmUnsignedTransaction<N, C>> {
     const senderAddress = new EvmAddress(sender).toString();
     const recipientAddress = recipient.address
       .toUniversalAddress()
       .toUint8Array();
+
+    const amount = details.remainingAmount + details.referrerFee;
 
     const tokenAddr = circle.usdcContract.get(this.network, this.chain)!;
 

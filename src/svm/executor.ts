@@ -86,7 +86,6 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
   async *transfer(
     sender: AccountAddress<C>,
     recipient: ChainAddress,
-    amount: bigint,
     details: QuoteDetails
   ): AsyncGenerator<SolanaUnsignedTransaction<N, C>> {
     const usdc = new PublicKey(
@@ -142,7 +141,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
         senderPk,
         senderAta,
         destinationAddress,
-        amount,
+        details.remainingAmount,
         msgSendEvent.publicKey
       )
     );
