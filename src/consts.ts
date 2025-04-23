@@ -32,9 +32,8 @@ export const solanaExecutorId: Partial<Record<Network, string>> = {
   Testnet: "Ax7mtQPbNPQmghd7C3BHrMdwwmkAXBDq7kNGfXNcc7dg",
 };
 
-// Estimated lamport value to cover worst-case Solana tx costs (base fee + rent for used_nonces + ATA rent)
-// Used to prevent relay wallet drain due to non-deterministic rent charges (e.g., first nonce in batch, missing ATA)
-export const SOLANA_MSG_VALUE = 9_000_000n;
+// cost of 1 signature + rounding error on priority fee
+export const SOLANA_MSG_VALUE_BASE_FEE = 5_001n;
 
 // Gas limits must be high enough to cover the worst-case scenario for each chain
 // to avoid relay failures. However, they should not be too high to reduce the

@@ -13,6 +13,7 @@ import {
   EmptyPlatformMap,
   isSameToken,
   nativeTokenId,
+  UniversalAddress,
   type ChainAddress,
   type ChainContext,
   type Signer,
@@ -42,8 +43,10 @@ import {
   gasLimits,
   REFERRER_FEE_DBPS,
   referrers,
-  SOLANA_MSG_VALUE,
+  SOLANA_MSG_VALUE_BASE_FEE,
 } from "./consts";
+import { Connection } from "@solana/web3.js";
+import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
 
 // IMPORTANT: register the platform specific implementations of the protocol
 import "./evm/index.js";
@@ -89,6 +92,10 @@ type QR = routes.QuoteResult<Op, Vp>;
 // and the attestation is not needed for the route to work.
 type AT = { id: string; attestation: {} };
 type R = routes.Receipt<AT>;
+
+// The minimum rent exemption amount for a 165 byte account (e.g. an ATA)
+// cache it here to avoid fetching it from the Solana RPC
+let ataMinRentAmount: bigint | undefined = undefined;
 
 export class CCTPW7ExecutorRoute<N extends Network>
   extends routes.AutomaticRoute<N, Op, Vp, R>
@@ -240,6 +247,36 @@ export class CCTPW7ExecutorRoute<N extends Network>
       };
     }
 
+    const { recipient } = request;
+    let tokenAccountExists = true;
+
+    // Check if the associated token account (ATA) exists on Solana.
+    // If it doesn't, include a gas drop-off instruction so the relayer can create it.
+    // Note: There's a potential race condition — the account might exist during this check,
+    // but could be closed before the transfer completes.
+    if (recipient && toChain.chain === "Solana") {
+      const usdcAddress = Wormhole.parseAddress("Solana", dstUsdcAddress);
+      const ata = await toChain.getTokenAccount(recipient.address, usdcAddress);
+      const connection: Connection = await toChain.getRpc();
+      const ataAccount = await connection.getAccountInfo(
+        new SolanaAddress(ata.address).unwrap()
+      );
+      tokenAccountExists = ataAccount !== null;
+      if (!tokenAccountExists && !ataMinRentAmount) {
+        ataMinRentAmount = BigInt(
+          await connection.getMinimumBalanceForRentExemption(165)
+        );
+      }
+    }
+
+    let msgValue = 0n;
+    if (toChain.chain === "Solana") {
+      msgValue += SOLANA_MSG_VALUE_BASE_FEE;
+      if (!tokenAccountExists && ataMinRentAmount) {
+        msgValue += ataMinRentAmount;
+      }
+    }
+
     const relayRequests = [];
 
     // Add the gas instruction
@@ -247,7 +284,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       request: {
         type: "GasInstruction" as const,
         gasLimit,
-        msgValue: toChain.chain === "Solana" ? SOLANA_MSG_VALUE : 0n,
+        msgValue,
       },
     });
 
@@ -261,17 +298,17 @@ export class CCTPW7ExecutorRoute<N extends Network>
         : 0n;
 
     // Add the gas drop-off instruction if applicable
-    // Always add it when sending to Solana so the relayer can create the ATA
-    // if it doesn't exist, even if the dropOff is 0
-    if (dropOff > 0n || toChain.chain === "Solana") {
+    if (dropOff > 0n || !tokenAccountExists) {
       relayRequests.push({
         request: {
           type: "GasDropOffInstruction" as const,
           dropOff,
-          // Since we don't know the recipient address yet, we use a dummy address
-          // This will be replaced with the actual recipient address
-          // in the `initiate` method at transfer time
-          recipient: new Uint8Array(32),
+          // If the recipient is undefined (e.g. the user hasn’t connected their wallet yet),
+          // we temporarily use a dummy address to fetch a quote.
+          // The recipient address is validated later in the `initiate` method, which will throw if it's still missing.
+          recipient: recipient
+            ? recipient.address.toUniversalAddress()
+            : new UniversalAddress(new Uint8Array(32)),
         },
       });
     }
@@ -354,6 +391,21 @@ export class CCTPW7ExecutorRoute<N extends Network>
       throw new Error("Missing quote details");
     }
 
+    const relayInstructions = deserializeLayout(
+      relayInstructionsLayout,
+      quote.details.relayInstructions
+    );
+
+    // Make sure that the gas drop-off recipient matches the actual recipient
+    relayInstructions.requests.forEach(({ request }) => {
+      if (
+        request.type === "GasDropOffInstruction" &&
+        !request.recipient.equals(to.address.toUniversalAddress())
+      ) {
+        throw new Error("Gas drop-off recipient does not match");
+      }
+    });
+
     const executor = await request.fromChain.getProtocol("CCTPW7Executor");
     const sender = Wormhole.parseAddress(signer.chain(), signer.address());
 
@@ -370,43 +422,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       );
     }
 
-    const quoteDetails = {
-      ...quote.details,
-    };
-
-    const relayInstructions = deserializeLayout(
-      relayInstructionsLayout,
-      quoteDetails.relayInstructions
-    );
-
-    const updatedRequests = relayInstructions.requests.map(
-      (relayInstruction) => {
-        if (relayInstruction.request.type === "GasDropOffInstruction") {
-          return {
-            ...relayInstruction,
-            request: {
-              ...relayInstruction.request,
-              // Replace the dummy recipient address with the actual recipient address
-              // For Solana, use recipient's wallet address (not ATA) so relayer can create the correct ATA
-              recipient: to.address.toUniversalAddress().toUint8Array(),
-            },
-          };
-        }
-        return relayInstruction;
-      }
-    );
-
-    const updatedRelayInstructions = {
-      ...relayInstructions,
-      requests: updatedRequests,
-    };
-
-    quoteDetails.relayInstructions = serializeLayout(
-      relayInstructionsLayout,
-      updatedRelayInstructions
-    );
-
-    const xfer = await executor.transfer(sender, cctpRecipient, quoteDetails);
+    const xfer = await executor.transfer(sender, cctpRecipient, quote.details);
 
     const txids = await signSendWait(request.fromChain, xfer, signer);
 

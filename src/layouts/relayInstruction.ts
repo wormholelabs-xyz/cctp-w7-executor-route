@@ -1,3 +1,4 @@
+import { layoutItems } from "@wormhole-foundation/sdk-connect";
 import { DeriveType, Layout } from "binary-layout";
 
 export const gasInstructionLayout = [
@@ -9,7 +10,7 @@ export type GasInstruction = DeriveType<typeof gasInstructionLayout>;
 
 export const gasDropOffInstructionLayout = [
   { name: "dropOff", binary: "uint", size: 16 },
-  { name: "recipient", binary: "bytes", size: 32 },
+  { name: "recipient", ...layoutItems.universalAddressItem },
 ] as const satisfies Layout;
 
 export type GasDropOffInstruction = DeriveType<

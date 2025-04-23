@@ -45,6 +45,7 @@ import { CCTPW7ExecutorRoute } from "../src";
   const tr = await routes.RouteTransferRequest.create(wh, {
     source,
     destination,
+    recipient: receiver.address,
   });
 
   // resolve the transfer request to a set of routes that can perform it
@@ -61,7 +62,7 @@ import { CCTPW7ExecutorRoute } from "../src";
     amount: "0.01",
     options: {
       // 0.0 - 1.0 percentage
-      nativeGas: 0.05,
+      nativeGas: 1.0,
     },
   };
 
