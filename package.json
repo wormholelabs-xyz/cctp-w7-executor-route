@@ -28,12 +28,12 @@
     "test": "vitest"
   },
   "peerDependencies": {
-    "@wormhole-foundation/sdk-connect": "^1.16.0",
-    "@wormhole-foundation/sdk-evm": "^1.16.0",
-    "@wormhole-foundation/sdk-solana": "^1.16.0",
-    "@wormhole-foundation/sdk-solana-cctp": "^1.16.0",
-    "@wormhole-foundation/sdk-sui": "^1.16.0",
-    "@wormhole-foundation/sdk-sui-cctp": "^1.16.0"
+    "@wormhole-foundation/sdk-connect": "^1.16.1",
+    "@wormhole-foundation/sdk-evm": "^1.16.1",
+    "@wormhole-foundation/sdk-solana": "^1.16.1",
+    "@wormhole-foundation/sdk-solana-cctp": "^1.16.1",
+    "@wormhole-foundation/sdk-sui": "^1.16.1",
+    "@wormhole-foundation/sdk-sui-cctp": "^1.16.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.6",

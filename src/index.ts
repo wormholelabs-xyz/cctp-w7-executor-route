@@ -459,11 +459,8 @@ export class CCTPW7ExecutorRoute<N extends Network>
 
           const relayStatus = txStatus?.status;
 
-          // TODO: how to handle failure states in Connect?
-          // Transfers could be resumed through the manual CCTP
-          // route if the relay fails
           if (
-            relayStatus === RelayStatus.Failed || // TODO: how can this happen?
+            relayStatus === RelayStatus.Failed || // this could happen if simulation fails
             relayStatus === RelayStatus.Underpaid || // only happens if you don't pay at least the costEstimate
             relayStatus === RelayStatus.Unsupported || // capabilities check didn't pass
             relayStatus === RelayStatus.Aborted // TODO: how can this happen?
@@ -471,7 +468,9 @@ export class CCTPW7ExecutorRoute<N extends Network>
             receipt = {
               ...receipt,
               state: TransferState.Failed,
-              error: `Transfer failed: ${relayStatus}`,
+              error: new routes.RelayFailedError(
+                `Relay failed with status: ${relayStatus}`
+              ),
             };
           }
 
