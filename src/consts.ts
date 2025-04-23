@@ -4,14 +4,14 @@ export const apiBaseUrl: Partial<Record<Network, string>> = {
   Testnet: "https://executor-testnet.labsapis.com",
 };
 
-// Shim Contract Addresses
+// Shim Contract Addresses (e.g. CCTPv1WithExecutor.sol)
 export const shimContracts: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
   Testnet: {
-    Sepolia: "0x4Cbf94024Ff07a7cd69d687084d67773Fc6ef925",
-    BaseSepolia: "0x17166DEC8502769eBD6D30112098a4588eA2e88A",
-    Avalanche: "0x0254356716c59a3DA3C0e19EFf58511ba7f0002F",
+    Sepolia: "0x0F78904c750801391EbBf308181e9d6fc892B0f3",
+    BaseSepolia: "0x4983C6bD3bB7DA9EECe71cfa7AE4C67CAbf362F0",
+    Avalanche: "0x2cfEC91B50f657Cc86Ec693542527ac3e03bF742",
     Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
   },
 };
