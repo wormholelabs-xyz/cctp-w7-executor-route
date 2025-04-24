@@ -338,7 +338,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
     const eta =
       fromChain.chain === "Polygon"
         ? 2_000 * 200
-        : finality.estimateFinalityTime(fromChain.chain) + 5_000; // 5 seconds buffer for the relayer
+        : finality.estimateFinalityTime(fromChain.chain) + 1_000; // buffer for the relayer
 
     const estimatedCost = BigInt(quote.estimatedCost);
 
@@ -463,7 +463,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
             relayStatus === RelayStatus.Failed || // this could happen if simulation fails
             relayStatus === RelayStatus.Underpaid || // only happens if you don't pay at least the costEstimate
             relayStatus === RelayStatus.Unsupported || // capabilities check didn't pass
-            relayStatus === RelayStatus.Aborted // TODO: how can this happen?
+            relayStatus === RelayStatus.Aborted // An unrecoverable error indicating the attempt should stop (bad data, pre-flight checks failed, or chain-specific conditions)
           ) {
             receipt = {
               ...receipt,
