@@ -9,9 +9,10 @@ export const shimContracts: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
   Testnet: {
-    Sepolia: "0x0F78904c750801391EbBf308181e9d6fc892B0f3",
-    BaseSepolia: "0x4983C6bD3bB7DA9EECe71cfa7AE4C67CAbf362F0",
+    Aptos: "0x14a12d1fd6ef371b70c2113155534ec152ec7f779e281b54866c796c9a4a58d3",
     Avalanche: "0x2cfEC91B50f657Cc86Ec693542527ac3e03bF742",
+    BaseSepolia: "0x4983C6bD3bB7DA9EECe71cfa7AE4C67CAbf362F0",
+    Sepolia: "0x0F78904c750801391EbBf308181e9d6fc892B0f3",
     Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
   },
 };
@@ -42,9 +43,10 @@ export const gasLimits: Partial<
   Record<Network, Partial<Record<Chain, bigint>>>
 > = {
   Testnet: {
-    Sepolia: 200_000n,
-    BaseSepolia: 200_000n,
+    Aptos: 1_500n,
     Avalanche: 200_000n,
+    BaseSepolia: 200_000n,
+    Sepolia: 200_000n,
     Solana: 250_000n,
     Sui: 8_000_000n,
   },
@@ -58,9 +60,10 @@ export const referrers: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
   Testnet: {
-    Sepolia: "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7",
-    BaseSepolia: "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7",
+    Aptos: "0x23b54f6e29bba7f4123d088f4cfcd83f5e23a049de15895b119ce5a6cb5faa91",
     Avalanche: "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7",
+    BaseSepolia: "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7",
+    Sepolia: "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7",
     Solana: "9r6q2iEg4MBevjC8reaLmQUDxueF3vabUoqDkZ2LoAYe",
     Sui: "0x30bd9b3d5ad00f38fd0c314139ba47ccb3c78353d99880d81125ca0c370b415e",
   },
