@@ -58,9 +58,12 @@ export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
     config: ChainsConfig<N, Platform>
   ): Promise<AptosCCTPW7Executor<N, AptosChains>> {
     const [network, chain] = await AptosPlatform.chainFromRpc(provider);
-    const conf = config[chain]!;
+
+    const conf = config[chain];
+    if (!conf) throw new Error(`No config found for ${chain}`);
     if (conf.network !== network)
       throw new Error(`Network mismatch: ${conf.network} != ${network}`);
+
     return new AptosCCTPW7Executor(
       network as N,
       chain,
