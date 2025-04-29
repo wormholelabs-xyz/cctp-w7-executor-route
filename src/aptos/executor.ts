@@ -88,8 +88,6 @@ export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
     )!;
 
     const refundAddr = senderAddress;
-    const quote = details.signedQuote;
-    const relayInstructions = details.relayInstructions;
     const payee = senderAddress;
     const functionArguments: Array<
       EntryFunctionArgumentTypes | SimpleEntryFunctionArgumentTypes
@@ -101,8 +99,8 @@ export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
       details.estimatedCost,
       toChainId(recipient.chain),
       refundAddr,
-      quote,
-      relayInstructions,
+      details.signedQuote,
+      details.relayInstructions,
       REFERRER_FEE_DBPS,
       payee,
     ];
