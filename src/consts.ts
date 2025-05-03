@@ -52,9 +52,6 @@ export const gasLimits: Partial<
   },
 };
 
-// Referrer Fee in *tenths* of basis points
-export const REFERRER_FEE_DBPS = 10n;
-
 // Referrer addresses (to whom the referrer fee should be paid)
 export const referrers: Partial<
   Record<Network, Partial<Record<Chain, string>>>

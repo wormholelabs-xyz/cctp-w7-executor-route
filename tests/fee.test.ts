@@ -1,4 +1,3 @@
-import { REFERRER_FEE_DBPS } from "../src/consts";
 import { calculateReferrerFee } from "../src/utils";
 
 describe("calculateReferrerFee", () => {
@@ -45,10 +44,5 @@ describe("calculateReferrerFee", () => {
 
     expect(result.referrerFee).toBe(0n);
     expect(result.remainingAmount).toBe(0n);
-  });
-
-  it("fee should be between 0 and 65_635", () => {
-    expect(REFERRER_FEE_DBPS).toBeLessThanOrEqual(65_535n);
-    expect(REFERRER_FEE_DBPS).toBeGreaterThanOrEqual(0n);
   });
 });

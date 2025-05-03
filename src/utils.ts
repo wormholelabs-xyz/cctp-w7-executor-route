@@ -47,6 +47,8 @@ export type RelayData = {
 export type Capabilities = {
   requestPrefixes: Array<keyof typeof RequestPrefix>;
   gasDropOffLimit: string;
+  maxGasLimit: string;
+  maxMsgValue: string; // the maximum msgValue, inclusive of the gasDropOffLimit
 };
 
 export interface CapabilitiesResponse {

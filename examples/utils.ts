@@ -11,6 +11,7 @@ import {
 import { getEvmSignerForKey } from "@wormhole-foundation/sdk-evm";
 import { getSolanaSigner } from "@wormhole-foundation/sdk-solana";
 import { getSuiSigner } from "@wormhole-foundation/sdk-sui";
+import { getAptosSigner } from "@wormhole-foundation/sdk-aptos";
 
 function getEnv(key: string): string {
   // If we're in the browser, return empty string
@@ -18,10 +19,7 @@ function getEnv(key: string): string {
 
   // Otherwise, return the env var or error
   const val = process.env[key];
-  if (!val)
-    throw new Error(
-      `Missing env var ${key}, did you forget to set values in '.env'?`
-    );
+  if (!val) throw new Error(`Missing env var ${key}`);
 
   return val;
 }
@@ -54,6 +52,12 @@ export async function getStuff<N extends Network, C extends Chain>(
       signer = await getSuiSigner(
         await chain.getRpc(),
         getEnv("SUI_PRIVATE_KEY")
+      );
+      break;
+    case "Aptos":
+      signer = await getAptosSigner(
+        await chain.getRpc(),
+        getEnv("APTOS_PRIVATE_KEY")
       );
       break;
     default:

@@ -39,12 +39,7 @@ import {
 } from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
 import { CCTPW7Executor } from "./types";
-import {
-  gasLimits,
-  REFERRER_FEE_DBPS,
-  referrers,
-  SOLANA_MSG_VALUE_BASE_FEE,
-} from "./consts";
+import { gasLimits, referrers, SOLANA_MSG_VALUE_BASE_FEE } from "./consts";
 import { Connection } from "@solana/web3.js";
 import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
 
@@ -83,6 +78,7 @@ export type QuoteDetails = {
   referrer: ChainAddress; // The referrer address (to whom the referrer fee should be paid)
   referrerFee: bigint; // The referrer fee in USDC
   remainingAmount: bigint; // The remaining amount after the referrer fee in USDC
+  referrerFeeDbps: bigint; // The referrer fee in *tenths* of basis points
 };
 
 type Q = routes.Quote<Op, Vp, QuoteDetails>;
@@ -98,11 +94,39 @@ type R = routes.Receipt<AT>;
 // cache it here to avoid fetching it from the Solana RPC
 let ataMinRentAmount: bigint | undefined = undefined;
 
+export namespace CCTPW7ExecutorRoute {
+  export type Config = {
+    // Referrer Fee in *tenths* of basis points
+    // e.g. 10 = 1 basis point (0.01%)
+    referrerFeeDbps: bigint;
+  };
+}
+
+// Use this function to create a new CCTPW7ExecutorRoute with custom config
+export function cctpW7ExecutorRoute(config: CCTPW7ExecutorRoute.Config) {
+  if (config.referrerFeeDbps < 0 || config.referrerFeeDbps > 65535n) {
+    throw new Error("Referrer fee must be between 0 and 65535");
+  }
+  class CCTPW7ExecutorRouteImpl<
+    N extends Network
+  > extends CCTPW7ExecutorRoute<N> {
+    static override config = config;
+  }
+
+  return CCTPW7ExecutorRouteImpl;
+}
+
 export class CCTPW7ExecutorRoute<N extends Network>
   extends routes.AutomaticRoute<N, Op, Vp, R>
   implements routes.StaticRouteMethods<typeof CCTPW7ExecutorRoute>
 {
   static NATIVE_GAS_DROPOFF_SUPPORTED = true;
+
+  // @ts-ignore
+  // Since we set the config on the static class, access it with this param
+  // the CCTPW7ExecutorRoute.config will always be empty
+  readonly staticConfig = this.constructor.config;
+  static config: CCTPW7ExecutorRoute.Config = { referrerFeeDbps: 0n };
 
   static meta = {
     name: "CCTPW7ExecutorRoute",
@@ -211,10 +235,11 @@ export class CCTPW7ExecutorRoute<N extends Network>
       };
     }
     const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
+    const referrerFeeDbps = this.staticConfig.referrerFeeDbps;
 
     const { referrerFee, remainingAmount } = calculateReferrerFee(
       amount.units(params.normalizedParams.amount),
-      REFERRER_FEE_DBPS
+      this.staticConfig.referrerFeeDbps
     );
     if (remainingAmount <= 0n) {
       return {
@@ -350,6 +375,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       referrer,
       referrerFee,
       remainingAmount,
+      referrerFeeDbps,
     };
 
     const [srcNativeDecimals, dstNativeDecimals] = await Promise.all([
