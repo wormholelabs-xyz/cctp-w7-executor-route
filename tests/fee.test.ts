@@ -1,3 +1,4 @@
+import { cctpW7ExecutorRoute } from "../src";
 import { calculateReferrerFee } from "../src/utils";
 
 describe("calculateReferrerFee", () => {
@@ -44,5 +45,10 @@ describe("calculateReferrerFee", () => {
 
     expect(result.referrerFee).toBe(0n);
     expect(result.remainingAmount).toBe(0n);
+  });
+
+  it("fee should be between 0 and 65535", () => {
+    expect(() => cctpW7ExecutorRoute({ referrerFeeDbps: -1n })).toThrow();
+    expect(() => cctpW7ExecutorRoute({ referrerFeeDbps: 65_536n })).toThrow();
   });
 });
