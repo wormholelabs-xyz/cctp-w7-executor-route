@@ -23,7 +23,7 @@ import {
 import type { Provider, TransactionRequest } from "ethers";
 import { Contract } from "ethers";
 import { CCTPW7Executor } from "../types";
-import { REFERRER_FEE_DBPS, shimContracts } from "../consts";
+import { shimContracts } from "../consts";
 import { QuoteDetails } from "..";
 
 export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
@@ -117,7 +117,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
         instructions: details.relayInstructions,
       },
       {
-        dbps: REFERRER_FEE_DBPS,
+        dbps: details.referrerFeeDbps,
         payee: details.referrer.address.toString(),
       }
     );

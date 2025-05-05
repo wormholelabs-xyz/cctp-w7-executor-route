@@ -22,7 +22,7 @@ import {
   AptosUnsignedTransaction,
 } from "@wormhole-foundation/sdk-aptos";
 import { CCTPW7Executor } from "../types";
-import { REFERRER_FEE_DBPS, shimContracts } from "../consts";
+import { shimContracts } from "../consts";
 import { QuoteDetails } from "..";
 
 export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
@@ -104,7 +104,7 @@ export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
       refundAddr,
       details.signedQuote,
       details.relayInstructions,
-      REFERRER_FEE_DBPS,
+      details.referrerFeeDbps,
       payee,
     ];
 

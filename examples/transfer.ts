@@ -2,9 +2,10 @@ import { Wormhole, circle, routes } from "@wormhole-foundation/sdk-connect";
 import { EvmPlatform } from "@wormhole-foundation/sdk-evm";
 import { SolanaPlatform } from "@wormhole-foundation/sdk-solana";
 import { SuiPlatform } from "@wormhole-foundation/sdk-sui";
+import { AptosPlatform } from "@wormhole-foundation/sdk-aptos";
 
 import { getStuff } from "./utils";
-import { CCTPW7ExecutorRoute } from "../src";
+import { cctpW7ExecutorRoute, CCTPW7ExecutorRoute } from "../src";
 
 (async function () {
   // Setup
@@ -12,6 +13,7 @@ import { CCTPW7ExecutorRoute } from "../src";
     EvmPlatform,
     SolanaPlatform,
     SuiPlatform,
+    AptosPlatform,
   ]);
 
   const sendChain = wh.getChain("Avalanche");
@@ -28,7 +30,9 @@ import { CCTPW7ExecutorRoute } from "../src";
   );
 
   // Create a new Wormhole route resolver, adding the Mayan route to the default list
-  const resolver = wh.resolver([CCTPW7ExecutorRoute]);
+  const referrerFeeDbps = 10n;
+  const route = cctpW7ExecutorRoute({ referrerFeeDbps });
+  const resolver = wh.resolver([route]);
 
   //const dstTokens = await resolver.supportedDestinationTokens(
   //  source,
