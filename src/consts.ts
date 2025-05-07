@@ -30,7 +30,7 @@ export const suiExecutorIds: Partial<Record<Network, SuiExecutorIds>> = {
 
 // Solana Executor Program IDs
 export const solanaExecutorId: Partial<Record<Network, string>> = {
-  Testnet: "Ax7mtQPbNPQmghd7C3BHrMdwwmkAXBDq7kNGfXNcc7dg",
+  Testnet: "execXUrAsMnqMmTHj5m7N1YQgsDz3cwGLYCYyuDRciV",
 };
 
 // cost of 1 signature + rounding error on priority fee
