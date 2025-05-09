@@ -2,6 +2,7 @@ import { Chain, Network } from "@wormhole-foundation/sdk-connect";
 
 export const apiBaseUrl: Partial<Record<Network, string>> = {
   Testnet: "https://executor-testnet.labsapis.com",
+  Mainnet: "https://executor.labsapis.com",
 };
 
 // Shim Contract Addresses (e.g. CCTPv1WithExecutor.sol)
