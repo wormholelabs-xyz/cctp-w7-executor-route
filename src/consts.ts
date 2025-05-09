@@ -23,7 +23,8 @@ export const shimContracts: Partial<
     Ethereum: "0xeEFb36c4458dA7798742cf038C5c27E07aB9c51E",
     Optimism: "0xBC6f9d1CBa49DB365728478cefa02F6743617637",
     Polygon:"0x007995f2AEcfBC745f20a7AE8D3a02c0EbF46264",
-    Unichain: "0xA7aBDb8f2108901c586543BD5e10E4fA263F4A47"
+    Unichain: "0xA7aBDb8f2108901c586543BD5e10E4fA263F4A47",
+    Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
   }
 };
 
@@ -45,7 +46,7 @@ export const suiExecutorIds: Partial<Record<Network, SuiExecutorIds>> = {
 // Solana Executor Program IDs
 export const solanaExecutorId: Partial<Record<Network, string>> = {
   Testnet: "execXUrAsMnqMmTHj5m7N1YQgsDz3cwGLYCYyuDRciV",
-  Mainnet: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs"
+  Mainnet: "execXUrAsMnqMmTHj5m7N1YQgsDz3cwGLYCYyuDRciV"
 };
 
 // cost of 1 signature + rounding error on priority fee
