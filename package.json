@@ -1,7 +1,6 @@
 {
   "name": "@wormhole-labs/cctp-w7-executor-route",
   "version": "0.0.1",
-  "private": true,
   "license": "Apache-2.0",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -28,14 +27,14 @@
     "test": "vitest"
   },
   "peerDependencies": {
-    "@wormhole-foundation/sdk-aptos": "^1.16.1",
-    "@wormhole-foundation/sdk-connect": "^1.16.1",
-    "@wormhole-foundation/sdk-evm": "^1.16.1",
-    "@wormhole-foundation/sdk-solana": "^1.16.1",
-    "@wormhole-foundation/sdk-solana-cctp": "^1.16.1",
-    "@wormhole-foundation/sdk-sui": "^1.16.1",
-    "@wormhole-foundation/sdk-sui-cctp": "^1.16.1"
-  },
+    "@wormhole-foundation/sdk-aptos": "^1.17.0",
+    "@wormhole-foundation/sdk-connect": "^1.17.0",
+    "@wormhole-foundation/sdk-evm": "^1.17.0",
+    "@wormhole-foundation/sdk-solana": "^1.17.0",
+    "@wormhole-foundation/sdk-solana-cctp": "^1.17.0",
+    "@wormhole-foundation/sdk-sui": "^1.17.0",
+    "@wormhole-foundation/sdk-sui-cctp": "^1.17.0"
+},
   "devDependencies": {
     "@types/node": "^20.11.6",
     "tsx": "^4.7.0",
