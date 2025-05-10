@@ -40,7 +40,7 @@ export const suiExecutorIds: Partial<Record<Network, SuiExecutorIds>> = {
   },
   Mainnet: {
     executorId: "0xdb0fe8bb1e2b5be628adbea0636063325073e1070ee11e4281457dfd7f158235",
-    executorRequestsId: "0xc030df7a3eed1494fa4b64aa8ab63a79041cf1114f4ff2b7ab5aca1c684a21a7 ",
+    executorRequestsId: "0xc030df7a3eed1494fa4b64aa8ab63a79041cf1114f4ff2b7ab5aca1c684a21a7",
   }
 };
 
