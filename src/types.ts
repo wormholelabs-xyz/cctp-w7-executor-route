@@ -5,7 +5,7 @@ import {
   UnsignedTransaction,
   Network,
 } from "@wormhole-foundation/sdk-connect";
-import { QuoteDetails } from ".";
+import { QuoteDetails } from "./index.js";
 
 export interface CCTPW7Executor<
   N extends Network = Network,

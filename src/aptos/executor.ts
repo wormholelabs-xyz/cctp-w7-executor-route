@@ -21,9 +21,9 @@ import {
   AptosPlatform,
   AptosUnsignedTransaction,
 } from "@wormhole-foundation/sdk-aptos";
-import { CCTPW7Executor } from "../types";
-import { shimContracts } from "../consts";
-import { QuoteDetails } from "..";
+import { CCTPW7Executor } from "../types.js";
+import { shimContracts } from "../consts.js";
+import { QuoteDetails } from "../index.js";
 
 export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
   implements CCTPW7Executor<N, C>

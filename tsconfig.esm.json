@@ -4,6 +4,8 @@
   "compilerOptions": {
     "target": "es2022",
     "outDir": "dist/esm",
-    "rootDir": "src"
+    "rootDir": "src",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
   }
 }

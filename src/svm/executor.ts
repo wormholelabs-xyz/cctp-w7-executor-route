@@ -19,22 +19,30 @@ import {
   SolanaPlatform,
   SolanaUnsignedTransaction,
 } from "@wormhole-foundation/sdk-solana";
-import { CCTPW7Executor } from "../types";
-import { shimContracts, solanaExecutorId } from "../consts";
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { QuoteDetails } from "..";
+import { CCTPW7Executor } from "../types.js";
+import { shimContracts, solanaExecutorId } from "../consts.js";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
+import { QuoteDetails } from "../index.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { createDepositForBurnInstruction } from "@wormhole-foundation/sdk-solana-cctp";
-import { BN, Program } from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
 import {
   ExampleCctpWithExecutor,
   ExampleCctpWithExecutorIdl,
-} from "./idl/example_cctp_with_executor";
-import { signedQuoteLayout } from "../layouts";
+} from "./idl/example_cctp_with_executor.js";
+import { signedQuoteLayout } from "../layouts/index.js";
+import { BN } from "bn.js";
 
 export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
   implements CCTPW7Executor<N, C>
@@ -107,8 +115,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
     const senderAta = getAssociatedTokenAddressSync(usdc, senderPk);
     const referrer = new SolanaAddress(details.referrer.address).unwrap();
 
-    const transaction = new Transaction();
-    transaction.feePayer = senderPk;
+    const instructions: TransactionInstruction[] = [];
 
     if (details.referrerFee > 0n) {
       const referrerAta = getAssociatedTokenAddressSync(usdc, referrer);
@@ -116,7 +123,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
         referrerAta
       );
       if (!referrerAtaAccount) {
-        transaction.add(
+        instructions.push(
           createAssociatedTokenAccountIdempotentInstruction(
             senderPk,
             referrerAta,
@@ -125,7 +132,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
           )
         );
       }
-      transaction.add(
+      instructions.push(
         createTransferInstruction(
           senderAta,
           referrerAta,
@@ -143,7 +150,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
 
     const msgSendEvent = Keypair.generate();
 
-    transaction.add(
+    instructions.push(
       await createDepositForBurnInstruction(
         this.messageTransmitterProgramId,
         this.tokenMessengerProgramId,
@@ -173,7 +180,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
       this.messageTransmitterProgramId
     );
 
-    transaction.add(
+    instructions.push(
       await shimProgram.methods
         .relayLastMessage({
           execAmount: new BN(details.estimatedCost.toString()),
@@ -189,6 +196,15 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
         })
         .instruction()
     );
+
+    const message = new TransactionMessage({
+      payerKey: senderPk,
+      recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
+      instructions,
+    });
+
+    const messageV0 = message.compileToV0Message();
+    const transaction = new VersionedTransaction(messageV0);
 
     yield this.createUnsignedTx(
       { transaction, signers: [msgSendEvent] },

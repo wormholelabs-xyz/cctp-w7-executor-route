@@ -18,9 +18,9 @@ import {
   SuiUnsignedTransaction,
 } from "@wormhole-foundation/sdk-sui";
 import { SuiPlatform } from "@wormhole-foundation/sdk-sui";
-import { CCTPW7Executor } from "../types";
-import { suiExecutorIds } from "../consts";
-import { QuoteDetails } from "..";
+import { CCTPW7Executor } from "../types.js";
+import { suiExecutorIds } from "../consts.js";
+import { QuoteDetails } from "../index.js";
 import { suiCircleObjects } from "@wormhole-foundation/sdk-sui-cctp";
 
 export class SuiCCTPW7Executor<N extends Network, C extends SuiChains>

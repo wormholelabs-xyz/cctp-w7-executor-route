@@ -22,9 +22,9 @@ import {
 } from "@wormhole-foundation/sdk-evm";
 import type { Provider, TransactionRequest } from "ethers";
 import { Contract } from "ethers";
-import { CCTPW7Executor } from "../types";
-import { shimContracts } from "../consts";
-import { QuoteDetails } from "..";
+import { CCTPW7Executor } from "../types.js";
+import { shimContracts } from "../consts.js";
+import { QuoteDetails } from "../index.js";
 
 export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
   implements CCTPW7Executor<N, C>

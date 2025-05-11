@@ -10,7 +10,6 @@ import {
   toChainId,
 } from "@wormhole-foundation/sdk-base";
 import {
-  EmptyPlatformMap,
   isSameToken,
   nativeTokenId,
   UniversalAddress,
@@ -35,19 +34,20 @@ import {
   fetchCapabilities,
   fetchSignedQuote,
   fetchStatus as fetchTxStatus,
+  getExecutor,
   RelayStatus,
-} from "./utils";
-import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
-import { CCTPW7Executor } from "./types";
-import { gasLimits, referrers, SOLANA_MSG_VALUE_BASE_FEE } from "./consts";
+} from "./utils.js";
+import { relayInstructionsLayout, signedQuoteLayout } from "./layouts/index.js";
+import { gasLimits, referrers, SOLANA_MSG_VALUE_BASE_FEE } from "./consts.js";
 import { Connection } from "@solana/web3.js";
 import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
 
-// IMPORTANT: register the platform specific implementations of the protocol
-import "./aptos/index.js";
-import "./evm/index.js";
-import "./sui/index.js";
-import "./svm/index.js";
+// register platform addresses
+import "@wormhole-foundation/sdk-aptos/address";
+import "@wormhole-foundation/sdk-evm/address";
+import "@wormhole-foundation/sdk-solana/address";
+import "@wormhole-foundation/sdk-sui/address";
+
 
 export namespace CCTPW7ExecutorRoute {
   export type Options = {
@@ -433,7 +433,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       }
     });
 
-    const executor = await request.fromChain.getProtocol("CCTPW7Executor");
+    const executor = await getExecutor(request.fromChain);
     const sender = Wormhole.parseAddress(signer.chain(), signer.address());
 
     // When transferring to Solana, the recipient address is the ATA for CCTP transfers
@@ -529,16 +529,5 @@ export class CCTPW7ExecutorRoute<N extends Network>
     }
 
     return receipt;
-  }
-}
-
-declare module "@wormhole-foundation/sdk-definitions" {
-  export namespace WormholeRegistry {
-    interface ProtocolToInterfaceMapping<N, C> {
-      CCTPW7Executor: CCTPW7Executor<N, C>;
-    }
-    interface ProtocolToPlatformMapping {
-      CCTPW7Executor: EmptyPlatformMap<"CCTPW7Executor">;
-    }
   }
 }

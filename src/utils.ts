@@ -1,7 +1,14 @@
-import { Chain, Network, toChainId } from "@wormhole-foundation/sdk-base";
-import { RequestPrefix, SignedQuote } from "./layouts";
+import {
+  Chain,
+  chainToPlatform,
+  Network,
+  toChainId,
+} from "@wormhole-foundation/sdk-base";
+import { RequestPrefix, SignedQuote } from "./layouts/index.js";
 import axios from "axios";
-import { apiBaseUrl } from "./consts";
+import { apiBaseUrl } from "./consts.js";
+import { ChainContext } from "@wormhole-foundation/sdk-connect";
+import { CCTPW7Executor } from "./types.js";
 
 export enum RelayStatus {
   Pending = "pending",
@@ -131,4 +138,33 @@ export function calculateReferrerFee(
     return { referrerFee, remainingAmount };
   }
   return { referrerFee: 0n, remainingAmount: amount };
+}
+
+export async function getExecutor<N extends Network>(
+  chain: ChainContext<N>
+): Promise<CCTPW7Executor> {
+  const platform = chainToPlatform(chain.chain);
+  const rpc = await chain.getRpc();
+  const { config } = chain.platform;
+
+  switch (platform) {
+    case "Evm":
+      const { EvmCCTPW7Executor } = await import("./evm/index.js");
+      return EvmCCTPW7Executor.fromRpc(rpc, config);
+
+    case "Solana":
+      const { SvmCCTPW7Executor } = await import("./svm/index.js");
+      return SvmCCTPW7Executor.fromRpc(rpc, config);
+
+    case "Aptos":
+      const { AptosCCTPW7Executor } = await import("./aptos/index.js");
+      return AptosCCTPW7Executor.fromRpc(rpc, config);
+
+    case "Sui":
+      const { SuiCCTPW7Executor } = await import("./sui/index.js");
+      return SuiCCTPW7Executor.fromRpc(rpc, config);
+
+    default:
+      throw new Error(`Unsupported platform: ${platform}`);
+  }
 }
