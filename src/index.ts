@@ -457,14 +457,18 @@ export class CCTPW7ExecutorRoute<N extends Network>
     // Status the transfer immediately before returning
     let statusAttempts = 0;
     while (statusAttempts < 10) {
-      const [txStatus] = await fetchTxStatus(
-        this.wh.network,
-        txids.at(-1)!.txid,
-        request.fromChain.chain,
-      );
+      try {
+        const [txStatus] = await fetchTxStatus(
+          this.wh.network,
+          txids.at(-1)!.txid,
+          request.fromChain.chain,
+        );
 
-      if (txStatus) {
-        break;
+        if (txStatus) {
+          break;
+        }
+      } catch (_) {
+        // is ok we just try again!
       }
       statusAttempts++;
       await sleep(2_000);
