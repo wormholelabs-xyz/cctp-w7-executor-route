@@ -36,6 +36,7 @@ import {
   fetchSignedQuote,
   fetchStatus as fetchTxStatus,
   RelayStatus,
+  sleep,
 } from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
 import { CCTPW7Executor } from "./types";
@@ -452,6 +453,22 @@ export class CCTPW7ExecutorRoute<N extends Network>
     const xfer = await executor.transfer(sender, cctpRecipient, quote.details);
 
     const txids = await signSendWait(request.fromChain, xfer, signer);
+
+    // Status the transfer immediately before returning
+    let statusAttempts = 0;
+    while (statusAttempts < 10) {
+      const [txStatus] = await fetchTxStatus(
+        this.wh.network,
+        txids.at(-1)!.txid,
+        request.fromChain.chain,
+      );
+
+      if (txStatus) {
+        break;
+      }
+      statusAttempts++;
+      await sleep(2_000);
+    }
 
     return {
       from: request.fromChain.chain,
