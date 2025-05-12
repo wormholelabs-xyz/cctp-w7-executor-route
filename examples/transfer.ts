@@ -5,7 +5,7 @@ import { SuiPlatform } from "@wormhole-foundation/sdk-sui";
 import { AptosPlatform } from "@wormhole-foundation/sdk-aptos";
 
 import { getStuff } from "./utils";
-import { cctpW7ExecutorRoute, CCTPW7ExecutorRoute } from "../src";
+import { cctpW7ExecutorRoute } from "../src";
 
 (async function () {
   // Setup
