@@ -19,7 +19,7 @@ import {
   SolanaPlatform,
   SolanaUnsignedTransaction,
 } from "@wormhole-foundation/sdk-solana";
-import { CCTPW7Executor } from "../types";
+import { CCTPExecutor } from "../types";
 import { shimContracts, solanaExecutorId } from "../consts";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { QuoteDetails } from "..";
@@ -36,8 +36,8 @@ import {
 } from "./idl/example_cctp_with_executor";
 import { signedQuoteLayout } from "../layouts";
 
-export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
-  implements CCTPW7Executor<N, C>
+export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
+  implements CCTPExecutor<N, C>
 {
   readonly tokenMessengerProgramId: PublicKey;
   readonly messageTransmitterProgramId: PublicKey;
@@ -52,7 +52,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
     readonly contracts: Contracts
   ) {
     if (network === "Devnet")
-      throw new Error("CCTPW7Executor not supported on Devnet");
+      throw new Error("CCTPExecutor not supported on Devnet");
 
     const getContractAddress = (
       contract: string | undefined,
@@ -86,12 +86,12 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
   static async fromRpc<N extends Network>(
     provider: Connection,
     config: ChainsConfig<N, Platform>
-  ): Promise<SvmCCTPW7Executor<N, SolanaChains>> {
+  ): Promise<SvmCCTPExecutor<N, SolanaChains>> {
     const [network, chain] = await SolanaPlatform.chainFromRpc(provider);
     const conf = config[chain]!;
     if (conf.network !== network)
       throw new Error(`Network mismatch: ${conf.network} != ${network}`);
-    return new SvmCCTPW7Executor(network as N, chain, provider, conf.contracts);
+    return new SvmCCTPExecutor(network as N, chain, provider, conf.contracts);
   }
 
   async *transfer(
@@ -192,7 +192,7 @@ export class SvmCCTPW7Executor<N extends Network, C extends SolanaChains>
 
     yield this.createUnsignedTx(
       { transaction, signers: [msgSendEvent] },
-      "SvmCCTPW7Executor.Transfer"
+      "SvmCCTPExecutor.Transfer"
     );
   }
 

@@ -21,12 +21,12 @@ import {
   AptosPlatform,
   AptosUnsignedTransaction,
 } from "@wormhole-foundation/sdk-aptos";
-import { CCTPW7Executor } from "../types";
+import { CCTPExecutor } from "../types";
 import { shimContracts } from "../consts";
 import { QuoteDetails } from "..";
 
-export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
-  implements CCTPW7Executor<N, C>
+export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
+  implements CCTPExecutor<N, C>
 {
   readonly usdcId: string;
   readonly shimContract: string;
@@ -38,7 +38,7 @@ export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
     readonly contracts: Contracts
   ) {
     if (network === "Devnet")
-      throw new Error("CCTPW7Executor not supported on Devnet");
+      throw new Error("CCTPExecutor not supported on Devnet");
 
     const usdcId = circle.usdcContract.get(this.network, this.chain);
     if (!usdcId) {
@@ -56,7 +56,7 @@ export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
   static async fromRpc<N extends Network>(
     provider: Aptos,
     config: ChainsConfig<N, Platform>
-  ): Promise<AptosCCTPW7Executor<N, AptosChains>> {
+  ): Promise<AptosCCTPExecutor<N, AptosChains>> {
     const [network, chain] = await AptosPlatform.chainFromRpc(provider);
 
     const conf = config[chain];
@@ -64,12 +64,7 @@ export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
     if (conf.network !== network)
       throw new Error(`Network mismatch: ${conf.network} != ${network}`);
 
-    return new AptosCCTPW7Executor(
-      network as N,
-      chain,
-      provider,
-      conf.contracts
-    );
+    return new AptosCCTPExecutor(network as N, chain, provider, conf.contracts);
   }
 
   async *transfer(
@@ -113,7 +108,7 @@ export class AptosCCTPW7Executor<N extends Network, C extends AptosChains>
       functionArguments,
     };
 
-    yield this.createUnsignedTx(tx, "AtposCCTPW7Executor.Transfer");
+    yield this.createUnsignedTx(tx, "AtposCCTPExecutor.Transfer");
   }
 
   private createUnsignedTx(
