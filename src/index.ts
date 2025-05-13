@@ -36,6 +36,7 @@ import {
   fetchSignedQuote,
   fetchStatus as fetchTxStatus,
   RelayStatus,
+  sleep,
 } from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
 import { CCTPW7Executor } from "./types";
@@ -452,6 +453,34 @@ export class CCTPW7ExecutorRoute<N extends Network>
     const xfer = await executor.transfer(sender, cctpRecipient, quote.details);
 
     const txids = await signSendWait(request.fromChain, xfer, signer);
+
+    // Status the transfer immediately before returning
+    let statusAttempts = 0;
+
+    const statusTransferImmediately = async () => {
+      while (statusAttempts < 20) {
+        try {
+          const [txStatus] = await fetchTxStatus(
+            this.wh.network,
+            txids.at(-1)!.txid,
+            request.fromChain.chain,
+          );
+
+          if (txStatus) {
+            break;
+          }
+        } catch (_) {
+          // is ok we just try again!
+        }
+        statusAttempts++;
+        await sleep(2_000);
+      }
+    };
+
+    // Spawn a loop in the background that will status this transfer until
+    // the API gives a successful response. We don't await the result
+    // here because we don't need it for the return value.
+    statusTransferImmediately();
 
     return {
       from: request.fromChain.chain,

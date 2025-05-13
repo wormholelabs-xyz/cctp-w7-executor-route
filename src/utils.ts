@@ -132,3 +132,7 @@ export function calculateReferrerFee(
   }
   return { referrerFee: 0n, remainingAmount: amount };
 }
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
