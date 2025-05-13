@@ -1,4 +1,4 @@
-# CCTP W7 Executor Route
+# CCTP Executor Route
 
 ## Transfer Example
 

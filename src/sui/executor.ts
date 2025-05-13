@@ -18,13 +18,13 @@ import {
   SuiUnsignedTransaction,
 } from "@wormhole-foundation/sdk-sui";
 import { SuiPlatform } from "@wormhole-foundation/sdk-sui";
-import { CCTPW7Executor } from "../types";
+import { CCTPExecutor } from "../types";
 import { suiExecutorIds } from "../consts";
 import { QuoteDetails } from "..";
 import { suiCircleObjects } from "@wormhole-foundation/sdk-sui-cctp";
 
-export class SuiCCTPW7Executor<N extends Network, C extends SuiChains>
-  implements CCTPW7Executor<N, C>
+export class SuiCCTPExecutor<N extends Network, C extends SuiChains>
+  implements CCTPExecutor<N, C>
 {
   readonly usdcId: string;
   readonly usdcTreasuryId: string;
@@ -43,7 +43,7 @@ export class SuiCCTPW7Executor<N extends Network, C extends SuiChains>
     readonly contracts: Contracts
   ) {
     if (network === "Devnet")
-      throw new Error("CCTPW7Executor not supported on Devnet");
+      throw new Error("CCTPExecutor not supported on Devnet");
 
     const getContractAddress = (
       contract: string | undefined,
@@ -92,12 +92,12 @@ export class SuiCCTPW7Executor<N extends Network, C extends SuiChains>
   static async fromRpc<N extends Network>(
     provider: SuiClient,
     config: ChainsConfig<N, Platform>
-  ): Promise<SuiCCTPW7Executor<N, SuiChains>> {
+  ): Promise<SuiCCTPExecutor<N, SuiChains>> {
     const [network, chain] = await SuiPlatform.chainFromRpc(provider);
     const conf = config[chain]!;
     if (conf.network !== network)
       throw new Error(`Network mismatch: ${conf.network} != ${network}`);
-    return new SuiCCTPW7Executor(network as N, chain, provider, conf.contracts);
+    return new SuiCCTPExecutor(network as N, chain, provider, conf.contracts);
   }
 
   async *transfer(
@@ -193,7 +193,7 @@ export class SuiCCTPW7Executor<N extends Network, C extends SuiChains>
       ],
     });
 
-    yield this.createUnsignedTx(tx, "SuiCCTPW7Executor.Transfer");
+    yield this.createUnsignedTx(tx, "SuiCCTPExecutor.Transfer");
   }
 
   private createUnsignedTx(

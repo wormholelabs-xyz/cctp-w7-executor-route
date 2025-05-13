@@ -5,7 +5,7 @@ import { SuiPlatform } from "@wormhole-foundation/sdk-sui";
 import { AptosPlatform } from "@wormhole-foundation/sdk-aptos";
 
 import { getStuff } from "./utils";
-import { cctpW7ExecutorRoute } from "../src";
+import { cctpExecutorRoute } from "../src";
 
 (async function () {
   // Setup
@@ -31,7 +31,7 @@ import { cctpW7ExecutorRoute } from "../src";
 
   // Create a new Wormhole route resolver, adding the Mayan route to the default list
   const referrerFeeDbps = 10n;
-  const route = cctpW7ExecutorRoute({ referrerFeeDbps });
+  const route = cctpExecutorRoute({ referrerFeeDbps });
   const resolver = wh.resolver([route]);
 
   //const dstTokens = await resolver.supportedDestinationTokens(

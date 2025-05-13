@@ -7,7 +7,7 @@ import {
 } from "@wormhole-foundation/sdk-connect";
 import { QuoteDetails } from ".";
 
-export interface CCTPW7Executor<
+export interface CCTPExecutor<
   N extends Network = Network,
   C extends Chain = Chain
 > {

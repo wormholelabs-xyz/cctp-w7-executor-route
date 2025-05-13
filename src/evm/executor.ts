@@ -22,12 +22,12 @@ import {
 } from "@wormhole-foundation/sdk-evm";
 import type { Provider, TransactionRequest } from "ethers";
 import { Contract } from "ethers";
-import { CCTPW7Executor } from "../types";
+import { CCTPExecutor } from "../types";
 import { shimContracts } from "../consts";
 import { QuoteDetails } from "..";
 
-export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
-  implements CCTPW7Executor<N, C>
+export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
+  implements CCTPExecutor<N, C>
 {
   readonly chainId: bigint;
   readonly shimContract: string;
@@ -39,7 +39,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
     readonly contracts: Contracts
   ) {
     if (network === "Devnet")
-      throw new Error("CCTPW7Executor not supported on Devnet");
+      throw new Error("CCTPExecutor not supported on Devnet");
 
     this.chainId = nativeChainIds.networkChainToNativeChainId.get(
       network,
@@ -54,12 +54,12 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
   static async fromRpc<N extends Network>(
     provider: Provider,
     config: ChainsConfig<N, Platform>
-  ): Promise<EvmCCTPW7Executor<N, EvmChains>> {
+  ): Promise<EvmCCTPExecutor<N, EvmChains>> {
     const [network, chain] = await EvmPlatform.chainFromRpc(provider);
     const conf = config[chain]!;
     if (conf.network !== network)
       throw new Error(`Network mismatch: ${conf.network} != ${network}`);
-    return new EvmCCTPW7Executor(network as N, chain, provider, conf.contracts);
+    return new EvmCCTPExecutor(network as N, chain, provider, conf.contracts);
   }
 
   async *transfer(
@@ -93,7 +93,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
       );
       yield this.createUnsignedTx(
         addFrom(txReq, senderAddress),
-        "ERC20.approve of EvmCCTPW7Executor",
+        "ERC20.approve of EvmCCTPExecutor",
         false
       );
     }
@@ -125,7 +125,7 @@ export class EvmCCTPW7Executor<N extends Network, C extends EvmChains>
 
     yield this.createUnsignedTx(
       addFrom(txReq, senderAddress),
-      "EvmCCTPW7Executor.depositForBurn"
+      "EvmCCTPExecutor.depositForBurn"
     );
   }
 

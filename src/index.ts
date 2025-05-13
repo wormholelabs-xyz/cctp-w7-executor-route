@@ -39,7 +39,7 @@ import {
   sleep,
 } from "./utils";
 import { relayInstructionsLayout, signedQuoteLayout } from "./layouts";
-import { CCTPW7Executor } from "./types";
+import { CCTPExecutor } from "./types";
 import { gasLimits, referrers, SOLANA_MSG_VALUE_BASE_FEE } from "./consts";
 import { Connection } from "@solana/web3.js";
 import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
@@ -50,7 +50,7 @@ import "./evm/index.js";
 import "./sui/index.js";
 import "./svm/index.js";
 
-export namespace CCTPW7ExecutorRoute {
+export namespace CCTPExecutorRoute {
   export type Options = {
     // 0.0 - 1.0 percentage
     nativeGas?: number;
@@ -66,8 +66,8 @@ export namespace CCTPW7ExecutorRoute {
   }
 }
 
-type Op = CCTPW7ExecutorRoute.Options;
-type Vp = CCTPW7ExecutorRoute.ValidatedParams;
+type Op = CCTPExecutorRoute.Options;
+type Vp = CCTPExecutorRoute.ValidatedParams;
 
 type Tp = routes.TransferParams<Op>;
 type Vr = routes.ValidationResult<Op>;
@@ -95,7 +95,7 @@ type R = routes.Receipt<AT>;
 // cache it here to avoid fetching it from the Solana RPC
 let ataMinRentAmount: bigint | undefined = undefined;
 
-export namespace CCTPW7ExecutorRoute {
+export namespace CCTPExecutorRoute {
   export type Config = {
     // Referrer Fee in *tenths* of basis points
     // e.g. 10 = 1 basis point (0.01%)
@@ -103,34 +103,32 @@ export namespace CCTPW7ExecutorRoute {
   };
 }
 
-// Use this function to create a new CCTPW7ExecutorRoute with custom config
-export function cctpW7ExecutorRoute(config: CCTPW7ExecutorRoute.Config) {
+// Use this function to create a new CCTPExecutorRoute with custom config
+export function cctpExecutorRoute(config: CCTPExecutorRoute.Config) {
   if (config.referrerFeeDbps < 0 || config.referrerFeeDbps > 65535n) {
     throw new Error("Referrer fee must be between 0 and 65535");
   }
-  class CCTPW7ExecutorRouteImpl<
-    N extends Network
-  > extends CCTPW7ExecutorRoute<N> {
+  class CCTPExecutorRouteImpl<N extends Network> extends CCTPExecutorRoute<N> {
     static override config = config;
   }
 
-  return CCTPW7ExecutorRouteImpl;
+  return CCTPExecutorRouteImpl;
 }
 
-export class CCTPW7ExecutorRoute<N extends Network>
+export class CCTPExecutorRoute<N extends Network>
   extends routes.AutomaticRoute<N, Op, Vp, R>
-  implements routes.StaticRouteMethods<typeof CCTPW7ExecutorRoute>
+  implements routes.StaticRouteMethods<typeof CCTPExecutorRoute>
 {
   static NATIVE_GAS_DROPOFF_SUPPORTED = true;
 
   // @ts-ignore
   // Since we set the config on the static class, access it with this param
-  // the CCTPW7ExecutorRoute.config will always be empty
+  // the CCTPExecutorRoute.config will always be empty
   readonly staticConfig = this.constructor.config;
-  static config: CCTPW7ExecutorRoute.Config = { referrerFeeDbps: 0n };
+  static config: CCTPExecutorRoute.Config = { referrerFeeDbps: 0n };
 
   static meta = {
-    name: "CCTPW7ExecutorRoute",
+    name: "CCTPExecutorRoute",
     provider: "Circle",
   };
 
@@ -434,7 +432,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
       }
     });
 
-    const executor = await request.fromChain.getProtocol("CCTPW7Executor");
+    const executor = await request.fromChain.getProtocol("CCTPExecutor");
     const sender = Wormhole.parseAddress(signer.chain(), signer.address());
 
     // When transferring to Solana, the recipient address is the ATA for CCTP transfers
@@ -463,7 +461,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
           const [txStatus] = await fetchTxStatus(
             this.wh.network,
             txids.at(-1)!.txid,
-            request.fromChain.chain,
+            request.fromChain.chain
           );
 
           if (txStatus) {
@@ -564,10 +562,10 @@ export class CCTPW7ExecutorRoute<N extends Network>
 declare module "@wormhole-foundation/sdk-definitions" {
   export namespace WormholeRegistry {
     interface ProtocolToInterfaceMapping<N, C> {
-      CCTPW7Executor: CCTPW7Executor<N, C>;
+      CCTPExecutor: CCTPExecutor<N, C>;
     }
     interface ProtocolToPlatformMapping {
-      CCTPW7Executor: EmptyPlatformMap<"CCTPW7Executor">;
+      CCTPExecutor: EmptyPlatformMap<"CCTPExecutor">;
     }
   }
 }
