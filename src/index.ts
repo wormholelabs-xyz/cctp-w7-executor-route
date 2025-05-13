@@ -106,7 +106,7 @@ export class CCTPW7ExecutorRoute<N extends Network>
 
   static meta = {
     name: "CCTPW7ExecutorRoute",
-    provider: "W7 Executor",
+    provider: "Circle",
   };
 
   static supportedNetworks(): Network[] {
