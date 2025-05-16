@@ -104,7 +104,7 @@ export namespace CCTPExecutorRoute {
 }
 
 // Use this function to create a new CCTPExecutorRoute with custom config
-export function cctpExecutorRoute(config: CCTPExecutorRoute.Config) {
+export function cctpExecutorRoute(config: CCTPExecutorRoute.Config = { referrerFeeDbps: 0n }) {
   if (config.referrerFeeDbps < 0 || config.referrerFeeDbps > 65535n) {
     throw new Error("Referrer fee must be between 0 and 65535");
   }
