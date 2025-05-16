@@ -111,7 +111,7 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
     transaction.feePayer = senderPk;
 
     if (details.referrerFee > 0n) {
-      const referrerAta = getAssociatedTokenAddressSync(usdc, referrer);
+      const referrerAta = getAssociatedTokenAddressSync(usdc, referrer, true);
       const referrerAtaAccount = await this.connection.getAccountInfo(
         referrerAta
       );
