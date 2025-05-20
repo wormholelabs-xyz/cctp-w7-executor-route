@@ -1,4 +1,4 @@
-import { cctpExecutorRoute } from "../src";
+import { cctpExecutorRoute } from "../src/routes/cctpV1";
 import { calculateReferrerFee } from "../src/utils";
 
 describe("calculateReferrerFee", () => {

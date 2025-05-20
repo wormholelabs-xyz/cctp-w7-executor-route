@@ -8,6 +8,7 @@ import type {
 } from "@wormhole-foundation/sdk-connect";
 import {
   circle,
+  encoding,
   nativeChainIds,
   toChainId,
 } from "@wormhole-foundation/sdk-connect";
@@ -22,15 +23,17 @@ import {
 } from "@wormhole-foundation/sdk-evm";
 import type { Provider, TransactionRequest } from "ethers";
 import { Contract } from "ethers";
-import { CCTPExecutor } from "../types";
-import { shimContractsV1 } from "../consts";
-import { QuoteDetails } from "../routes/cctpV1";
+import { CCTPv2Executor } from "../types";
+import { circleV2Contracts, shimContractsV2 } from "../consts";
+import { CCTPv2QuoteDetails } from "../routes/cctpV2";
+import { CircleV2Message, serializeCircleV2Message } from "../layouts";
 
-export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
-  implements CCTPExecutor<N, C>
+export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
+  implements CCTPv2Executor<N, C>
 {
   readonly chainId: bigint;
   readonly shimContract: string;
+  readonly messageTransmitter: string;
 
   constructor(
     readonly network: N,
@@ -39,33 +42,39 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
     readonly contracts: Contracts
   ) {
     if (network === "Devnet")
-      throw new Error("CCTPExecutor not supported on Devnet");
+      throw new Error("CCTPv2Executor not supported on Devnet");
 
     this.chainId = nativeChainIds.networkChainToNativeChainId.get(
       network,
       chain
     ) as bigint;
 
-    const shimContract = shimContractsV1[network]?.[chain];
+    const shimContract = shimContractsV2[network]?.[chain];
     if (!shimContract) throw new Error(`Shim contract for ${chain} not found`);
     this.shimContract = shimContract;
+
+    const messageTransmitter =
+      circleV2Contracts[network]?.[chain]?.messageTransmitterV2;
+    if (!messageTransmitter)
+      throw new Error(`MessageTransmitter contract for ${chain} not found`);
+    this.messageTransmitter = messageTransmitter;
   }
 
   static async fromRpc<N extends Network>(
     provider: Provider,
     config: ChainsConfig<N, Platform>
-  ): Promise<EvmCCTPExecutor<N, EvmChains>> {
+  ): Promise<EvmCCTPv2Executor<N, EvmChains>> {
     const [network, chain] = await EvmPlatform.chainFromRpc(provider);
     const conf = config[chain]!;
     if (conf.network !== network)
       throw new Error(`Network mismatch: ${conf.network} != ${network}`);
-    return new EvmCCTPExecutor(network as N, chain, provider, conf.contracts);
+    return new EvmCCTPv2Executor(network as N, chain, provider, conf.contracts);
   }
 
   async *transfer(
     sender: AccountAddress<C>,
     recipient: ChainAddress,
-    details: QuoteDetails
+    details: CCTPv2QuoteDetails
   ): AsyncGenerator<EvmUnsignedTransaction<N, C>> {
     const senderAddress = new EvmAddress(sender).toString();
     const recipientAddress = recipient.address
@@ -93,15 +102,18 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
       );
       yield this.createUnsignedTx(
         addFrom(txReq, senderAddress),
-        "ERC20.approve of EvmCCTPExecutor",
+        "ERC20.approve of EvmCCTPv2Executor",
         false
       );
     }
 
     // TODO: type safety. typechain brings in so much boilerplate code and is soft deprecated. use viem?
     const shimAbi = [
-      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint16 dbps, address payee) feeArgs) external payable returns (uint64 nonce)",
+      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint16 dbps, address payee) feeArgs) external payable returns (uint64 nonce)",
     ];
+
+    // If equal to bytes32(0), any address can call receiveMessage() on destination domain.
+    const destinationCaller = new Uint8Array(32);
 
     const shim = new Contract(this.shimContract, shimAbi, this.provider);
 
@@ -111,6 +123,9 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
       circle.circleChainId.get(this.network, recipient.chain)!,
       recipientAddress,
       tokenAddr,
+      destinationCaller,
+      details.fastTransferMaxFee,
+      details.minFinalityThreshold,
       {
         refundAddress: senderAddress,
         signedQuote: details.signedQuote,
@@ -121,11 +136,51 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
         payee: details.referrer.address.toString(),
       }
     );
-    txReq.value = details.estimatedCost;
+    txReq.value = 0n; //details.estimatedCost;
 
     yield this.createUnsignedTx(
       addFrom(txReq, senderAddress),
-      "EvmCCTPExecutor.depositForBurn"
+      "EvmCCTPv2Executor.depositForBurn"
+    );
+  }
+
+  async isTransferCompleted(message: CircleV2Message): Promise<boolean> {
+    const contract = new Contract(
+      this.messageTransmitter,
+      ["function usedNonces(bytes32) public view returns (uint256)"],
+      this.provider
+    );
+
+    const result = await contract
+      .getFunction("usedNonces")
+      .staticCall(message.nonce);
+
+    return result === 1n;
+  }
+
+  async *redeem(
+    sender: AccountAddress<C>,
+    message: CircleV2Message,
+    attestation: string
+  ): AsyncGenerator<EvmUnsignedTransaction<N, C>> {
+    const senderAddr = new EvmAddress(sender).toString();
+
+    const contract = new Contract(
+      this.messageTransmitter,
+      ["function receiveMessage(bytes message, bytes attestation)"],
+      this.provider
+    );
+
+    const txReq = await contract
+      .getFunction("receiveMessage")
+      .populateTransaction(
+        serializeCircleV2Message(message),
+        encoding.hex.decode(attestation)
+      );
+
+    yield this.createUnsignedTx(
+      addFrom(txReq, senderAddr),
+      "MessageTransmitterV2.receiveMessage"
     );
   }
 

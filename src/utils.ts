@@ -1,7 +1,22 @@
-import { Chain, Network, toChainId } from "@wormhole-foundation/sdk-base";
-import { RequestPrefix, SignedQuote } from "./layouts";
+import {
+  Chain,
+  encoding,
+  Network,
+  toChainId,
+} from "@wormhole-foundation/sdk-base";
+import {
+  CircleV2Message,
+  deserializeCircleV2Message,
+  RequestPrefix,
+  SignedQuote,
+} from "./layouts";
 import axios from "axios";
-import { apiBaseUrl } from "./consts";
+import { apiBaseUrl, circleV2Api, getCircleV2Domain } from "./consts";
+import {
+  DEFAULT_TASK_TIMEOUT,
+  tasks,
+  TransactionId,
+} from "@wormhole-foundation/sdk-connect";
 
 export enum RelayStatus {
   Pending = "pending",
@@ -134,5 +149,65 @@ export function calculateReferrerFee(
 }
 
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+interface CircleV2AttestationResponse {
+  messages: {
+    message: string;
+    eventNonce: string;
+    attestation: string;
+    cctpVersion: number;
+    status: "pending_confirmations" | "complete";
+  }[];
+}
+
+export async function getCircleV2Attestation(
+  tx: TransactionId,
+  network: Network,
+  timeout: number = DEFAULT_TASK_TIMEOUT
+): Promise<{ message: CircleV2Message; attestation: string } | null> {
+  if (network === "Devnet") return null;
+
+  const sourceDomain = getCircleV2Domain(network, tx.chain);
+  return tasks.retry(
+    async () => {
+      const url = `${circleV2Api[network]}/messages/${sourceDomain}?transactionHash=${tx.txid}`;
+      try {
+        const response = await axios.get<CircleV2AttestationResponse>(url);
+
+        // CCTP V2 could be used to send multiple transfers on a single tx
+        // but we'll assume it's only one
+        const attestation = response.data.messages[0];
+        if (!attestation) return null;
+
+        if (attestation.cctpVersion !== 2) throw new Error("CCTP V2 only");
+
+        if (attestation.status === "pending_confirmations") return null;
+
+        const message = deserializeCircleV2Message(
+          encoding.hex.decode(attestation.message)
+        );
+
+        return {
+          message,
+          attestation: attestation.attestation,
+        };
+      } catch (error) {
+        if (!error) return null;
+        if (typeof error === "object") {
+          // A 404 error means the message is not yet available
+          // since its not available yet, we return null signaling it can be tried again
+          if (axios.isAxiosError(error) && error.response?.status === 404)
+            return null;
+          if ("status" in error && error.status === 404) return null;
+        }
+
+        throw error;
+      }
+    },
+    2000,
+    timeout,
+    "CCTPv2:GetMessage"
+  );
 }
