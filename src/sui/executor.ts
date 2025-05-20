@@ -20,7 +20,7 @@ import {
 import { SuiPlatform } from "@wormhole-foundation/sdk-sui";
 import { CCTPExecutor } from "../types";
 import { suiExecutorIds } from "../consts";
-import { QuoteDetails } from "..";
+import { QuoteDetails } from "../routes/cctpV1";
 import { suiCircleObjects } from "@wormhole-foundation/sdk-sui-cctp";
 
 export class SuiCCTPExecutor<N extends Network, C extends SuiChains>
