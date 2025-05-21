@@ -211,3 +211,19 @@ export async function getCircleV2Attestation(
     "CCTPv2:GetMessage"
   );
 }
+
+interface CircleV2FastBurnFeeResponse {
+  minimumFee: number; // The minimum fee for the transaction, in BPS (Basis Points) (1 = 0.01%).
+}
+
+export async function getCircleV2FastBurnFee(
+  network: Network,
+  fromChain: Chain,
+  toChain: Chain
+): Promise<bigint> {
+  const sourceDomain = getCircleV2Domain(network, fromChain);
+  const destinationDomain = getCircleV2Domain(network, toChain);
+  const url = `${circleV2Api[network]}/fastBurn/USDC/fees/${sourceDomain}/${destinationDomain}`;
+  const response = await axios.get<CircleV2FastBurnFeeResponse>(url);
+  return BigInt(response.data.minimumFee);
+}

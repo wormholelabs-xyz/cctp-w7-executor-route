@@ -44,7 +44,7 @@ export const shimContractsV2: Partial<
     Base: "0xbd8d42f40a11b37bD1b3770D754f9629F7cd5679",
     Ethereum: "0x2cCf230467FE7387674BAa657747F0B5485c7fEC",
     Linea: "0xc48c126468BE919068dE1983F00F65af759a4E87",
-    // Sonic: "0xc39BF082ec91D9bC385F956D24a8D66C0c26223d",
+    Sonic: "0xc39BF082ec91D9bC385F956D24a8D66C0c26223d",
   },
 };
 
@@ -80,13 +80,14 @@ export const SOLANA_MSG_VALUE_BASE_FEE = 5_001n;
 export const gasLimits: Partial<
   Record<Network, Partial<Record<Chain, bigint>>>
 > = {
-  // TODO: add Linea and Sonic. Do we need separate limits for CCTPv2 (standard and fast)?
   Testnet: {
     Aptos: 5_000n,
     Avalanche: 200_000n,
     BaseSepolia: 200_000n,
+    Linea: 250_000n,
     Sepolia: 200_000n,
     Solana: 250_000n,
+    Sonic: 250_000n,
     Sui: 8_000_000n,
   },
   Mainnet: {
@@ -95,10 +96,12 @@ export const gasLimits: Partial<
     Avalanche: 250_000n,
     Base: 250_000n,
     Ethereum: 250_000n,
+    Linea: 250_000n,
     Optimism: 250_000n,
     Polygon: 250_000n,
     Unichain: 250_000n,
     Solana: 250_000n,
+    Sonic: 250_000n,
     Sui: 8_000_000n,
   },
 };
@@ -117,15 +120,17 @@ export const referrers: Partial<
   },
   Mainnet: {
     Aptos: "0x1f177e724a874ab6267172a3049291c480fc665883e6a3ac95d0909492c09dc8",
-    Solana: "JB3rmygUVuVZzgkxvMdV8mSKLJeQAkSXEK284Dqsziah",
-    Sui: "0xbfa1240e48c622d97881473953be730091161b7931d89bd6afe667841cf69ef4",
     Arbitrum: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
     Avalanche: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
     Base: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
     Ethereum: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
     Optimism: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
+    Linea: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
     Polygon: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
     Unichain: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
+    Solana: "JB3rmygUVuVZzgkxvMdV8mSKLJeQAkSXEK284Dqsziah",
+    Sonic: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
+    Sui: "0xbfa1240e48c622d97881473953be730091161b7931d89bd6afe667841cf69ef4",
   },
 };
 
@@ -158,10 +163,10 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
     },
-    //Sonic: {
-    //  tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
-    //  messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
-    //},
+    Sonic: {
+      tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+      messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    },
   },
   Mainnet: {
     Ethereum: {
@@ -184,10 +189,10 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
-    //Sonic: {
-    //  tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
-    //  messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
-    //},
+    Sonic: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
   },
 };
 
@@ -200,7 +205,7 @@ export const circleV2Domains: Partial<
     ArbitrumSepolia: 3,
     BaseSepolia: 6,
     Linea: 11,
-    // Sonic: 13,
+    Sonic: 13,
   },
   Mainnet: {
     Ethereum: 0,
@@ -208,7 +213,7 @@ export const circleV2Domains: Partial<
     Arbitrum: 3,
     Base: 6,
     Linea: 11,
-    // Sonic: 13,
+    Sonic: 13,
   },
 };
 
@@ -239,7 +244,32 @@ export const circleV2Api: Partial<Record<Network, string>> = {
   Mainnet: "https://iris-api.circle.com/v2",
 };
 
+// https://github.com/circlefin/evm-cctp-contracts/blob/master/src/v2/FinalityThresholds.sol
 export enum CircleV2FinalityThreshold {
-  FAST = 1000,
-  STANDARD = 2000,
+  MINIMUM = 500,
+  CONFIRMED = 1000,
+  FINALIZED = 2000,
 }
+
+// https://developers.circle.com/stablecoins/required-block-confirmations
+export const FastTransferETAs: Partial<
+  Record<Network, Partial<Record<Chain, number>>>
+> = {
+  // milliseconds
+  Testnet: {
+    Sepolia: 20_000,
+    Avalanche: 1,
+    ArbitrumSepolia: 8_000,
+    BaseSepolia: 8_000,
+    Linea: 8_000,
+    Sonic: 8_000,
+  },
+  Mainnet: {
+    Ethereum: 20_000,
+    Avalanche: 1,
+    Arbitrum: 8_000,
+    Base: 8_000,
+    Linea: 8_000,
+    Sonic: 8_000,
+  },
+};
