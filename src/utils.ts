@@ -181,9 +181,8 @@ export async function getCircleV2Attestation(
   network: Network,
   timeout: number = DEFAULT_TASK_TIMEOUT
 ): Promise<{ message: CircleV2Message; attestation: string } | null> {
-  if (network === "Devnet") return null;
-
   const sourceDomain = getCircleV2Domain(network, tx.chain);
+
   return tasks.retry(
     async () => {
       const url = `${circleV2Api[network]}/messages/${sourceDomain}?transactionHash=${tx.txid}`;
@@ -195,7 +194,8 @@ export async function getCircleV2Attestation(
         const attestation = response.data.messages[0];
         if (!attestation) return null;
 
-        if (attestation.cctpVersion !== 2) throw new Error("CCTP V2 only");
+        if (attestation.cctpVersion !== 2)
+          throw new Error("CCTPv1 attestation found");
 
         if (attestation.status === "pending_confirmations") return null;
 

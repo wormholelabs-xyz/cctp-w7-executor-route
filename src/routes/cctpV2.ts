@@ -135,7 +135,7 @@ export class CCTPv2StandardExecutorRoute<N extends Network>
   static config: CCTPv2ExecutorRoute.Config = { referrerFeeDbps: 0n };
 
   static meta = {
-    name: "CCTPv2SlowExecutorRoute",
+    name: "CCTPv2StandardExecutorRoute",
     provider: "Circle",
   };
 
@@ -591,15 +591,21 @@ export class CCTPv2StandardExecutorRoute<N extends Network>
           // If the relay failed, then we check if it was completed
           // through another method (e.g. manual delivery)
           if (isFailed(receipt)) {
-            // @ts-ignore
-            const { attestation } = receipt.attestation!;
+            if (!receipt.attestation) {
+              // This should never happen since we set the attestation
+              // on the receipt before checking the relay status
+              throw new Error("Attestation on failed transfer is missing");
+            }
+
+            const attestation: CCTPv2ExecutorRoute.Attestation =
+              receipt.attestation;
 
             const executor = await this.wh
               .getChain(receipt.to)
               .getProtocol("CCTPv2Executor");
 
             const isTransferCompleted = await executor.isTransferCompleted(
-              attestation.message
+              attestation.attestation.message
             );
 
             if (isTransferCompleted) {
