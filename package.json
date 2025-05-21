@@ -27,13 +27,13 @@
     "test": "vitest"
   },
   "peerDependencies": {
-    "@wormhole-foundation/sdk-aptos": "^1.18.0",
-    "@wormhole-foundation/sdk-connect": "^1.18.0",
-    "@wormhole-foundation/sdk-evm": "^1.18.0",
-    "@wormhole-foundation/sdk-solana": "^1.18.0",
-    "@wormhole-foundation/sdk-solana-cctp": "^1.18.0",
-    "@wormhole-foundation/sdk-sui": "^1.18.0",
-    "@wormhole-foundation/sdk-sui-cctp": "^1.18.0"
+    "@wormhole-foundation/sdk-aptos": "^1.19.0",
+    "@wormhole-foundation/sdk-connect": "^1.19.0",
+    "@wormhole-foundation/sdk-evm": "^1.19.0",
+    "@wormhole-foundation/sdk-solana": "^1.19.0",
+    "@wormhole-foundation/sdk-solana-cctp": "^1.19.0",
+    "@wormhole-foundation/sdk-sui": "^1.19.0",
+    "@wormhole-foundation/sdk-sui-cctp": "^1.19.0"
 },
   "devDependencies": {
     "@types/node": "^20.11.6",

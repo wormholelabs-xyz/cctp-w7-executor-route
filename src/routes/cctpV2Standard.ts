@@ -400,7 +400,7 @@ export class CCTPv2StandardExecutorRoute<N extends Network>
       referrerFee,
       remainingAmount,
       referrerFeeDbps,
-      minFinalityThreshold: CircleV2FinalityThreshold.STANDARD,
+      minFinalityThreshold: CircleV2FinalityThreshold.FINALIZED,
       fastTransferMaxFee: 0n, // no fee for standard / slow transfer
     };
 
