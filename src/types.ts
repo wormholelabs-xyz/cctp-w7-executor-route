@@ -5,7 +5,7 @@ import {
   UnsignedTransaction,
   Network,
 } from "@wormhole-foundation/sdk-connect";
-import { QuoteDetails } from ".";
+import { CCTPv2QuoteDetails, QuoteDetails } from ".";
 import { CircleV2Message } from "./layouts";
 
 // CCTPv1
@@ -28,7 +28,7 @@ export interface CCTPv2Executor<
   transfer(
     sender: AccountAddress<C>,
     recipient: ChainAddress,
-    details: QuoteDetails
+    details: CCTPv2QuoteDetails
   ): AsyncGenerator<UnsignedTransaction<N, C>>;
 
   isTransferCompleted(message: CircleV2Message): Promise<boolean>;

@@ -1,18 +1,13 @@
 import type { Chain, Network } from "@wormhole-foundation/sdk-base";
 import {
   amount,
-  circle,
   deserializeLayout,
-  encoding,
   finality,
-  serializeLayout,
-  toChainId,
 } from "@wormhole-foundation/sdk-base";
 import {
   EmptyPlatformMap,
   isSameToken,
   nativeTokenId,
-  UniversalAddress,
   type ChainAddress,
   type ChainContext,
   type Signer,
@@ -29,24 +24,11 @@ import {
   TransferState,
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
-import {
-  calculateReferrerFee,
-  fetchCapabilities,
-  fetchSignedQuote,
-  fetchStatus as fetchTxStatus,
-  RelayStatus,
-  sleep,
-} from "../utils";
-import { relayInstructionsLayout, signedQuoteLayout } from "../layouts";
+import { fetchStatus as fetchTxStatus, RelayStatus, sleep } from "../utils";
+import { relayInstructionsLayout } from "../layouts";
 import { CCTPExecutor } from "../types";
-import {
-  gasLimits,
-  referrers,
-  shimContractsV1,
-  SOLANA_MSG_VALUE_BASE_FEE,
-} from "../consts";
-import { Connection } from "@solana/web3.js";
-import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
+import { shimContractsV1, usdcContracts } from "../consts";
+import { fetchQuoteDetails } from "./helpers";
 
 export namespace CCTPExecutorRoute {
   export type Options = {
@@ -84,6 +66,8 @@ export type QuoteDetails = {
   referrerFee: bigint; // The referrer fee in USDC
   remainingAmount: bigint; // The remaining amount after the referrer fee in USDC
   referrerFeeDbps: bigint; // The referrer fee in *tenths* of basis points
+  expiryTime: Date; // The expiry time of the quote
+  gasDropOff: bigint; // The gas drop-off amount in native token units
 };
 
 type Q = routes.Quote<Op, Vp, QuoteDetails>;
@@ -94,10 +78,6 @@ type QR = routes.QuoteResult<Op, Vp>;
 // and the attestation is not needed for the route to work.
 type AT = { id: string; attestation: {} };
 type R = routes.Receipt<AT>;
-
-// The minimum rent exemption amount for a 165 byte account (e.g. an ATA)
-// cache it here to avoid fetching it from the Solana RPC
-let ataMinRentAmount: bigint | undefined = undefined;
 
 // Use this function to create a new CCTPExecutorRoute with custom config
 export function cctpExecutorRoute(
@@ -113,6 +93,7 @@ export function cctpExecutorRoute(
   return CCTPExecutorRouteImpl;
 }
 
+// CCTPv1
 export class CCTPExecutorRoute<N extends Network>
   extends routes.AutomaticRoute<N, Op, Vp, R>
   implements routes.StaticRouteMethods<typeof CCTPExecutorRoute>
@@ -135,7 +116,7 @@ export class CCTPExecutorRoute<N extends Network>
   }
 
   static supportedChains(network: Network): Chain[] {
-    return Object.keys(shimContractsV1[network] ?? {}) as Chain[];
+    return [...Object.keys(shimContractsV1[network] ?? {}), "Sui"] as Chain[];
   }
 
   static async supportedDestinationTokens<N extends Network>(
@@ -149,10 +130,8 @@ export class CCTPExecutorRoute<N extends Network>
     }
 
     // Ensure the source token is USDC
-    const sourceChainUsdcContract = circle.usdcContract.get(
-      fromChain.network,
-      fromChain.chain
-    );
+    const sourceChainUsdcContract =
+      usdcContracts[fromChain.network]?.[fromChain.chain];
     if (
       !(
         sourceChainUsdcContract &&
@@ -166,10 +145,9 @@ export class CCTPExecutorRoute<N extends Network>
     }
 
     const { network, chain } = toChain;
-    if (!circle.usdcContract.has(network, chain)) return [];
-    return [
-      Wormhole.chainAddress(chain, circle.usdcContract.get(network, chain)!),
-    ];
+    const destChainUsdcContract = usdcContracts[network]?.[chain];
+    if (!destChainUsdcContract) return [];
+    return [Wormhole.chainAddress(chain, destChainUsdcContract)];
   }
 
   getDefaultOptions(): Op {
@@ -210,180 +188,29 @@ export class CCTPExecutorRoute<N extends Network>
   ): Promise<QR> {
     const { fromChain, toChain } = request;
 
-    const chains = CCTPExecutorRoute.supportedChains(fromChain.network);
-    if (!chains.includes(fromChain.chain) || !chains.includes(toChain.chain)) {
-      return {
-        success: false,
-        error: new Error("Unsupported chain"),
-      };
-    }
-
-    const srcUsdcAddress = circle.usdcContract.get(
-      fromChain.network,
-      fromChain.chain
-    );
-    if (!srcUsdcAddress) {
-      throw new Error("Invalid transfer, no USDC contract on source");
-    }
-
-    const dstUsdcAddress = circle.usdcContract.get(
-      toChain.network,
-      toChain.chain
-    );
-    if (!dstUsdcAddress) {
-      throw new Error("Invalid transfer, no USDC contract on destination");
-    }
-
-    const referrerAddress = referrers[fromChain.network]?.[fromChain.chain];
-    if (!referrerAddress) {
-      return {
-        success: false,
-        error: new Error("No referrer address found"),
-      };
-    }
-    const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
-    const referrerFeeDbps = this.staticConfig.referrerFeeDbps;
-
-    const { referrerFee, remainingAmount } = calculateReferrerFee(
-      amount.units(params.normalizedParams.amount),
-      this.staticConfig.referrerFeeDbps
-    );
-    if (remainingAmount <= 0n) {
-      return {
-        success: false,
-        error: new Error("Amount after fee <= 0"),
-      };
-    }
-
-    const gasLimit = gasLimits[fromChain.network]?.[toChain.chain];
-    if (!gasLimit) {
-      return {
-        success: false,
-        error: new Error("Gas limit not found"),
-      };
-    }
-
-    const capabilities = await fetchCapabilities(fromChain.network);
-    const srcCapabilities = capabilities[toChainId(fromChain.chain)];
-    if (!srcCapabilities) {
-      return {
-        success: false,
-        error: new Error("Unsupported source chain"),
-      };
-    }
-
-    const dstCapabilities = capabilities[toChainId(toChain.chain)];
-    if (!dstCapabilities || !dstCapabilities.requestPrefixes.includes("ERC1")) {
-      return {
-        success: false,
-        error: new Error("Unsupported destination chain"),
-      };
-    }
-
-    const { recipient } = request;
-    let tokenAccountExists = true;
-
-    // Check if the associated token account (ATA) exists on Solana.
-    // If it doesn't, include a gas drop-off instruction so the relayer can create it.
-    // Note: There's a potential race condition — the account might exist during this check,
-    // but could be closed before the transfer completes.
-    if (recipient && toChain.chain === "Solana") {
-      const usdcAddress = Wormhole.parseAddress("Solana", dstUsdcAddress);
-      const ata = await toChain.getTokenAccount(recipient.address, usdcAddress);
-      const connection: Connection = await toChain.getRpc();
-      const ataAccount = await connection.getAccountInfo(
-        new SolanaAddress(ata.address).unwrap()
-      );
-      tokenAccountExists = ataAccount !== null;
-      if (!tokenAccountExists && !ataMinRentAmount) {
-        ataMinRentAmount = BigInt(
-          await connection.getMinimumBalanceForRentExemption(165)
-        );
-      }
-    }
-
-    let msgValue = 0n;
-    if (toChain.chain === "Solana") {
-      msgValue += SOLANA_MSG_VALUE_BASE_FEE;
-      if (!tokenAccountExists && ataMinRentAmount) {
-        msgValue += ataMinRentAmount;
-      }
-    }
-
-    const relayRequests = [];
-
-    // Add the gas instruction
-    relayRequests.push({
-      request: {
-        type: "GasInstruction" as const,
-        gasLimit,
-        msgValue,
-      },
-    });
-
-    // Calculate the gas dropOff value
-    const gasDropOffLimit = BigInt(dstCapabilities.gasDropOffLimit);
-    const dropOff =
-      params.options.nativeGas && gasDropOffLimit > 0n
-        ? (BigInt(Math.round(params.options.nativeGas * 100)) *
-            gasDropOffLimit) /
-          100n
-        : 0n;
-
-    // Add the gas drop-off instruction if applicable
-    if (dropOff > 0n || !tokenAccountExists) {
-      relayRequests.push({
-        request: {
-          type: "GasDropOffInstruction" as const,
-          dropOff,
-          // If the recipient is undefined (e.g. the user hasn’t connected their wallet yet),
-          // we temporarily use a dummy address to fetch a quote.
-          // The recipient address is validated later in the `initiate` method, which will throw if it's still missing.
-          recipient: recipient
-            ? recipient.address.toUniversalAddress()
-            : new UniversalAddress(new Uint8Array(32)),
-        },
-      });
-    }
-
-    const relayInstructions = serializeLayout(relayInstructionsLayout, {
-      requests: relayRequests,
-    });
-
-    const quote = await fetchSignedQuote(
-      fromChain.network,
-      fromChain.chain,
-      toChain.chain,
-      encoding.hex.encode(relayInstructions, true)
+    const quoteDetails = await fetchQuoteDetails(
+      request,
+      params,
+      this.staticConfig.referrerFeeDbps,
+      CCTPExecutorRoute.supportedChains(fromChain.network),
+      "ERC1"
     );
 
-    if (!quote.estimatedCost) {
+    if (quoteDetails instanceof Error) {
       return {
         success: false,
-        error: new Error("No estimated cost"),
+        error: quoteDetails,
       };
     }
 
-    const signedQuoteBytes = encoding.hex.decode(quote.signedQuote);
-    const signedQuote = deserializeLayout(signedQuoteLayout, signedQuoteBytes);
+    const { remainingAmount, estimatedCost, gasDropOff, expiryTime } =
+      quoteDetails;
 
     // https://developers.circle.com/stablecoins/docs/required-block-confirmations
     const eta =
       fromChain.chain === "Polygon"
         ? 2_000 * 200
         : finality.estimateFinalityTime(fromChain.chain) + 1_000; // buffer for the relayer
-
-    const estimatedCost = BigInt(quote.estimatedCost);
-
-    const details: QuoteDetails = {
-      signedQuote: signedQuoteBytes,
-      relayInstructions: relayInstructions,
-      estimatedCost,
-      referrer,
-      referrerFee,
-      remainingAmount,
-      referrerFeeDbps,
-    };
 
     const [srcNativeDecimals, dstNativeDecimals] = await Promise.all([
       fromChain.getDecimals("native"),
@@ -408,10 +235,10 @@ export class CCTPExecutorRoute<N extends Network>
         token: nativeTokenId(fromChain.chain),
         amount: amount.fromBaseUnits(estimatedCost, srcNativeDecimals),
       },
-      destinationNativeGas: amount.fromBaseUnits(dropOff, dstNativeDecimals),
+      destinationNativeGas: amount.fromBaseUnits(gasDropOff, dstNativeDecimals),
       eta,
-      expires: signedQuote.quote.expiryTime,
-      details,
+      expires: expiryTime,
+      details: quoteDetails,
     };
   }
 
@@ -446,10 +273,11 @@ export class CCTPExecutorRoute<N extends Network>
     // When transferring to Solana, the recipient address is the ATA for CCTP transfers
     let cctpRecipient = to;
     if (to.chain === "Solana") {
-      const usdcAddress = Wormhole.parseAddress(
-        "Solana",
-        circle.usdcContract.get(request.toChain.network, request.toChain.chain)!
-      );
+      const solanaUsdc =
+        usdcContracts[request.toChain.network]?.[request.toChain.chain];
+      if (!solanaUsdc) throw new Error("No USDC contract found for Solana");
+
+      const usdcAddress = Wormhole.parseAddress("Solana", solanaUsdc);
       cctpRecipient = await request.toChain.getTokenAccount(
         to.address,
         usdcAddress

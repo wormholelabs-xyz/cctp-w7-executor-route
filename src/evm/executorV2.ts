@@ -25,8 +25,8 @@ import type { Provider, TransactionRequest } from "ethers";
 import { Contract } from "ethers";
 import { CCTPv2Executor } from "../types";
 import { circleV2Contracts, shimContractsV2 } from "../consts";
-import { CCTPv2QuoteDetails } from "../routes/cctpV2Standard";
 import { CircleV2Message, serializeCircleV2Message } from "../layouts";
+import { CCTPv2QuoteDetails } from "../routes/cctpV2Base";
 
 export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
   implements CCTPv2Executor<N, C>
