@@ -1,9 +1,5 @@
 import type { Chain, Network } from "@wormhole-foundation/sdk-base";
-import {
-  amount,
-  deserializeLayout,
-  finality,
-} from "@wormhole-foundation/sdk-base";
+import { amount, finality } from "@wormhole-foundation/sdk-base";
 import {
   EmptyPlatformMap,
   isSameToken,
@@ -20,15 +16,13 @@ import {
   isSourceFinalized,
   isSourceInitiated,
   routes,
-  signSendWait,
   TransferState,
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
-import { fetchStatus as fetchTxStatus, RelayStatus, sleep } from "../utils";
-import { relayInstructionsLayout } from "../layouts";
+import { fetchStatus as fetchTxStatus, RelayStatus } from "../utils";
 import { CCTPExecutor } from "../types";
 import { shimContractsV1, usdcContracts } from "../consts";
-import { fetchQuoteDetails } from "./helpers";
+import { fetchQuoteDetails, initiateTransfer } from "./helpers";
 
 export namespace CCTPExecutorRoute {
   export type Options = {
@@ -252,76 +246,10 @@ export class CCTPExecutorRoute<N extends Network>
       throw new Error("Missing quote details");
     }
 
-    const relayInstructions = deserializeLayout(
-      relayInstructionsLayout,
-      quote.details.relayInstructions
-    );
-
-    // Make sure that the gas drop-off recipient matches the actual recipient
-    relayInstructions.requests.forEach(({ request }) => {
-      if (
-        request.type === "GasDropOffInstruction" &&
-        !request.recipient.equals(to.address.toUniversalAddress())
-      ) {
-        throw new Error("Gas drop-off recipient does not match");
-      }
+    return await initiateTransfer(request, signer, to, {
+      protocol: "CCTPExecutor",
+      details: quote.details,
     });
-
-    const executor = await request.fromChain.getProtocol("CCTPExecutor");
-    const sender = Wormhole.parseAddress(signer.chain(), signer.address());
-
-    // When transferring to Solana, the recipient address is the ATA for CCTP transfers
-    let cctpRecipient = to;
-    if (to.chain === "Solana") {
-      const solanaUsdc =
-        usdcContracts[request.toChain.network]?.[request.toChain.chain];
-      if (!solanaUsdc) throw new Error("No USDC contract found for Solana");
-
-      const usdcAddress = Wormhole.parseAddress("Solana", solanaUsdc);
-      cctpRecipient = await request.toChain.getTokenAccount(
-        to.address,
-        usdcAddress
-      );
-    }
-
-    const xfer = await executor.transfer(sender, cctpRecipient, quote.details);
-
-    const txids = await signSendWait(request.fromChain, xfer, signer);
-
-    // Status the transfer immediately before returning
-    let statusAttempts = 0;
-
-    const statusTransferImmediately = async () => {
-      while (statusAttempts < 20) {
-        try {
-          const [txStatus] = await fetchTxStatus(
-            this.wh.network,
-            txids.at(-1)!.txid,
-            request.fromChain.chain
-          );
-
-          if (txStatus) {
-            break;
-          }
-        } catch (_) {
-          // is ok we just try again!
-        }
-        statusAttempts++;
-        await sleep(2_000);
-      }
-    };
-
-    // Spawn a loop in the background that will status this transfer until
-    // the API gives a successful response. We don't await the result
-    // here because we don't need it for the return value.
-    statusTransferImmediately();
-
-    return {
-      from: request.fromChain.chain,
-      to: request.toChain.chain,
-      state: TransferState.SourceInitiated,
-      originTxs: txids,
-    };
   }
 
   public override async *track(receipt: R, timeout?: number) {
