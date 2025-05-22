@@ -82,7 +82,7 @@ export const gasLimits: Partial<
 > = {
   Testnet: {
     Aptos: 5_000n,
-    ArbitrumSepolia: 400_000n,
+    ArbitrumSepolia: 500_000n,
     Avalanche: 200_000n,
     BaseSepolia: 200_000n,
     Linea: 250_000n,
@@ -328,8 +328,8 @@ export const isCircleV2FastChain = (
 };
 
 // The USDC addresses for V2 only chains aren't defined in the Wormhole SDK,
-// and I'm not sure if they should be since it doesn't support
-// CCTP V2 and might be confusing.
+// and I'm not sure if they should be since the Wormhole SDK doesn't support
+// CCTP V2 which might cause confusion. So I'm defining them here for now.
 export const usdcContracts: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
@@ -340,7 +340,6 @@ export const usdcContracts: Partial<
     BaseSepolia: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
     Linea: "0xFEce4462D57bD51A6A552365A011b95f0E16d9B7",
     OptimismSepolia: "0x5fd84259d66Cd46123540766Be93DFE6D43130D7",
-    Polygon: "0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97",
     Sepolia: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
     Solana: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
     Sonic: "0xA4879Fed32Ecbef99399e5cbC247E533421C4eC6",
