@@ -33,7 +33,7 @@ const circleBurnMessageV2Layout = [
   { name: "messageSender", ...universalAddressItem },
   { name: "maxFee", ...amountItem },
   { name: "feeExecuted", ...amountItem },
-  { name: "expirationBlock", ...amountItem }, // TODO: handle this?
+  { name: "expirationBlock", ...amountItem },
   { name: "hookData", binary: "bytes" },
 ] as const satisfies Layout;
 

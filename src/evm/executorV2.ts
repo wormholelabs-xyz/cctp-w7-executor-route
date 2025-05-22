@@ -136,7 +136,7 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
         payee: details.referrer.address.toString(),
       }
     );
-    txReq.value = 0n; //details.estimatedCost;
+    txReq.value = details.estimatedCost;
 
     yield this.createUnsignedTx(
       addFrom(txReq, senderAddress),
