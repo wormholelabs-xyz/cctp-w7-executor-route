@@ -2,7 +2,7 @@
 
 ## Transfer Example
 
-This project includes a script for testing a USDC token transfer using the CCTPv1 Executor route with a referrer fee. You can change the source and destination chains in the `examples/transfer.ts` file.
+This project includes a script for testing a USDC token transfer using the CCTPv1 or CCTPv2 Executor routes with a referrer fee. You can change the source and destination chains in the `examples/transfer.ts` file.
 
 ### Prerequisites
 
