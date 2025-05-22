@@ -1,5 +1,4 @@
 import {
-  Chain,
   ChainAddress,
   ChainContext,
   EmptyPlatformMap,
@@ -21,7 +20,7 @@ import {
 import { fetchStatus, getCircleV2Attestation, RelayStatus } from "../utils";
 import { CircleV2Message } from "../layouts";
 import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
-import { getCircleV2Chain, shimContractsV2, usdcContracts } from "../consts";
+import { getCircleV2Chain, usdcContracts } from "../consts";
 import { CCTPv2Executor } from "../types";
 import { initiateTransfer } from "./helpers";
 
@@ -55,20 +54,11 @@ export abstract class CCTPv2BaseRoute<
     return ["Mainnet", "Testnet"];
   }
 
-  static supportedChains(network: Network): Chain[] {
-    return Object.keys(shimContractsV2[network] ?? {}) as Chain[];
-  }
-
   static async supportedDestinationTokens<N extends Network>(
     sourceToken: TokenId,
     fromChain: ChainContext<N>,
     toChain: ChainContext<N>
   ): Promise<TokenId[]> {
-    const chains = this.supportedChains(fromChain.network);
-    if (!chains.includes(fromChain.chain) || !chains.includes(toChain.chain)) {
-      return [];
-    }
-
     // Ensure the source token is USDC
     const sourceChainUsdcContract =
       usdcContracts[fromChain.network]?.[fromChain.chain];
@@ -94,32 +84,6 @@ export abstract class CCTPv2BaseRoute<
     return {
       nativeGas: 0,
     };
-  }
-
-  async validate(
-    request: routes.RouteTransferRequest<N>,
-    params: Tp
-  ): Promise<Vr> {
-    if (
-      params.options?.nativeGas &&
-      (params.options.nativeGas < 0 || params.options.nativeGas > 1)
-    ) {
-      return {
-        valid: false,
-        error: new Error("Invalid native gas percentage"),
-        params,
-      };
-    }
-
-    const validatedParams: Vp = {
-      normalizedParams: {
-        amount: request.parseAmount(params.amount),
-      },
-      options: params.options ?? this.getDefaultOptions(),
-      ...params,
-    };
-
-    return { valid: true, params: validatedParams };
   }
 
   async initiate(

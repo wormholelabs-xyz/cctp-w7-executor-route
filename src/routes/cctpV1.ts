@@ -118,11 +118,6 @@ export class CCTPExecutorRoute<N extends Network>
     fromChain: ChainContext<N>,
     toChain: ChainContext<N>
   ): Promise<TokenId[]> {
-    const chains = this.supportedChains(fromChain.network);
-    if (!chains.includes(fromChain.chain) || !chains.includes(toChain.chain)) {
-      return [];
-    }
-
     // Ensure the source token is USDC
     const sourceChainUsdcContract =
       usdcContracts[fromChain.network]?.[fromChain.chain];
@@ -154,6 +149,18 @@ export class CCTPExecutorRoute<N extends Network>
     request: routes.RouteTransferRequest<N>,
     params: Tp
   ): Promise<Vr> {
+    const chains = CCTPExecutorRoute.supportedChains(request.fromChain.network);
+    if (
+      !chains.includes(request.fromChain.chain) ||
+      !chains.includes(request.toChain.chain)
+    ) {
+      return {
+        valid: false,
+        error: new Error("Unsupported source or destination chain"),
+        params,
+      };
+    }
+
     if (
       params.options?.nativeGas &&
       (params.options.nativeGas < 0 || params.options.nativeGas > 1)
@@ -186,7 +193,6 @@ export class CCTPExecutorRoute<N extends Network>
       request,
       params,
       this.staticConfig.referrerFeeDbps,
-      CCTPExecutorRoute.supportedChains(fromChain.network),
       "ERC1"
     );
 

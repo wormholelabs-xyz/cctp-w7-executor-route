@@ -143,15 +143,11 @@ export const circleV2Contracts: Partial<
   Record<Network, Partial<Record<Chain, CircleV2Contracts>>>
 > = {
   Testnet: {
-    Sepolia: {
+    ArbitrumSepolia: {
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
     },
     Avalanche: {
-      tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
-      messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
-    },
-    ArbitrumSepolia: {
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
     },
@@ -163,13 +159,17 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
     },
+    Sepolia: {
+      tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+      messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    },
     Sonic: {
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
     },
   },
   Mainnet: {
-    Ethereum: {
+    Arbitrum: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
@@ -177,11 +177,11 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
-    Arbitrum: {
+    Base: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
-    Base: {
+    Ethereum: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
@@ -217,6 +217,19 @@ export const circleV2Domains: Partial<
   },
 };
 
+export const isCircleV2FastChain = (
+  network: Network,
+  chain: Chain
+): boolean => {
+  const fastChains = Object.keys(fastTransferETAs[network] ?? {});
+  return fastChains.includes(chain);
+};
+
+export const isCircleV2Chain = (network: Network, chain: Chain): boolean => {
+  const chains = Object.keys(circleV2Domains[network] ?? {});
+  return chains.includes(chain);
+};
+
 export const getCircleV2Domain = (network: Network, chain: Chain): number => {
   const domain = circleV2Domains[network]?.[chain];
   if (domain === undefined) {
@@ -246,7 +259,6 @@ export const circleV2Api: Partial<Record<Network, string>> = {
 
 // https://github.com/circlefin/evm-cctp-contracts/blob/master/src/v2/FinalityThresholds.sol
 export enum CircleV2FinalityThreshold {
-  MINIMUM = 500,
   CONFIRMED = 1000,
   FINALIZED = 2000,
 }
@@ -257,20 +269,16 @@ export const fastTransferETAs: Partial<
 > = {
   // milliseconds
   Testnet: {
-    Sepolia: 20_000,
-    Avalanche: 1,
     ArbitrumSepolia: 8_000,
     BaseSepolia: 8_000,
+    Sepolia: 20_000,
     Linea: 8_000,
-    Sonic: 8_000,
   },
   Mainnet: {
-    Ethereum: 20_000,
-    Avalanche: 1,
     Arbitrum: 8_000,
     Base: 8_000,
+    Ethereum: 20_000,
     Linea: 8_000,
-    Sonic: 8_000,
   },
 };
 

@@ -1,10 +1,22 @@
-import type { Network } from "@wormhole-foundation/sdk-base";
+import type { Chain, Network } from "@wormhole-foundation/sdk-base";
 import { amount } from "@wormhole-foundation/sdk-base";
 import { nativeTokenId } from "@wormhole-foundation/sdk-definitions";
 import { routes } from "@wormhole-foundation/sdk-connect";
 import { getCircleV2FastBurnFee } from "../utils";
-import { CircleV2FinalityThreshold, fastTransferETAs } from "../consts";
-import { CCTPv2BaseRoute, CCTPv2QuoteDetails, Qr, Vp } from "./cctpV2Base";
+import {
+  CircleV2FinalityThreshold,
+  fastTransferETAs,
+  isCircleV2Chain,
+  isCircleV2FastChain,
+} from "../consts";
+import {
+  CCTPv2BaseRoute,
+  CCTPv2QuoteDetails,
+  Qr,
+  Tp,
+  Vp,
+  Vr,
+} from "./cctpV2Base";
 import { CCTPExecutorRoute } from "./cctpV1";
 import { fetchQuoteDetails } from "./helpers";
 
@@ -39,6 +51,49 @@ export class CCTPv2FastExecutorRoute<N extends Network>
     provider: "Circle",
   };
 
+  static supportedChains(network: Network): Chain[] {
+    return Object.keys(fastTransferETAs[network] ?? {}) as Chain[];
+  }
+
+  async validate(
+    request: routes.RouteTransferRequest<N>,
+    params: Tp
+  ): Promise<Vr> {
+    const { fromChain, toChain } = request;
+    // Can only transfer to Circle V2 chains
+    if (
+      !isCircleV2FastChain(fromChain.network, fromChain.chain) ||
+      !isCircleV2Chain(toChain.network, toChain.chain)
+    ) {
+      return {
+        valid: false,
+        error: new Error("Unsupported source or destination chain"),
+        params,
+      };
+    }
+
+    if (
+      params.options?.nativeGas &&
+      (params.options.nativeGas < 0 || params.options.nativeGas > 1)
+    ) {
+      return {
+        valid: false,
+        error: new Error("Invalid native gas percentage"),
+        params,
+      };
+    }
+
+    const validatedParams: Vp = {
+      normalizedParams: {
+        amount: request.parseAmount(params.amount),
+      },
+      options: params.options ?? this.getDefaultOptions(),
+      ...params,
+    };
+
+    return { valid: true, params: validatedParams };
+  }
+
   async quote(
     request: routes.RouteTransferRequest<N>,
     params: Vp
@@ -49,7 +104,6 @@ export class CCTPv2FastExecutorRoute<N extends Network>
       request,
       params,
       this.staticConfig.referrerFeeDbps,
-      CCTPv2BaseRoute.supportedChains(fromChain.network),
       "ERC2"
     );
 
