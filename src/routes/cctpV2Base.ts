@@ -16,7 +16,12 @@ import {
   TransferState,
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
-import { fetchStatus, getCircleV2Attestation, RelayStatus } from "../utils";
+import {
+  fetchStatus,
+  getCircleV2Attestation,
+  reattestCircleV2Message,
+  RelayStatus,
+} from "../utils";
 import { CircleV2Message } from "../layouts";
 import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
 import { circleV2Domains, getCircleV2Chain } from "../consts";
@@ -235,12 +240,28 @@ export abstract class CCTPv2BaseRoute<
       throw new Error("No attestation found");
     }
 
-    // TODO: check if the attestation is expired and, if so, re-attest and fetch
-
-    const sender = Wormhole.parseAddress(signer.chain(), signer.address());
     const toChain = this.wh.getChain(receipt.to);
     const executor = await toChain.getProtocol("CCTPv2Executor");
-    const { attestation, message } = receipt.attestation.attestation;
+
+    // check if the attestation is expired and, if so, re-attest and fetch
+    let { attestation, message } = receipt.attestation.attestation;
+    const { expirationBlock } = message.messageBody;
+    const currentBlock = await executor.getCurrentBlock();
+    if (expirationBlock !== 0n && expirationBlock < currentBlock) {
+      const newAttestation = await reattestCircleV2Message(
+        toChain.network,
+        receipt.attestation
+      );
+
+      if (!newAttestation) {
+        throw new Error("Failed to reattest message");
+      }
+
+      attestation = newAttestation.attestation;
+      message = newAttestation.message;
+    }
+
+    const sender = Wormhole.parseAddress(signer.chain(), signer.address());
     const xfer = executor.redeem(sender, message, attestation);
 
     const dstTxIds = await signSendWait(

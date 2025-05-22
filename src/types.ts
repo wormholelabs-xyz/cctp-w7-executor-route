@@ -38,4 +38,6 @@ export interface CCTPv2Executor<
     message: CircleV2Message,
     attestation: string
   ): AsyncGenerator<UnsignedTransaction<N, C>>;
+
+  getCurrentBlock(): Promise<bigint>;
 }
