@@ -82,6 +82,7 @@ export const gasLimits: Partial<
 > = {
   Testnet: {
     Aptos: 5_000n,
+    ArbitrumSepolia: 400_000n,
     Avalanche: 200_000n,
     BaseSepolia: 200_000n,
     Linea: 250_000n,
@@ -196,6 +197,50 @@ export const circleV2Contracts: Partial<
   },
 };
 
+export const circleV1Domains: Partial<
+  Record<Network, Partial<Record<Chain, number>>>
+> = {
+  Testnet: {
+    Sepolia: 0,
+    Avalanche: 1,
+    OptimismSepolia: 2,
+    ArbitrumSepolia: 3,
+    Solana: 5,
+    BaseSepolia: 6,
+    Polygon: 7,
+    Sui: 8,
+    Aptos: 9,
+    Unichain: 10,
+  },
+  Mainnet: {
+    Ethereum: 0,
+    Avalanche: 1,
+    Optimism: 2,
+    Arbitrum: 3,
+    Solana: 5,
+    Base: 6,
+    Polygon: 7,
+    Sui: 8,
+    Aptos: 9,
+    Unichain: 10,
+  },
+};
+
+export const isCircleV1Chain = (network: Network, chain: Chain): boolean => {
+  const chains = Object.keys(circleV1Domains[network] ?? {});
+  return chains.includes(chain);
+};
+
+export const getCircleV1Domain = (network: Network, chain: Chain): number => {
+  const domain = circleV1Domains[network]?.[chain];
+  if (domain === undefined) {
+    throw new Error(
+      `CircleV1 domain not found for network ${network} and chain ${chain}`
+    );
+  }
+  return domain;
+};
+
 export const circleV2Domains: Partial<
   Record<Network, Partial<Record<Chain, number>>>
 > = {
@@ -215,14 +260,6 @@ export const circleV2Domains: Partial<
     Linea: 11,
     Sonic: 13,
   },
-};
-
-export const isCircleV2FastChain = (
-  network: Network,
-  chain: Chain
-): boolean => {
-  const fastChains = Object.keys(fastTransferETAs[network] ?? {});
-  return fastChains.includes(chain);
 };
 
 export const isCircleV2Chain = (network: Network, chain: Chain): boolean => {
@@ -280,6 +317,14 @@ export const fastTransferETAs: Partial<
     Ethereum: 20_000,
     Linea: 8_000,
   },
+};
+
+export const isCircleV2FastChain = (
+  network: Network,
+  chain: Chain
+): boolean => {
+  const fastChains = Object.keys(fastTransferETAs[network] ?? {});
+  return fastChains.includes(chain);
 };
 
 // The USDC addresses for V2 only chains aren't defined in the Wormhole SDK,
