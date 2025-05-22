@@ -1,6 +1,5 @@
 import {
   amount,
-  Chain,
   ChainAddress,
   deserializeLayout,
   encoding,
@@ -42,17 +41,9 @@ export async function fetchQuoteDetails(
   request: routes.RouteTransferRequest<Network>,
   params: CCTPExecutorRoute.ValidatedParams,
   referrerFeeDbps: bigint,
-  supportedChains: Chain[],
   capability: "ERC1" | "ERC2"
 ): Promise<QuoteDetails | Error> {
   const { fromChain, toChain } = request;
-
-  if (
-    !supportedChains.includes(fromChain.chain) ||
-    !supportedChains.includes(toChain.chain)
-  ) {
-    return new Error("Unsupported chain");
-  }
 
   const srcUsdcAddress = usdcContracts[fromChain.network]?.[fromChain.chain];
   if (!srcUsdcAddress) {
