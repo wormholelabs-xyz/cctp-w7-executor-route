@@ -136,7 +136,7 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
         payee: details.referrer.address.toString(),
       }
     );
-    txReq.value = details.estimatedCost;
+    txReq.value = 0n; //details.estimatedCost;
 
     yield this.createUnsignedTx(
       addFrom(txReq, senderAddress),
@@ -182,6 +182,10 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
       addFrom(txReq, senderAddr),
       "MessageTransmitterV2.receiveMessage"
     );
+  }
+
+  async getCurrentBlock(): Promise<bigint> {
+    return BigInt(await this.provider.getBlockNumber());
   }
 
   private createUnsignedTx(

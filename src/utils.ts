@@ -12,12 +12,18 @@ import {
   SignedQuote,
 } from "./layouts";
 import axios from "axios";
-import { apiBaseUrl, circleV2Api, getCircleV2Domain } from "./consts";
+import {
+  apiBaseUrl,
+  circleV2Api,
+  getCircleV2Chain,
+  getCircleV2Domain,
+} from "./consts";
 import {
   DEFAULT_TASK_TIMEOUT,
   tasks,
   TransactionId,
 } from "@wormhole-foundation/sdk-connect";
+import { CCTPv2ExecutorRoute } from "./routes";
 
 export enum RelayStatus {
   Pending = "pending",
@@ -240,4 +246,51 @@ export async function getCircleV2FastBurnFee(
   const url = `${circleV2Api[network]}/fastBurn/USDC/fees/${sourceDomain}/${destinationDomain}`;
   const response = await axios.get<CircleV2FastBurnFeeResponse>(url);
   return BigInt(response.data.minimumFee);
+}
+
+interface CircleV2ReattestResponse {
+  message: string;
+  nonce: string;
+  error?: string;
+}
+
+// https://developers.circle.com/api-reference/stablecoins/common/reattest-message
+export async function reattestCircleV2Message(
+  network: Network,
+  attestation: CCTPv2ExecutorRoute.Attestation
+): Promise<{ message: CircleV2Message; attestation: string } | null> {
+  // Re-Attest the message
+  const nonce = encoding.hex.encode(
+    attestation.attestation.message.nonce,
+    true
+  );
+  const url = `${circleV2Api[network]}/reattest/${nonce}`;
+  const response = await axios.post<CircleV2ReattestResponse>(url);
+  if (response.data.error) {
+    throw new Error(`Error re-attesting message: ${response.data.error}`);
+  }
+
+  const fromChain = getCircleV2Chain(
+    network,
+    attestation.attestation.message.sourceDomain
+  );
+
+  return tasks.retry(
+    async () => {
+      const newAttestation = await getCircleV2Attestation(
+        { txid: attestation.id, chain: fromChain },
+        network
+      );
+      if (!newAttestation) return null;
+
+      // keep retrying until the attestation changes
+      if (newAttestation.attestation === attestation.attestation.attestation)
+        return null;
+
+      return newAttestation;
+    },
+    2000,
+    DEFAULT_TASK_TIMEOUT,
+    "CCTPv2:Reattest"
+  );
 }

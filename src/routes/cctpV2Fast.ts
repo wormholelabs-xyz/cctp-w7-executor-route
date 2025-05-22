@@ -1,4 +1,4 @@
-import type { Chain, Network } from "@wormhole-foundation/sdk-base";
+import type { Network } from "@wormhole-foundation/sdk-base";
 import { amount } from "@wormhole-foundation/sdk-base";
 import {
   ChainContext,
@@ -164,10 +164,6 @@ export class CCTPv2FastExecutorRoute<N extends Network>
           error: new Error("Amount after fast transfer fee <= 0"),
         };
       }
-
-      console.log(`fastBurnFeeBps: ${fastBurnFeeBps}`);
-      console.log(`fastTransferMaxFee: ${fastTransferMaxFee}`);
-      console.log(`receivedAmount: ${receivedAmount}`);
 
       const eta = fastTransferETAs[fromChain.network]?.[fromChain.chain];
 
