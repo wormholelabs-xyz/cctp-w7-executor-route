@@ -71,7 +71,7 @@ export const gasLimits: Partial<
   },
   Mainnet: {
     Aptos: 5_000n,
-    Arbitrum: 400_000n,
+    Arbitrum: 500_000n,
     Avalanche: 250_000n,
     Base: 250_000n,
     Ethereum: 250_000n,
