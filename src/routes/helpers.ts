@@ -222,27 +222,15 @@ export async function initiateTransfer(
 
   const sender = Wormhole.parseAddress(signer.chain(), signer.address());
 
-  // When transferring to Solana, the recipient address is the ATA for CCTP transfers
-  let cctpRecipient = to;
-  if (to.chain === "Solana") {
-    const solanaUsdc =
-      usdcContracts[request.toChain.network]?.[request.toChain.chain];
-    if (!solanaUsdc) throw new Error("No USDC contract found for Solana");
-
-    const usdcAddress = Wormhole.parseAddress("Solana", solanaUsdc);
-    cctpRecipient = await request.toChain.getTokenAccount(
-      to.address,
-      usdcAddress
-    );
-  }
+  const recipient = await resolveRecipient(to, request);
 
   let xfer;
   if (params.protocol === "CCTPExecutor") {
     const executor = await request.fromChain.getProtocol(params.protocol);
-    xfer = await executor.transfer(sender, cctpRecipient, params.details);
+    xfer = await executor.transfer(sender, recipient, params.details);
   } else {
     const executor = await request.fromChain.getProtocol(params.protocol);
-    xfer = await executor.transfer(sender, cctpRecipient, params.details);
+    xfer = await executor.transfer(sender, recipient, params.details);
   }
 
   const txids = await signSendWait(request.fromChain, xfer, signer);
@@ -281,4 +269,19 @@ export async function initiateTransfer(
     state: TransferState.SourceInitiated,
     originTxs: txids,
   };
+}
+
+async function resolveRecipient(
+  to: ChainAddress,
+  request: routes.RouteTransferRequest<Network>
+): Promise<ChainAddress> {
+  if (to.chain !== "Solana") return to;
+
+  // When transferring to Solana, the recipient address is the ATA
+  const solanaUsdc =
+    usdcContracts[request.toChain.network]?.[request.toChain.chain];
+  if (!solanaUsdc) throw new Error("No USDC contract found for Solana");
+
+  const usdcAddress = Wormhole.parseAddress("Solana", solanaUsdc);
+  return request.toChain.getTokenAccount(to.address, usdcAddress);
 }
