@@ -7,7 +7,6 @@ import type {
   Platform,
 } from "@wormhole-foundation/sdk-connect";
 import {
-  circle,
   encoding,
   nativeChainIds,
   toChainId,
@@ -24,7 +23,12 @@ import {
 import type { Provider, TransactionRequest } from "ethers";
 import { Contract } from "ethers";
 import { CCTPv2Executor } from "../types";
-import { circleV2Contracts, shimContractsV2 } from "../consts";
+import {
+  circleV2Contracts,
+  getCircleV2Domain,
+  shimContractsV2,
+  usdcContracts,
+} from "../consts";
 import { CircleV2Message, serializeCircleV2Message } from "../layouts";
 import { CCTPv2QuoteDetails } from "../routes/cctpV2Base";
 
@@ -34,6 +38,7 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
   readonly chainId: bigint;
   readonly shimContract: string;
   readonly messageTransmitter: string;
+  readonly usdcContract: string;
 
   constructor(
     readonly network: N,
@@ -58,6 +63,10 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
     if (!messageTransmitter)
       throw new Error(`MessageTransmitter contract for ${chain} not found`);
     this.messageTransmitter = messageTransmitter;
+
+    const usdcContract = usdcContracts[network]?.[chain];
+    if (!usdcContract) throw new Error(`USDC contract for ${chain} not found`);
+    this.usdcContract = usdcContract;
   }
 
   static async fromRpc<N extends Network>(
@@ -83,11 +92,9 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
 
     const amount = details.remainingAmount + details.referrerFee;
 
-    const tokenAddr = circle.usdcContract.get(this.network, this.chain)!;
-
     const tokenContract = EvmPlatform.getTokenImplementation(
       this.provider,
-      tokenAddr
+      this.usdcContract
     );
 
     const allowance = await tokenContract.allowance(
@@ -117,12 +124,17 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
 
     const shim = new Contract(this.shimContract, shimAbi, this.provider);
 
+    const destinationCircleDomain = getCircleV2Domain(
+      this.network,
+      recipient.chain
+    );
+
     const txReq = await shim.getFunction("depositForBurn").populateTransaction(
       amount,
       toChainId(recipient.chain),
-      circle.circleChainId.get(this.network, recipient.chain)!,
+      destinationCircleDomain,
       recipientAddress,
-      tokenAddr,
+      this.usdcContract,
       destinationCaller,
       details.fastTransferMaxFee,
       details.minFinalityThreshold,
