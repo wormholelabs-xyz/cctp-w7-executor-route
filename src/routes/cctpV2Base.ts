@@ -1,18 +1,17 @@
 import {
+  amount,
+  Chain,
   ChainAddress,
-  ChainContext,
   EmptyPlatformMap,
   isAttested,
   isCompleted,
   isFailed,
-  isSameToken,
   isSourceFinalized,
   isSourceInitiated,
   Network,
   routes,
   Signer,
   signSendWait,
-  TokenId,
   TransactionId,
   TransferState,
   Wormhole,
@@ -20,14 +19,36 @@ import {
 import { fetchStatus, getCircleV2Attestation, RelayStatus } from "../utils";
 import { CircleV2Message } from "../layouts";
 import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
-import { getCircleV2Chain, usdcContracts } from "../consts";
+import { circleV2Domains, getCircleV2Chain } from "../consts";
 import { CCTPv2Executor } from "../types";
 import { initiateTransfer } from "./helpers";
 
-export type CCTPv2Attestation = {
-  id: string;
-  attestation: { message: CircleV2Message; attestation: string };
-};
+export namespace CCTPv2ExecutorRoute {
+  export type Options = {
+    // 0.0 - 1.0 percentage
+    nativeGas?: number;
+  };
+
+  export type NormalizedParams = {
+    amount: amount.Amount;
+  };
+
+  export interface ValidatedParams
+    extends routes.ValidatedTransferParams<Options> {
+    normalizedParams: NormalizedParams;
+  }
+
+  export type Config = {
+    // Referrer Fee in *tenths* of basis points
+    // e.g. 10 = 1 basis point (0.01%)
+    referrerFeeDbps: bigint;
+  };
+
+  export type Attestation = {
+    id: string;
+    attestation: { message: CircleV2Message; attestation: string };
+  };
+}
 
 export type Op = CCTPExecutorRoute.Options;
 export type Vp = CCTPExecutorRoute.ValidatedParams;
@@ -35,15 +56,15 @@ export type Vp = CCTPExecutorRoute.ValidatedParams;
 export type Tp = routes.TransferParams<Op>;
 export type Vr = routes.ValidationResult<Op>;
 
-export type Q = routes.Quote<Op, Vp, CCTPv2QuoteDetails>;
-export type Qr = routes.QuoteResult<Op, Vp>;
-
-export type R = routes.Receipt<CCTPv2Attestation>;
-
 export type CCTPv2QuoteDetails = QuoteDetails & {
   fastTransferMaxFee: bigint; // The maximum fee to pay on the destination domain, specified in units of burnToken (USDC)
   minFinalityThreshold: number; // The minimum finality at which a burn message will be attested to
 };
+
+export type Q = routes.Quote<Op, Vp, CCTPv2QuoteDetails>;
+export type Qr = routes.QuoteResult<Op, Vp>;
+
+export type R = routes.Receipt<CCTPv2ExecutorRoute.Attestation>;
 
 export abstract class CCTPv2BaseRoute<
   N extends Network
@@ -54,30 +75,8 @@ export abstract class CCTPv2BaseRoute<
     return ["Mainnet", "Testnet"];
   }
 
-  static async supportedDestinationTokens<N extends Network>(
-    sourceToken: TokenId,
-    fromChain: ChainContext<N>,
-    toChain: ChainContext<N>
-  ): Promise<TokenId[]> {
-    // Ensure the source token is USDC
-    const sourceChainUsdcContract =
-      usdcContracts[fromChain.network]?.[fromChain.chain];
-    if (
-      !(
-        sourceChainUsdcContract &&
-        isSameToken(
-          sourceToken,
-          Wormhole.tokenId(fromChain.chain, sourceChainUsdcContract)
-        )
-      )
-    ) {
-      return [];
-    }
-
-    const { network, chain } = toChain;
-    const destChainUsdcContract = usdcContracts[network]?.[chain];
-    if (!destChainUsdcContract) return [];
-    return [Wormhole.chainAddress(chain, destChainUsdcContract)];
+  static supportedChains(network: Network): Chain[] {
+    return Object.keys(circleV2Domains[network] ?? {}) as Chain[];
   }
 
   getDefaultOptions(): Op {
@@ -181,10 +180,11 @@ export abstract class CCTPv2BaseRoute<
             if (!receipt.attestation) {
               // This should never happen since we set the attestation
               // on the receipt before checking the relay status
-              throw new Error("Attestation on failed transfer is missing");
+              throw new Error("Receipt is missing attestation");
             }
 
-            const attestation: CCTPv2Attestation = receipt.attestation;
+            const attestation: CCTPv2ExecutorRoute.Attestation =
+              receipt.attestation;
 
             const executor = await this.wh
               .getChain(receipt.to)
@@ -234,6 +234,8 @@ export abstract class CCTPv2BaseRoute<
     if (!receipt.attestation) {
       throw new Error("No attestation found");
     }
+
+    // TODO: check if the attestation is expired and, if so, re-attest and fetch
 
     const sender = Wormhole.parseAddress(signer.chain(), signer.address());
     const toChain = this.wh.getChain(receipt.to);

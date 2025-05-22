@@ -21,8 +21,8 @@ import {
 } from "@wormhole-foundation/sdk-connect";
 import { fetchStatus as fetchTxStatus, RelayStatus } from "../utils";
 import { CCTPExecutor } from "../types";
-import { shimContractsV1, usdcContracts } from "../consts";
-import { fetchQuoteDetails, initiateTransfer } from "./helpers";
+import { circleV1Domains, isCircleV1Chain, usdcContracts } from "../consts";
+import { fetchExecutorQuote, initiateTransfer } from "./helpers";
 
 export namespace CCTPExecutorRoute {
   export type Options = {
@@ -110,7 +110,7 @@ export class CCTPExecutorRoute<N extends Network>
   }
 
   static supportedChains(network: Network): Chain[] {
-    return [...Object.keys(shimContractsV1[network] ?? {}), "Sui"] as Chain[];
+    return [...Object.keys(circleV1Domains[network] ?? {})] as Chain[];
   }
 
   static async supportedDestinationTokens<N extends Network>(
@@ -118,6 +118,13 @@ export class CCTPExecutorRoute<N extends Network>
     fromChain: ChainContext<N>,
     toChain: ChainContext<N>
   ): Promise<TokenId[]> {
+    if (
+      !isCircleV1Chain(fromChain.network, fromChain.chain) ||
+      !isCircleV1Chain(toChain.network, toChain.chain)
+    ) {
+      return [];
+    }
+
     // Ensure the source token is USDC
     const sourceChainUsdcContract =
       usdcContracts[fromChain.network]?.[fromChain.chain];
@@ -149,10 +156,10 @@ export class CCTPExecutorRoute<N extends Network>
     request: routes.RouteTransferRequest<N>,
     params: Tp
   ): Promise<Vr> {
-    const chains = CCTPExecutorRoute.supportedChains(request.fromChain.network);
+    const { fromChain, toChain } = request;
     if (
-      !chains.includes(request.fromChain.chain) ||
-      !chains.includes(request.toChain.chain)
+      !isCircleV1Chain(fromChain.network, fromChain.chain) ||
+      !isCircleV1Chain(toChain.network, toChain.chain)
     ) {
       return {
         valid: false,
@@ -189,57 +196,60 @@ export class CCTPExecutorRoute<N extends Network>
   ): Promise<QR> {
     const { fromChain, toChain } = request;
 
-    const quoteDetails = await fetchQuoteDetails(
-      request,
-      params,
-      this.staticConfig.referrerFeeDbps,
-      "ERC1"
-    );
+    try {
+      const quoteDetails = await fetchExecutorQuote(
+        request,
+        params,
+        this.staticConfig.referrerFeeDbps,
+        "ERC1"
+      );
 
-    if (quoteDetails instanceof Error) {
+      const { remainingAmount, estimatedCost, gasDropOff, expiryTime } =
+        quoteDetails;
+
+      // https://developers.circle.com/stablecoins/docs/required-block-confirmations
+      const eta =
+        fromChain.chain === "Polygon"
+          ? 2_000 * 200
+          : finality.estimateFinalityTime(fromChain.chain) + 1_000; // buffer for the relayer
+
+      const [srcNativeDecimals, dstNativeDecimals] = await Promise.all([
+        fromChain.getDecimals("native"),
+        toChain.getDecimals("native"),
+      ]);
+
+      return {
+        success: true,
+        params,
+        sourceToken: {
+          token: request.source.id,
+          amount: params.normalizedParams.amount,
+        },
+        destinationToken: {
+          token: request.destination.id,
+          amount: amount.fromBaseUnits(
+            remainingAmount,
+            request.destination.decimals
+          ),
+        },
+        relayFee: {
+          token: nativeTokenId(fromChain.chain),
+          amount: amount.fromBaseUnits(estimatedCost, srcNativeDecimals),
+        },
+        destinationNativeGas: amount.fromBaseUnits(
+          gasDropOff,
+          dstNativeDecimals
+        ),
+        eta,
+        expires: expiryTime,
+        details: quoteDetails,
+      };
+    } catch (e) {
       return {
         success: false,
-        error: quoteDetails,
+        error: new Error(e instanceof Error ? e.message : `${e}`),
       };
     }
-
-    const { remainingAmount, estimatedCost, gasDropOff, expiryTime } =
-      quoteDetails;
-
-    // https://developers.circle.com/stablecoins/docs/required-block-confirmations
-    const eta =
-      fromChain.chain === "Polygon"
-        ? 2_000 * 200
-        : finality.estimateFinalityTime(fromChain.chain) + 1_000; // buffer for the relayer
-
-    const [srcNativeDecimals, dstNativeDecimals] = await Promise.all([
-      fromChain.getDecimals("native"),
-      toChain.getDecimals("native"),
-    ]);
-
-    return {
-      success: true,
-      params,
-      sourceToken: {
-        token: request.source.id,
-        amount: params.normalizedParams.amount,
-      },
-      destinationToken: {
-        token: request.destination.id,
-        amount: amount.fromBaseUnits(
-          remainingAmount,
-          request.destination.decimals
-        ),
-      },
-      relayFee: {
-        token: nativeTokenId(fromChain.chain),
-        amount: amount.fromBaseUnits(estimatedCost, srcNativeDecimals),
-      },
-      destinationNativeGas: amount.fromBaseUnits(gasDropOff, dstNativeDecimals),
-      eta,
-      expires: expiryTime,
-      details: quoteDetails,
-    };
   }
 
   async initiate(

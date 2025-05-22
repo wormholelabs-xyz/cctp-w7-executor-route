@@ -31,18 +31,20 @@ import {
 import { Connection } from "@solana/web3.js";
 import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
 import { relayInstructionsLayout, signedQuoteLayout } from "../layouts";
-import { CCTPv2QuoteDetails } from "./cctpV2Base";
+import { CCTPv2ExecutorRoute, CCTPv2QuoteDetails } from "./cctpV2Base";
 
 // The minimum rent exemption amount for a 165 byte account (e.g. an ATA)
 // cache it here to avoid fetching it from the Solana RPC
 let ataMinRentAmount: bigint | undefined = undefined;
 
-export async function fetchQuoteDetails(
+export async function fetchExecutorQuote(
   request: routes.RouteTransferRequest<Network>,
-  params: CCTPExecutorRoute.ValidatedParams,
+  params:
+    | CCTPExecutorRoute.ValidatedParams
+    | CCTPv2ExecutorRoute.ValidatedParams,
   referrerFeeDbps: bigint,
   capability: "ERC1" | "ERC2"
-): Promise<QuoteDetails | Error> {
+): Promise<QuoteDetails> {
   const { fromChain, toChain } = request;
 
   const srcUsdcAddress = usdcContracts[fromChain.network]?.[fromChain.chain];
@@ -57,7 +59,7 @@ export async function fetchQuoteDetails(
 
   const referrerAddress = referrers[fromChain.network]?.[fromChain.chain];
   if (!referrerAddress) {
-    return new Error("No referrer address found");
+    throw new Error("No referrer address found");
   }
   const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
 
@@ -66,18 +68,18 @@ export async function fetchQuoteDetails(
     referrerFeeDbps
   );
   if (remainingAmount <= 0n) {
-    return new Error("Amount after fee <= 0");
+    throw new Error("Amount after fee <= 0");
   }
 
-  const gasLimit = gasLimits[fromChain.network]?.[toChain.chain];
+  const gasLimit = gasLimits[toChain.network]?.[toChain.chain];
   if (!gasLimit) {
-    return new Error("Gas limit not found");
+    throw new Error("Gas limit not found");
   }
 
   const capabilities = await fetchCapabilities(fromChain.network);
   const srcCapabilities = capabilities[toChainId(fromChain.chain)];
   if (!srcCapabilities) {
-    return new Error("Unsupported source chain");
+    throw new Error("Unsupported source chain");
   }
 
   const dstCapabilities = capabilities[toChainId(toChain.chain)];
@@ -85,7 +87,7 @@ export async function fetchQuoteDetails(
     !dstCapabilities ||
     !dstCapabilities.requestPrefixes.includes(capability)
   ) {
-    return new Error("Unsupported destination chain");
+    throw new Error("Unsupported destination chain");
   }
 
   const { recipient } = request;
@@ -165,7 +167,7 @@ export async function fetchQuoteDetails(
   );
 
   if (!quote.estimatedCost) {
-    return new Error("No estimated cost");
+    throw new Error("No estimated cost");
   }
 
   const signedQuoteBytes = encoding.hex.decode(quote.signedQuote);
