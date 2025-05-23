@@ -1,4 +1,5 @@
 import {
+  amount,
   Chain,
   encoding,
   Network,
@@ -300,5 +301,5 @@ export async function getCircleV2FastBurnAllowance(
 ): Promise<bigint> {
   const url = `${circleV2Api[network]}/fastBurn/USDC/allowance`;
   const response = await axios.get<CircleV2FastBurnAllowanceResponse>(url);
-  return BigInt(Math.floor(response.data.allowance));
+  return amount.units(amount.parse(response.data.allowance, 6));
 }
