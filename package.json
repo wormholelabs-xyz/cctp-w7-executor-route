@@ -34,7 +34,7 @@
     "@wormhole-foundation/sdk-solana-cctp": "^1.19.0",
     "@wormhole-foundation/sdk-sui": "^1.19.0",
     "@wormhole-foundation/sdk-sui-cctp": "^1.19.0"
-},
+  },
   "devDependencies": {
     "@types/node": "^20.11.6",
     "tsx": "^4.7.0",
