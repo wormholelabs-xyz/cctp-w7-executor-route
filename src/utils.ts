@@ -279,8 +279,7 @@ export async function reattestCircleV2Message(
       );
       if (!newAttestation) return null;
 
-      // keep retrying until the attestation changes
-      if (newAttestation.attestation === attestation.attestation.attestation)
+      if (newAttestation.message.messageBody.expirationBlock !== 0n)
         return null;
 
       return newAttestation;
