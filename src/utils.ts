@@ -260,6 +260,9 @@ export async function reattestCircleV2Message(
   const url = `${circleV2Api[network]}/reattest/${nonce}`;
   const response = await axios.post<CircleV2ReattestResponse>(url);
   if (response.data.error) {
+    if (response.data.error.includes("Message is already finalized")) {
+      return attestation.attestation;
+    }
     throw new Error(`Error re-attesting message: ${response.data.error}`);
   }
 
@@ -286,4 +289,17 @@ export async function reattestCircleV2Message(
     DEFAULT_TASK_TIMEOUT,
     "CCTPv2:Reattest"
   );
+}
+
+interface CircleV2FastBurnAllowanceResponse {
+  allowance: number; // The current USDC Fast Burn allowance remaining, in full units of USDC up to 6 decimals; for example, 123999.999999 USDC.
+  lastUpdated: string; // The timestamp when the allowance was last updated.
+}
+
+export async function getCircleV2FastBurnAllowance(
+  network: Network
+): Promise<bigint> {
+  const url = `${circleV2Api[network]}/fastBurn/USDC/allowance`;
+  const response = await axios.get<CircleV2FastBurnAllowanceResponse>(url);
+  return BigInt(Math.floor(response.data.allowance));
 }

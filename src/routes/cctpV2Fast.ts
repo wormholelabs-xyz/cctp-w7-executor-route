@@ -7,7 +7,7 @@ import {
   TokenId,
 } from "@wormhole-foundation/sdk-definitions";
 import { routes, Wormhole } from "@wormhole-foundation/sdk-connect";
-import { getCircleV2FastBurnFee } from "../utils";
+import { getCircleV2FastBurnAllowance, getCircleV2FastBurnFee } from "../utils";
 import {
   CircleV2FinalityThreshold,
   fastTransferETAs,
@@ -154,6 +154,14 @@ export class CCTPv2FastExecutorRoute<N extends Network>
 
       const { remainingAmount, estimatedCost, gasDropOff, expiryTime } =
         quoteDetails;
+
+      const allowance = await getCircleV2FastBurnAllowance(fromChain.network);
+      if (allowance <= remainingAmount) {
+        return {
+          success: false,
+          error: new Error("Insufficient allowance for fast transfer"),
+        };
+      }
 
       const fastBurnFeeBps = await getCircleV2FastBurnFee(
         fromChain.network,
