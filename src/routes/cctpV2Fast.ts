@@ -57,15 +57,22 @@ export class CCTPv2FastExecutorRoute<N extends Network>
     provider: "Circle",
   };
 
+  static isPathSupported<N extends Network>(
+    fromChain: ChainContext<N>,
+    toChain: ChainContext<N>
+  ): boolean {
+    return (
+      isCircleV2FastChain(fromChain.network, fromChain.chain) &&
+      isCircleV2Chain(toChain.network, toChain.chain)
+    );
+  }
+
   static async supportedDestinationTokens<N extends Network>(
     sourceToken: TokenId,
     fromChain: ChainContext<N>,
     toChain: ChainContext<N>
   ): Promise<TokenId[]> {
-    if (
-      !isCircleV2FastChain(fromChain.network, fromChain.chain) ||
-      !isCircleV2Chain(toChain.network, toChain.chain)
-    ) {
+    if (!this.isPathSupported(fromChain, toChain)) {
       return [];
     }
 
@@ -94,10 +101,11 @@ export class CCTPv2FastExecutorRoute<N extends Network>
     request: routes.RouteTransferRequest<N>,
     params: Tp
   ): Promise<Vr> {
-    const { fromChain, toChain } = request;
     if (
-      !isCircleV2FastChain(fromChain.network, fromChain.chain) ||
-      !isCircleV2Chain(toChain.network, toChain.chain)
+      !CCTPv2FastExecutorRoute.isPathSupported(
+        request.fromChain,
+        request.toChain
+      )
     ) {
       return {
         valid: false,
