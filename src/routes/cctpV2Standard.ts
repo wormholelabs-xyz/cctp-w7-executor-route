@@ -54,15 +54,25 @@ export class CCTPv2StandardExecutorRoute<N extends Network>
     provider: "Circle",
   };
 
+  static isPathSupported<N extends Network>(
+    fromChain: ChainContext<N>,
+    toChain: ChainContext<N>
+  ): boolean {
+    return (
+      isCircleV2Chain(fromChain.network, fromChain.chain) &&
+      isCircleV2Chain(toChain.network, toChain.chain) &&
+      // We don't support slow transfers from Linea because the attestation time
+      // can be anywhere between 6 and 32 hours! Fast transfer should be used instead.
+      fromChain.chain !== "Linea"
+    );
+  }
+
   static async supportedDestinationTokens<N extends Network>(
     sourceToken: TokenId,
     fromChain: ChainContext<N>,
     toChain: ChainContext<N>
   ): Promise<TokenId[]> {
-    if (
-      !isCircleV2Chain(fromChain.network, fromChain.chain) ||
-      !isCircleV2Chain(toChain.network, toChain.chain)
-    ) {
+    if (!this.isPathSupported(fromChain, toChain)) {
       return [];
     }
 
@@ -91,10 +101,11 @@ export class CCTPv2StandardExecutorRoute<N extends Network>
     request: routes.RouteTransferRequest<N>,
     params: Tp
   ): Promise<Vr> {
-    const { fromChain, toChain } = request;
     if (
-      !isCircleV2Chain(fromChain.network, fromChain.chain) ||
-      !isCircleV2Chain(toChain.network, toChain.chain)
+      !CCTPv2StandardExecutorRoute.isPathSupported(
+        request.fromChain,
+        request.toChain
+      )
     ) {
       return {
         valid: false,
