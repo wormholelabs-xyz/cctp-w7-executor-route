@@ -227,8 +227,7 @@ export const circleV1Domains: Partial<
 };
 
 export const isCircleV1Chain = (network: Network, chain: Chain): boolean => {
-  const chains = Object.keys(circleV1Domains[network] ?? {});
-  return chains.includes(chain);
+  return circleV1Domains[network]?.[chain] !== undefined;
 };
 
 export const getCircleV1Domain = (network: Network, chain: Chain): number => {
@@ -263,8 +262,7 @@ export const circleV2Domains: Partial<
 };
 
 export const isCircleV2Chain = (network: Network, chain: Chain): boolean => {
-  const chains = Object.keys(circleV2Domains[network] ?? {});
-  return chains.includes(chain);
+  return circleV2Domains[network]?.[chain] !== undefined;
 };
 
 export const getCircleV2Domain = (network: Network, chain: Chain): number => {
@@ -323,8 +321,7 @@ export const isCircleV2FastChain = (
   network: Network,
   chain: Chain
 ): boolean => {
-  const fastChains = Object.keys(fastTransferETAs[network] ?? {});
-  return fastChains.includes(chain);
+  return fastTransferETAs[network]?.[chain] !== undefined;
 };
 
 // The USDC addresses for V2 only chains aren't defined in the Wormhole SDK,
