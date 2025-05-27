@@ -23,7 +23,7 @@ import {
   RelayStatus,
 } from "../utils";
 import { CircleV2Message } from "../layouts";
-import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
+import { QuoteDetails } from "./cctpV1";
 import { circleV2Domains, getCircleV2Chain } from "../consts";
 import { CCTPv2Executor } from "../types";
 import { initiateTransfer } from "./helpers";
@@ -55,8 +55,8 @@ export namespace CCTPv2ExecutorRoute {
   };
 }
 
-export type Op = CCTPExecutorRoute.Options;
-export type Vp = CCTPExecutorRoute.ValidatedParams;
+export type Op = CCTPv2ExecutorRoute.Options;
+export type Vp = CCTPv2ExecutorRoute.ValidatedParams;
 
 export type Tp = routes.TransferParams<Op>;
 export type Vr = routes.ValidationResult<Op>;
@@ -175,7 +175,6 @@ export abstract class CCTPv2BaseRoute<
                   `Relay failed with status: ${relayStatus}`
                 ),
               };
-              yield receipt;
             }
           }
 
@@ -206,7 +205,6 @@ export abstract class CCTPv2BaseRoute<
                 attestation,
               };
             }
-            yield receipt;
           }
 
           // Important to yield before checking for completion
