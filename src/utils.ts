@@ -122,24 +122,26 @@ export function calculateReferrerFee(
   amount: bigint,
   dBps: bigint,
   threshold?: bigint
-): { referrerFee: bigint; remainingAmount: bigint } {
+): { referrerFee: bigint; remainingAmount: bigint; referrerFeeDbps: bigint } {
   if (dBps > MAX_U16) {
     throw new Error("dBps exceeds max u16");
   }
+  let referrerFeeDbps: bigint = dBps;
+  let remainingAmount: bigint = amount;
+  let referrerFee: bigint = 0n;
   if (dBps > 0) {
-    let referrerFee: bigint;
     if (threshold !== undefined && amount > 0) {
       // Capped dBps is minimum of dBps and threshold/amount
       const cappedMax = threshold / amount;
       const cappedDBps = dBps < cappedMax ? dBps : cappedMax;
       referrerFee = (amount * cappedDBps) / 100_000n;
+      referrerFeeDbps = cappedDBps;
     } else {
       referrerFee = (amount * dBps) / 100_000n;
     }
-    const remainingAmount = amount - referrerFee;
-    return { referrerFee, remainingAmount };
+    remainingAmount = amount - referrerFee;
   }
-  return { referrerFee: 0n, remainingAmount: amount };
+  return { referrerFee, remainingAmount, referrerFeeDbps };
 }
 
 export function sleep(ms: number): Promise<void> {

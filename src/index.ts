@@ -239,13 +239,14 @@ export class CCTPExecutorRoute<N extends Network>
       };
     }
     const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
-    const referrerFeeDbps = this.staticConfig.referrerFeeDbps;
 
-    const { referrerFee, remainingAmount } = calculateReferrerFee(
-      amount.units(params.normalizedParams.amount),
-      this.staticConfig.referrerFeeDbps,
-      this.staticConfig.referrerFeeThreshold
-    );
+    const { referrerFee, remainingAmount, referrerFeeDbps } =
+      calculateReferrerFee(
+        amount.units(params.normalizedParams.amount),
+        this.staticConfig.referrerFeeDbps,
+        this.staticConfig.referrerFeeThreshold
+      );
+
     if (remainingAmount <= 0n) {
       return {
         success: false,
