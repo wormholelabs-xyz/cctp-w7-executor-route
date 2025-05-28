@@ -20,9 +20,9 @@ import {
   SolanaUnsignedTransaction,
 } from "@wormhole-foundation/sdk-solana";
 import { CCTPExecutor } from "../types";
-import { shimContracts, solanaExecutorId } from "../consts";
+import { shimContractsV1, solanaExecutorId } from "../consts";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { QuoteDetails } from "..";
+import { QuoteDetails } from "../routes/cctpV1";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferInstruction,
@@ -73,7 +73,7 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
     );
 
     this.shimProgramId = getContractAddress(
-      shimContracts[network]?.[chain],
+      shimContractsV1[network]?.[chain],
       `Shim contract for ${chain} not found`
     );
 

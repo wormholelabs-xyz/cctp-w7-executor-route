@@ -22,8 +22,8 @@ import {
   AptosUnsignedTransaction,
 } from "@wormhole-foundation/sdk-aptos";
 import { CCTPExecutor } from "../types";
-import { shimContracts } from "../consts";
-import { QuoteDetails } from "..";
+import { shimContractsV1 } from "../consts";
+import { QuoteDetails } from "../routes/cctpV1";
 
 export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
   implements CCTPExecutor<N, C>
@@ -48,7 +48,7 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
     }
     this.usdcId = usdcId;
 
-    const shimContract = shimContracts[network]?.[chain];
+    const shimContract = shimContractsV1[network]?.[chain];
     if (!shimContract) throw new Error(`Shim contract for ${chain} not found`);
     this.shimContract = shimContract;
   }

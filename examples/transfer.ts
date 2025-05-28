@@ -5,7 +5,7 @@ import { SuiPlatform } from "@wormhole-foundation/sdk-sui";
 import { AptosPlatform } from "@wormhole-foundation/sdk-aptos";
 
 import { getStuff } from "./utils";
-import { cctpExecutorRoute } from "../src";
+import { cctpExecutorRoute, cctpV2StandardExecutorRoute } from "../src";
 
 (async function () {
   // Setup
@@ -17,7 +17,7 @@ import { cctpExecutorRoute } from "../src";
   ]);
 
   const sendChain = wh.getChain("Avalanche");
-  const destChain = wh.getChain("Sui");
+  const destChain = wh.getChain("Sepolia");
 
   // Doing transfer of USDC on Avalanche to USDC on Sepolia
   const source = Wormhole.tokenId(
@@ -29,9 +29,9 @@ import { cctpExecutorRoute } from "../src";
     circle.usdcContract.get("Testnet", destChain.chain)!
   );
 
-  // Create a new Wormhole route resolver, adding the Mayan route to the default list
-  const referrerFeeDbps = 10n;
-  const route = cctpExecutorRoute({ referrerFeeDbps });
+  // Create a new Wormhole route resolver, adding the CCTP route to the default list
+  const referrerFeeDbps = 0n;
+  const route = cctpV2StandardExecutorRoute({ referrerFeeDbps });
   const resolver = wh.resolver([route]);
 
   //const dstTokens = await resolver.supportedDestinationTokens(
