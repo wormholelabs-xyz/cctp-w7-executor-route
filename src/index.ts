@@ -100,11 +100,17 @@ export namespace CCTPExecutorRoute {
     // Referrer Fee in *tenths* of basis points
     // e.g. 10 = 1 basis point (0.01%)
     referrerFeeDbps: bigint;
+    // Optional threshold USDC amount used in the below referrer fee formula when specified.
+    // min(referrerFeeDbps, referrerFeeThreshold/amount)
+    // Note that this is in whole USDC, not in base units.
+    referrerFeeThreshold?: bigint;
   };
 }
 
 // Use this function to create a new CCTPExecutorRoute with custom config
-export function cctpExecutorRoute(config: CCTPExecutorRoute.Config = { referrerFeeDbps: 0n }) {
+export function cctpExecutorRoute(
+  config: CCTPExecutorRoute.Config = { referrerFeeDbps: 0n }
+) {
   if (config.referrerFeeDbps < 0 || config.referrerFeeDbps > 65535n) {
     throw new Error("Referrer fee must be between 0 and 65535");
   }
@@ -234,12 +240,14 @@ export class CCTPExecutorRoute<N extends Network>
       };
     }
     const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
-    const referrerFeeDbps = this.staticConfig.referrerFeeDbps;
 
-    const { referrerFee, remainingAmount } = calculateReferrerFee(
-      amount.units(params.normalizedParams.amount),
-      this.staticConfig.referrerFeeDbps
-    );
+    const { referrerFee, remainingAmount, referrerFeeDbps } =
+      calculateReferrerFee(
+        amount.units(params.normalizedParams.amount),
+        this.staticConfig.referrerFeeDbps,
+        this.staticConfig.referrerFeeThreshold
+      );
+
     if (remainingAmount <= 0n) {
       return {
         success: false,
