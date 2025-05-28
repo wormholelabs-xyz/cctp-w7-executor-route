@@ -14,7 +14,7 @@ describe("calculateReferrerFee", () => {
   it("should calculate the referrer fee and remaining amount correctly when referrerFeeThreshold is specified", () => {
     const amount = 1_000_000n;
     const dBps = 50n;
-    const threshold = 5_000_000n;
+    const threshold = 5n; // threshold is in whole units, so 5n = 5_000_000n in base units
     const cappedResult = calculateReferrerFee(amount, dBps, threshold);
 
     // using the capped dBps should yield the same result as the no threshold case
