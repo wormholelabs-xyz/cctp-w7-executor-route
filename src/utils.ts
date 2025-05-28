@@ -1,6 +1,7 @@
 import {
   amount,
   Chain,
+  circle,
   encoding,
   Network,
   toChainId,
@@ -19,9 +20,13 @@ import {
   getCircleV2Domain,
 } from "./consts";
 import {
+  ChainContext,
   DEFAULT_TASK_TIMEOUT,
+  isSameToken,
   tasks,
+  TokenId,
   TransactionId,
+  Wormhole,
 } from "@wormhole-foundation/sdk-connect";
 import { CCTPv2ExecutorRoute } from "./routes";
 
@@ -316,4 +321,34 @@ export async function getCircleV2FastBurnAllowance(
   const url = `${circleV2Api[network]}/fastBurn/USDC/allowance`;
   const response = await axios.get<CircleV2FastBurnAllowanceResponse>(url);
   return amount.units(amount.parse(response.data.allowance, 6));
+}
+
+export function getUsdcDestinationAddress<N extends Network>(
+  sourceToken: TokenId,
+  fromChain: ChainContext<N>,
+  toChain: ChainContext<N>
+): TokenId[] {
+  // Ensure the source token is USDC
+  const sourceChainUsdcContract = circle.usdcContract.get(
+    fromChain.network,
+    fromChain.chain
+  );
+  if (
+    !(
+      sourceChainUsdcContract &&
+      isSameToken(
+        sourceToken,
+        Wormhole.tokenId(fromChain.chain, sourceChainUsdcContract)
+      )
+    )
+  ) {
+    return [];
+  }
+
+  // Get the destination chain's USDC contract
+  const { network, chain } = toChain;
+  const destChainUsdcContract = circle.usdcContract.get(network, chain);
+  if (!destChainUsdcContract) return [];
+
+  return [Wormhole.chainAddress(chain, destChainUsdcContract)];
 }

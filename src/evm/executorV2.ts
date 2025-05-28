@@ -7,6 +7,7 @@ import type {
   Platform,
 } from "@wormhole-foundation/sdk-connect";
 import {
+  circle,
   encoding,
   nativeChainIds,
   toChainId,
@@ -27,7 +28,6 @@ import {
   circleV2Contracts,
   getCircleV2Domain,
   shimContractsV2,
-  usdcContracts,
 } from "../consts";
 import { CircleV2Message, serializeCircleV2Message } from "../layouts";
 import { CCTPv2QuoteDetails } from "../routes/cctpV2Base";
@@ -64,7 +64,7 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
       throw new Error(`MessageTransmitter contract for ${chain} not found`);
     this.messageTransmitter = messageTransmitter;
 
-    const usdcContract = usdcContracts[network]?.[chain];
+    const usdcContract = circle.usdcContract.get(network, chain);
     if (!usdcContract) throw new Error(`USDC contract for ${chain} not found`);
     this.usdcContract = usdcContract;
   }

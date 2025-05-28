@@ -1,6 +1,7 @@
 import {
   amount,
   ChainAddress,
+  circle,
   deserializeLayout,
   encoding,
   Network,
@@ -15,12 +16,7 @@ import {
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
 import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
-import {
-  gasLimits,
-  referrers,
-  SOLANA_MSG_VALUE_BASE_FEE,
-  usdcContracts,
-} from "../consts";
+import { gasLimits, referrers, SOLANA_MSG_VALUE_BASE_FEE } from "../consts";
 import {
   calculateReferrerFee,
   fetchCapabilities,
@@ -47,12 +43,18 @@ export async function fetchExecutorQuote(
 ): Promise<QuoteDetails> {
   const { fromChain, toChain } = request;
 
-  const srcUsdcAddress = usdcContracts[fromChain.network]?.[fromChain.chain];
+  const srcUsdcAddress = circle.usdcContract.get(
+    fromChain.network,
+    fromChain.chain
+  );
   if (!srcUsdcAddress) {
     throw new Error("Invalid transfer, no USDC contract on source");
   }
 
-  const dstUsdcAddress = usdcContracts[toChain.network]?.[toChain.chain];
+  const dstUsdcAddress = circle.usdcContract.get(
+    toChain.network,
+    toChain.chain
+  );
   if (!dstUsdcAddress) {
     throw new Error("Invalid transfer, no USDC contract on destination");
   }
@@ -271,8 +273,10 @@ async function resolveRecipient(
   if (to.chain !== "Solana") return to;
 
   // When transferring to Solana, the recipient address is the ATA
-  const solanaUsdc =
-    usdcContracts[request.toChain.network]?.[request.toChain.chain];
+  const solanaUsdc = circle.usdcContract.get(
+    request.toChain.network,
+    request.toChain.chain
+  );
   if (!solanaUsdc) throw new Error("No USDC contract found for Solana");
 
   const usdcAddress = Wormhole.parseAddress("Solana", solanaUsdc);

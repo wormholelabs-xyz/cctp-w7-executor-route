@@ -2,18 +2,20 @@ import type { Network } from "@wormhole-foundation/sdk-base";
 import { amount } from "@wormhole-foundation/sdk-base";
 import {
   ChainContext,
-  isSameToken,
   nativeTokenId,
   TokenId,
 } from "@wormhole-foundation/sdk-definitions";
-import { routes, Wormhole } from "@wormhole-foundation/sdk-connect";
-import { getCircleV2FastBurnAllowance, getCircleV2FastBurnFee } from "../utils";
+import { routes } from "@wormhole-foundation/sdk-connect";
+import {
+  getCircleV2FastBurnAllowance,
+  getCircleV2FastBurnFee,
+  getUsdcDestinationAddress,
+} from "../utils";
 import {
   CircleV2FinalityThreshold,
   fastTransferETAs,
   isCircleV2Chain,
   isCircleV2FastChain,
-  usdcContracts,
 } from "../consts";
 import {
   CCTPv2BaseRoute,
@@ -76,25 +78,7 @@ export class CCTPv2FastExecutorRoute<N extends Network>
       return [];
     }
 
-    // Ensure the source token is USDC
-    const sourceChainUsdcContract =
-      usdcContracts[fromChain.network]?.[fromChain.chain];
-    if (
-      !(
-        sourceChainUsdcContract &&
-        isSameToken(
-          sourceToken,
-          Wormhole.tokenId(fromChain.chain, sourceChainUsdcContract)
-        )
-      )
-    ) {
-      return [];
-    }
-
-    const { network, chain } = toChain;
-    const destChainUsdcContract = usdcContracts[network]?.[chain];
-    if (!destChainUsdcContract) return [];
-    return [Wormhole.chainAddress(chain, destChainUsdcContract)];
+    return getUsdcDestinationAddress(sourceToken, fromChain, toChain);
   }
 
   async validate(

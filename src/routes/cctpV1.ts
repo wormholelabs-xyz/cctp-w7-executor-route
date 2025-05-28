@@ -2,7 +2,6 @@ import type { Chain, Network } from "@wormhole-foundation/sdk-base";
 import { amount, finality } from "@wormhole-foundation/sdk-base";
 import {
   EmptyPlatformMap,
-  isSameToken,
   nativeTokenId,
   type ChainAddress,
   type ChainContext,
@@ -17,11 +16,14 @@ import {
   isSourceInitiated,
   routes,
   TransferState,
-  Wormhole,
 } from "@wormhole-foundation/sdk-connect";
-import { fetchStatus as fetchTxStatus, RelayStatus } from "../utils";
+import {
+  fetchStatus as fetchTxStatus,
+  getUsdcDestinationAddress,
+  RelayStatus,
+} from "../utils";
 import { CCTPExecutor } from "../types";
-import { circleV1Domains, isCircleV1Chain, usdcContracts } from "../consts";
+import { circleV1Domains, isCircleV1Chain } from "../consts";
 import { fetchExecutorQuote, initiateTransfer } from "./helpers";
 
 export namespace CCTPExecutorRoute {
@@ -125,25 +127,7 @@ export class CCTPExecutorRoute<N extends Network>
       return [];
     }
 
-    // Ensure the source token is USDC
-    const sourceChainUsdcContract =
-      usdcContracts[fromChain.network]?.[fromChain.chain];
-    if (
-      !(
-        sourceChainUsdcContract &&
-        isSameToken(
-          sourceToken,
-          Wormhole.tokenId(fromChain.chain, sourceChainUsdcContract)
-        )
-      )
-    ) {
-      return [];
-    }
-
-    const { network, chain } = toChain;
-    const destChainUsdcContract = usdcContracts[network]?.[chain];
-    if (!destChainUsdcContract) return [];
-    return [Wormhole.chainAddress(chain, destChainUsdcContract)];
+    return getUsdcDestinationAddress(sourceToken, fromChain, toChain);
   }
 
   getDefaultOptions(): Op {
