@@ -100,8 +100,9 @@ export namespace CCTPExecutorRoute {
     // Referrer Fee in *tenths* of basis points
     // e.g. 10 = 1 basis point (0.01%)
     referrerFeeDbps: bigint;
-    // Optional threshold value used in the below referrer fee formula when specified.
+    // Optional threshold USDC amount used in the below referrer fee formula when specified.
     // min(referrerFeeDbps, referrerFeeThreshold/amount)
+    // Note that this is in whole USDC, not in base units.
     referrerFeeThreshold?: bigint;
   };
 }

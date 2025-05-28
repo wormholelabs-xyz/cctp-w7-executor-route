@@ -1,4 +1,9 @@
-import { Chain, Network, toChainId } from "@wormhole-foundation/sdk-base";
+import {
+  Chain,
+  Network,
+  toChainId,
+  amount as sdkAmount,
+} from "@wormhole-foundation/sdk-base";
 import { RequestPrefix, SignedQuote } from "./layouts";
 import axios from "axios";
 import { apiBaseUrl } from "./consts";
@@ -131,8 +136,10 @@ export function calculateReferrerFee(
   let referrerFee: bigint = 0n;
   if (dBps > 0) {
     if (threshold !== undefined && amount > 0) {
+      // We first need to convert the threshold value to base units
+      const thresholdAmount = sdkAmount.parse(threshold.toString(), 6);
       // Capped dBps is minimum of dBps and threshold/amount
-      const cappedMax = threshold / amount;
+      const cappedMax = sdkAmount.units(thresholdAmount) / amount;
       const cappedDBps = dBps < cappedMax ? dBps : cappedMax;
       referrerFee = (amount * cappedDBps) / 100_000n;
       referrerFeeDbps = cappedDBps;
