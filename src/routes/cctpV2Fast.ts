@@ -132,7 +132,7 @@ export class CCTPv2FastExecutorRoute<N extends Network>
       const quoteDetails = await fetchExecutorQuote(
         request,
         params,
-        this.staticConfig.referrerFeeDbps,
+        this.staticConfig,
         "ERC2"
       );
 

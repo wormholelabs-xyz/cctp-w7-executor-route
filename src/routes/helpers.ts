@@ -38,7 +38,7 @@ export async function fetchExecutorQuote(
   params:
     | CCTPExecutorRoute.ValidatedParams
     | CCTPv2ExecutorRoute.ValidatedParams,
-  referrerFeeDbps: bigint,
+  config: CCTPExecutorRoute.Config | CCTPv2ExecutorRoute.Config,
   capability: "ERC1" | "ERC2"
 ): Promise<QuoteDetails> {
   const { fromChain, toChain } = request;
@@ -65,9 +65,10 @@ export async function fetchExecutorQuote(
   }
   const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
 
-  const { referrerFee, remainingAmount } = calculateReferrerFee(
+  const { referrerFee, remainingAmount, referrerFeeDbps } = calculateReferrerFee(
     amount.units(params.normalizedParams.amount),
-    referrerFeeDbps
+    config.referrerFeeDbps,
+    config.referrerFeeThreshold
   );
   if (remainingAmount <= 0n) {
     throw new Error("Amount after fee <= 0");
