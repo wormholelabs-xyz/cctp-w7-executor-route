@@ -26,6 +26,35 @@ describe("calculateReferrerFee", () => {
     expect(cappedResult.remainingAmount).toBe(999_950n);
   });
 
+  it("should calculate referrer fees correctly with same threshold but different amounts", () => {
+    const dBps = 10n; // 1bp
+    const threshold = 5_000_000n;
+
+    let amount = 100_000_000n; // $100
+    let result = calculateReferrerFee(amount, dBps, threshold);
+    expect(result.remainingAmount).toBe(99_990_000n);
+    expect(result.referrerFee).toBe(10_000n);
+    expect(result.referrerFeeDbps).toBe(10n);
+
+    amount = 1_000_000_000n; // $1,000
+    result = calculateReferrerFee(amount, dBps, threshold);
+    expect(result.remainingAmount).toBe(999_900_000n);
+    expect(result.referrerFee).toBe(100_000n);
+    expect(result.referrerFeeDbps).toBe(10n);
+
+    amount = 500_000_000_000n; // $500,000
+    result = calculateReferrerFee(amount, dBps, threshold);
+    expect(result.remainingAmount).toBe(499_950_000_000n);
+    expect(result.referrerFee).toBe(50_000_000n);
+    expect(result.referrerFeeDbps).toBe(10n);
+
+    amount = 1_000_000_000_000n; // $1,000,000
+    result = calculateReferrerFee(amount, dBps, threshold);
+    expect(result.remainingAmount).toBe(999_950_000_000n);
+    expect(result.referrerFee).toBe(50_000_000n);
+    expect(result.referrerFeeDbps).toBe(5n);
+  });
+
   it("should return the full amount as remaining and zero referrer fee when dBps is 0", () => {
     const amount = 1_000_000n;
     const dBps = 0n;
