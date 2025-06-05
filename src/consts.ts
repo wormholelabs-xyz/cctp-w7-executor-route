@@ -45,6 +45,7 @@ export const shimContractsV2: Partial<
     Ethereum: "0x2cCf230467FE7387674BAa657747F0B5485c7fEC",
     Linea: "0xc48c126468BE919068dE1983F00F65af759a4E87",
     Sonic: "0xc39BF082ec91D9bC385F956D24a8D66C0c26223d",
+    Worldchain: "0x789f2b91f7B35D5B890983328340c4600339B354",
   },
 };
 
@@ -82,7 +83,7 @@ export const gasLimits: Partial<
 > = {
   Testnet: {
     Aptos: 5_000n,
-    ArbitrumSepolia: 500_000n,
+    ArbitrumSepolia: 800_000n,
     Avalanche: 200_000n,
     BaseSepolia: 200_000n,
     Linea: 250_000n,
@@ -93,7 +94,7 @@ export const gasLimits: Partial<
   },
   Mainnet: {
     Aptos: 5_000n,
-    Arbitrum: 500_000n,
+    Arbitrum: 800_000n,
     Avalanche: 250_000n,
     Base: 250_000n,
     Ethereum: 250_000n,
@@ -104,6 +105,7 @@ export const gasLimits: Partial<
     Solana: 250_000n,
     Sonic: 250_000n,
     Sui: 8_000_000n,
+    Worldchain: 250_000n,
   },
 };
 
@@ -132,6 +134,7 @@ export const referrers: Partial<
     Solana: "JB3rmygUVuVZzgkxvMdV8mSKLJeQAkSXEK284Dqsziah",
     Sonic: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
     Sui: "0xbfa1240e48c622d97881473953be730091161b7931d89bd6afe667841cf69ef4",
+    Worldchain: "0xF11e0efF8b11Ce382645dd75352fC16b3aB3551E",
   },
 };
 
@@ -191,6 +194,10 @@ export const circleV2Contracts: Partial<
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
     Sonic: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
+    Worldchain: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
@@ -258,6 +265,7 @@ export const circleV2Domains: Partial<
     Base: 6,
     Linea: 11,
     Sonic: 13,
+    Worldchain: 14,
   },
 };
 
@@ -314,6 +322,7 @@ export const fastTransferETAs: Partial<
     Base: 8_000,
     Ethereum: 20_000,
     Linea: 8_000,
+    Worldchain: 8_000,
   },
 };
 
