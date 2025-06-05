@@ -56,7 +56,7 @@ export class CCTPv2FastExecutorRoute<N extends Network>
 
   static meta = {
     name: "CCTPv2FastExecutorRoute",
-    provider: "Circle",
+    provider: "Circle CCTP",
   };
 
   static isPathSupported<N extends Network>(
