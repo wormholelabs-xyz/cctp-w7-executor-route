@@ -108,7 +108,7 @@ export class CCTPExecutorRoute<N extends Network>
 
   static meta = {
     name: "CCTPExecutorRoute",
-    provider: "Circle",
+    provider: "Circle CCTP",
   };
 
   static supportedNetworks(): Network[] {
