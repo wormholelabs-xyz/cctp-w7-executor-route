@@ -45,6 +45,8 @@ export const shimContractsV2: Partial<
     Ethereum: "0x2cCf230467FE7387674BAa657747F0B5485c7fEC",
     Linea: "0xc48c126468BE919068dE1983F00F65af759a4E87",
     Optimism: "0xd0a8940b2e743e33b682daec4d52b46713606c9d",
+    Polygon: "0xc8a8e6d760dcbd5d6746e2f66cd2ffa722dd1e59",
+    Unichain: "0xD5D5D640D8b758672Cc7A078734175c4433866d5",
     Sonic: "0xc39BF082ec91D9bC385F956D24a8D66C0c26223d",
     Worldchain: "0x789f2b91f7B35D5B890983328340c4600339B354",
   },
@@ -198,6 +200,14 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
+    Polygon: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
+    Unichain: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
     Sonic: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
@@ -269,6 +279,8 @@ export const circleV2Domains: Partial<
     Optimism: 2,
     Arbitrum: 3,
     Base: 6,
+    Polygon: 7,
+    Unichain: 10,
     Linea: 11,
     Sonic: 13,
     Worldchain: 14,
@@ -329,6 +341,8 @@ export const fastTransferETAs: Partial<
     Ethereum: 20_000,
     Linea: 8_000,
     Optimism: 8_000,
+    Polygon: 8_000,
+    Unichain: 8_000,
     Worldchain: 8_000,
   },
 };
