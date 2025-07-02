@@ -110,35 +110,6 @@ export const gasLimits: Partial<
   },
 };
 
-// Referrer addresses (to whom the referrer fee should be paid)
-export const referrers: Partial<
-  Record<Network, Partial<Record<Chain, string>>>
-> = {
-  Testnet: {
-    Aptos: "0x23b54f6e29bba7f4123d088f4cfcd83f5e23a049de15895b119ce5a6cb5faa91",
-    Avalanche: "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7",
-    BaseSepolia: "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7",
-    Sepolia: "0x8F26A0025dcCc6Cfc07A7d38756280a10E295ad7",
-    Solana: "9r6q2iEg4MBevjC8reaLmQUDxueF3vabUoqDkZ2LoAYe",
-    Sui: "0x30bd9b3d5ad00f38fd0c314139ba47ccb3c78353d99880d81125ca0c370b415e",
-  },
-  Mainnet: {
-    Aptos: "0x1f177e724a874ab6267172a3049291c480fc665883e6a3ac95d0909492c09dc8",
-    Arbitrum: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Avalanche: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Base: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Ethereum: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Optimism: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Linea: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Polygon: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Unichain: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Solana: "JB3rmygUVuVZzgkxvMdV8mSKLJeQAkSXEK284Dqsziah",
-    Sonic: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-    Sui: "0xbfa1240e48c622d97881473953be730091161b7931d89bd6afe667841cf69ef4",
-    Worldchain: "0x9b2A3B92b1D86938D3Ed37B0519952C227bA6D09",
-  },
-};
-
 export type CircleV2Contracts = {
   tokenMessengerV2: string;
   messageTransmitterV2: string;

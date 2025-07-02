@@ -138,7 +138,10 @@ export class SuiCCTPExecutor<N extends Network, C extends SuiChains>
         details.referrerFee,
       ]);
       coin = txCoin;
-      tx.transferObjects([referrerFeeCoin], canonicalAddress(details.referrer));
+      tx.transferObjects(
+        [referrerFeeCoin],
+        details.referrer ? canonicalAddress(details.referrer) : senderAddress
+      );
     } else {
       const [txCoin] = tx.splitCoins(primaryCoinInput, [
         details.remainingAmount,

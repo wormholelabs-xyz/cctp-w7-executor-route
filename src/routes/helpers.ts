@@ -16,7 +16,7 @@ import {
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
 import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
-import { gasLimits, referrers, SOLANA_MSG_VALUE_BASE_FEE } from "../consts";
+import { gasLimits, SOLANA_MSG_VALUE_BASE_FEE } from "../consts";
 import {
   calculateReferrerFee,
   fetchCapabilities,
@@ -59,17 +59,25 @@ export async function fetchExecutorQuote(
     throw new Error("Invalid transfer, no USDC contract on destination");
   }
 
-  const referrerAddress = referrers[fromChain.network]?.[fromChain.chain];
-  if (!referrerAddress) {
-    throw new Error("No referrer address found");
+  let referrerAddress: string | undefined = undefined;
+  if (config.referrerFeeDbps > 0n) {
+    referrerAddress =
+      config.referrerAddresses?.[fromChain.network]?.[fromChain.chain];
+    if (!referrerAddress) {
+      throw new Error(`Referrer address not configured for ${fromChain.chain}`);
+    }
   }
-  const referrer = Wormhole.chainAddress(fromChain.chain, referrerAddress);
 
-  const { referrerFee, remainingAmount, referrerFeeDbps } = calculateReferrerFee(
-    amount.units(params.normalizedParams.amount),
-    config.referrerFeeDbps,
-    config.referrerFeeThreshold
-  );
+  const referrer = referrerAddress
+    ? Wormhole.chainAddress(fromChain.chain, referrerAddress)
+    : undefined;
+
+  const { referrerFee, remainingAmount, referrerFeeDbps } =
+    calculateReferrerFee(
+      amount.units(params.normalizedParams.amount),
+      config.referrerFeeDbps,
+      config.referrerFeeThreshold
+    );
   if (remainingAmount <= 0n) {
     throw new Error("Amount after fee <= 0");
   }

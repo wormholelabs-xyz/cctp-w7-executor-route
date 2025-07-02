@@ -51,6 +51,11 @@ export namespace CCTPv2ExecutorRoute {
     // min(referrerFeeDbps, referrerFeeThreshold/amount)
     // Note that this is in whole USDC, not in base units.
     referrerFeeThreshold?: bigint;
+    // Referrer addresses (to whom the referrer fee should be paid)
+    // are required when the referrer fee is non-zero.
+    referrerAddresses?: Partial<
+      Record<Network, Partial<Record<Chain, string>>>
+    >;
   };
 
   export type Attestation = {
