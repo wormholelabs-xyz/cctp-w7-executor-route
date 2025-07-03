@@ -105,7 +105,9 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
 
     const senderPk = new SolanaAddress(sender).unwrap();
     const senderAta = getAssociatedTokenAddressSync(usdc, senderPk);
-    const referrer = new SolanaAddress(details.referrer.address).unwrap();
+    const referrer = new SolanaAddress(
+      details.referrer?.address?.toString() ?? senderPk
+    ).unwrap();
 
     const transaction = new Transaction();
     transaction.feePayer = senderPk;

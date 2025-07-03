@@ -145,7 +145,7 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
       },
       {
         dbps: details.referrerFeeDbps,
-        payee: details.referrer.address.toString(),
+        payee: details.referrer?.address?.toString() ?? senderAddress,
       }
     );
     txReq.value = details.estimatedCost;

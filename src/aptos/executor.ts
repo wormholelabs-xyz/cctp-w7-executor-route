@@ -87,7 +87,7 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
 
     const refundAddr = senderAddress;
     const payee = new AptosAddress(
-      details.referrer.address.toString()
+      details.referrer?.address?.toString() ?? senderAddress
     ).unwrap();
     const functionArguments: Array<
       EntryFunctionArgumentTypes | SimpleEntryFunctionArgumentTypes

@@ -49,6 +49,11 @@ export namespace CCTPExecutorRoute {
     // min(referrerFeeDbps, referrerFeeThreshold/amount)
     // Note that this is in whole USDC, not in base units.
     referrerFeeThreshold?: bigint;
+    // Referrer addresses (to whom the referrer fee should be paid)
+    // are required when the referrer fee is non-zero.
+    referrerAddresses?: Partial<
+      Record<Network, Partial<Record<Chain, string>>>
+    >;
   };
 }
 
@@ -62,7 +67,7 @@ export type QuoteDetails = {
   signedQuote: Uint8Array; // The signed quote from the /v0/quote endpoint
   relayInstructions: Uint8Array; // The relay instructions for the transfer
   estimatedCost: bigint; // The estimated cost of the transfer
-  referrer: ChainAddress; // The referrer address (to whom the referrer fee should be paid)
+  referrer?: ChainAddress; // The referrer address (to whom the referrer fee should be paid)
   referrerFee: bigint; // The referrer fee in USDC
   remainingAmount: bigint; // The remaining amount after the referrer fee in USDC
   referrerFeeDbps: bigint; // The referrer fee in *tenths* of basis points
