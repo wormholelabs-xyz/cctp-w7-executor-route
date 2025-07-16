@@ -47,6 +47,7 @@ export const shimContractsV2: Partial<
     Optimism: "0xd0a8940b2e743e33b682daec4d52b46713606c9d",
     Polygon: "0xc8a8e6d760dcbd5d6746e2f66cd2ffa722dd1e59",
     Unichain: "0xD5D5D640D8b758672Cc7A078734175c4433866d5",
+    Seievm: "0xf4FefFc03EEFB06B009bFB168b60B30edf7abc12",
     Sonic: "0xc39BF082ec91D9bC385F956D24a8D66C0c26223d",
     Worldchain: "0x789f2b91f7B35D5B890983328340c4600339B354",
   },
@@ -105,6 +106,7 @@ export const gasLimits: Partial<
     Optimism: 250_000n,
     Polygon: 250_000n,
     Unichain: 250_000n,
+    Seievm: 250_000n,
     Solana: 250_000n,
     Sonic: 250_000n,
     Sui: 8_000_000n,
@@ -176,6 +178,10 @@ export const circleV2Contracts: Partial<
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
     Unichain: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
+    Seievm: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
@@ -255,6 +261,7 @@ export const circleV2Domains: Partial<
     Linea: 11,
     Sonic: 13,
     Worldchain: 14,
+    Seievm: 16,
   },
 };
 
@@ -314,6 +321,7 @@ export const fastTransferETAs: Partial<
     Optimism: 8_000,
     Polygon: 8_000,
     Unichain: 8_000,
+    Seievm: 8_000,
     Worldchain: 8_000,
   },
 };
