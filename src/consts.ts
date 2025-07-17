@@ -143,6 +143,10 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
     },
+    Solana: {
+      tokenMessengerV2: "CCTPV2vPZJS2u2BBsUoscuikbYjnpFmbFsvVuJdgUMQe",
+      messageTransmitterV2: "CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC",
+    },
     Sonic: {
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
@@ -176,6 +180,10 @@ export const circleV2Contracts: Partial<
     Polygon: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
+    Solana: {
+      tokenMessengerV2: "CCTPV2vPZJS2u2BBsUoscuikbYjnpFmbFsvVuJdgUMQe",
+      messageTransmitterV2: "CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC",
     },
     Unichain: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
@@ -246,6 +254,7 @@ export const circleV2Domains: Partial<
     Sepolia: 0,
     Avalanche: 1,
     ArbitrumSepolia: 3,
+    Solana: 5,
     BaseSepolia: 6,
     Linea: 11,
     Sonic: 13,
@@ -255,6 +264,7 @@ export const circleV2Domains: Partial<
     Avalanche: 1,
     Optimism: 2,
     Arbitrum: 3,
+    Solana: 5,
     Base: 6,
     Polygon: 7,
     Unichain: 10,
