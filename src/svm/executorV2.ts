@@ -356,6 +356,7 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
       { pubkey: eventAuthority, isSigner: false, isWritable: false },
+      { pubkey: this.tokenMessengerV2ProgramId, isSigner: false, isWritable: false },
     ];
 
     return new TransactionInstruction({

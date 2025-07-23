@@ -129,6 +129,10 @@ export async function fetchExecutorQuote(
     if (!tokenAccountExists && ataMinRentAmount) {
       msgValue += ataMinRentAmount;
     }
+    // Add extra for CCTP v2 operations
+    if (capability === "ERC2") {
+      msgValue += 1_200_000n;
+    }
   }
 
   const relayRequests = [];
