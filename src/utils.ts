@@ -329,7 +329,7 @@ interface CircleV2PingResponse {
 }
 
 export async function pingCircleV2Api(network: Network): Promise<void> {
-  const url = `${circleV2Api[network]}/health`;
+  const url = `${circleV2Api[network]}/ping`;
   try {
     await axios.get<CircleV2PingResponse>(url, {
       timeout: 5000, // 5 second timeout
