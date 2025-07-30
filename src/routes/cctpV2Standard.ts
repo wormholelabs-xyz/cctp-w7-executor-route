@@ -17,7 +17,7 @@ import {
   Vr,
 } from "./cctpV2Base";
 import { fetchExecutorQuote } from "./helpers";
-import { getUsdcDestinationAddress } from "../utils";
+import { getUsdcDestinationAddress, pingCircleV2Api } from "../utils";
 
 // Use this function to create a new CCTPv2StandardExecutorRoute with custom config
 export function cctpV2StandardExecutorRoute(
@@ -121,6 +121,9 @@ export class CCTPv2StandardExecutorRoute<N extends Network>
     const { fromChain, toChain } = request;
 
     try {
+      // Check Circle API availability and geoblocking
+      await pingCircleV2Api(fromChain.network);
+      
       const quoteDetails = await fetchExecutorQuote(
         request,
         params,

@@ -323,6 +323,30 @@ export async function getCircleV2FastBurnAllowance(
   return amount.units(amount.parse(response.data.allowance, 6));
 }
 
+interface CircleV2PingResponse {
+  status?: string;
+  message?: string;
+}
+
+export async function pingCircleV2Api(network: Network): Promise<void> {
+  const url = `${circleV2Api[network]}/health`;
+  try {
+    await axios.get<CircleV2PingResponse>(url, {
+      timeout: 5000, // 5 second timeout
+    });
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      // Check for geoblocking indicators
+      if (error.response?.status === 403 || error.response?.status === 451) {
+        throw new Error("Circle API access is restricted in your region.");
+      }
+      // Re-throw other errors for proper handling
+      throw error;
+    }
+    throw error;
+  }
+}
+
 export function getUsdcDestinationAddress<N extends Network>(
   sourceToken: TokenId,
   fromChain: ChainContext<N>,

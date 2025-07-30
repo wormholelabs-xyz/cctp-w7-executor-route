@@ -10,6 +10,7 @@ import {
   getCircleV2FastBurnAllowance,
   getCircleV2FastBurnFee,
   getUsdcDestinationAddress,
+  pingCircleV2Api,
 } from "../utils";
 import {
   CircleV2FinalityThreshold,
@@ -129,6 +130,9 @@ export class CCTPv2FastExecutorRoute<N extends Network>
     const { fromChain, toChain } = request;
 
     try {
+      // Check Circle API availability and geoblocking
+      await pingCircleV2Api(fromChain.network);
+      
       const quoteDetails = await fetchExecutorQuote(
         request,
         params,

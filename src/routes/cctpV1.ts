@@ -20,6 +20,7 @@ import {
 import {
   fetchStatus as fetchTxStatus,
   getUsdcDestinationAddress,
+  pingCircleV2Api,
   RelayStatus,
 } from "../utils";
 import { CCTPExecutor } from "../types";
@@ -190,6 +191,9 @@ export class CCTPExecutorRoute<N extends Network>
     const { fromChain, toChain } = request;
 
     try {
+      // Check Circle API availability and geoblocking
+      await pingCircleV2Api(fromChain.network);
+
       const quoteDetails = await fetchExecutorQuote(
         request,
         params,
