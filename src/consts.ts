@@ -43,6 +43,7 @@ export const shimContractsV2: Partial<
     Avalanche: "0x3952914628650Ca510404872D84DfF10A844C5B5",
     Base: "0xbd8d42f40a11b37bD1b3770D754f9629F7cd5679",
     Ethereum: "0x2cCf230467FE7387674BAa657747F0B5485c7fEC",
+    HyperEVM: "0xACD054f83c0b852d02503191e2c26527A7E72B1f",
     Linea: "0xc48c126468BE919068dE1983F00F65af759a4E87",
     Optimism: "0xd0a8940b2e743e33b682daec4d52b46713606c9d",
     Polygon: "0xc8a8e6d760dcbd5d6746e2f66cd2ffa722dd1e59",
@@ -102,6 +103,7 @@ export const gasLimits: Partial<
     Avalanche: 250_000n,
     Base: 250_000n,
     Ethereum: 250_000n,
+    HyperEVM: 250_000n,
     Linea: 250_000n,
     Optimism: 250_000n,
     Polygon: 250_000n,
@@ -166,6 +168,10 @@ export const circleV2Contracts: Partial<
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
     Ethereum: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
+    HyperEVM: {
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
@@ -272,6 +278,7 @@ export const circleV2Domains: Partial<
     Sonic: 13,
     Worldchain: 14,
     Seievm: 16,
+    HyperEVM: 19,
   },
 };
 
