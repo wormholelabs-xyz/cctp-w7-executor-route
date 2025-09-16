@@ -1,7 +1,27 @@
+import { BN, Program, utils } from "@coral-xyz/anchor";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  createTransferInstruction,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import {
+  AccountMeta,
+  Connection,
+  Keypair,
+  PublicKey,
+  PublicKeyInitData,
+  SystemProgram,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
+import { encoding } from "@wormhole-foundation/sdk-base";
 import {
   circle,
   deserializeLayout,
   toChainId,
+  UniversalAddress,
   type AccountAddress,
   type ChainAddress,
   type ChainsConfig,
@@ -18,36 +38,54 @@ import {
   SolanaPlatform,
   SolanaUnsignedTransaction,
 } from "@wormhole-foundation/sdk-solana";
-import { CCTPv2Executor } from "../types";
 import {
   circleV2Contracts,
+  circleV2SvmLut,
   getCircleV2Domain,
   solanaExecutorId,
 } from "../consts";
 import {
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-  SystemProgram,
-} from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+  CircleV2Message,
+  serializeCircleV2Message,
+  signedQuoteLayout,
+} from "../layouts";
 import { CCTPv2QuoteDetails } from "../routes/cctpV2Base";
-import {
-  createAssociatedTokenAccountIdempotentInstruction,
-  createTransferInstruction,
-  getAssociatedTokenAddressSync,
-} from "@solana/spl-token";
-import { BN, Program } from "@coral-xyz/anchor";
-import { CircleV2Message, serializeCircleV2Message } from "../layouts";
-import { signedQuoteLayout } from "../layouts";
-
+import { CCTPv2Executor } from "../types";
+import { MessageTransmitterV2 } from "./idl/CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC-idl";
+import MessageTransmitterV2Idl from "./idl/CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC-idl.json";
+import { TokenMessengerMinterV2 } from "./idl/CCTPV2vPZJS2u2BBsUoscuikbYjnpFmbFsvVuJdgUMQe-id";
+import TokenMessengerMinterV2Idl from "./idl/CCTPV2vPZJS2u2BBsUoscuikbYjnpFmbFsvVuJdgUMQe-id.json";
 import { Executor, ExecutorIdl } from "./idl/executor";
-import { createReceiveMessageInstruction } from "@wormhole-foundation/sdk-solana-cctp";
-import { TransactionInstruction } from "@solana/web3.js";
-import { UniversalAddress } from "@wormhole-foundation/sdk-connect";
 
 const CCTP_V2_REQUEST_BYTES = Buffer.from("4552433201", "hex");
+
+interface FindProgramAddressResponse {
+  publicKey: PublicKey;
+  bump: number;
+}
+
+const findProgramAddress = (
+  label: string,
+  programId: PublicKey,
+  extraSeeds?: (string | number[] | Buffer | PublicKey)[]
+): FindProgramAddressResponse => {
+  const seeds = [Buffer.from(utils.bytes.utf8.encode(label))];
+  if (extraSeeds) {
+    for (const extraSeed of extraSeeds) {
+      if (typeof extraSeed === "string") {
+        seeds.push(Buffer.from(utils.bytes.utf8.encode(extraSeed)));
+      } else if (Array.isArray(extraSeed)) {
+        seeds.push(Buffer.from(extraSeed as number[]));
+      } else if (Buffer.isBuffer(extraSeed)) {
+        seeds.push(Buffer.from(extraSeed));
+      } else {
+        seeds.push(Buffer.from(extraSeed.toBuffer()));
+      }
+    }
+  }
+  const res = PublicKey.findProgramAddressSync(seeds, programId);
+  return { publicKey: res[0], bump: res[1] };
+};
 
 export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
   implements CCTPv2Executor<N, C>
@@ -117,8 +155,7 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
       details.referrer?.address?.toString() ?? senderPk
     ).unwrap();
 
-    const transaction = new Transaction();
-    transaction.feePayer = senderPk;
+    const instructions: TransactionInstruction[] = [];
 
     // Handle referrer fee if applicable
     if (details.referrerFee > 0n) {
@@ -127,7 +164,7 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
         referrerAta
       );
       if (!referrerAtaAccount) {
-        transaction.add(
+        instructions.push(
           createAssociatedTokenAccountIdempotentInstruction(
             senderPk,
             referrerAta,
@@ -136,7 +173,7 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
           )
         );
       }
-      transaction.add(
+      instructions.push(
         createTransferInstruction(
           senderAta,
           referrerAta,
@@ -161,7 +198,7 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
       msgSendEvent.publicKey
     );
 
-    transaction.add(depositInstruction);
+    instructions.push(depositInstruction);
 
     const executorProgram = new Program<Executor>(
       ExecutorIdl,
@@ -174,7 +211,7 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
       details.signedQuote
     );
 
-    transaction.add(
+    instructions.push(
       await executorProgram.methods
         .requestForExecution({
           amount: new BN(details.estimatedCost.toString()),
@@ -191,6 +228,14 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
           systemProgram: SystemProgram.programId,
         })
         .instruction()
+    );
+
+    const lutAddress = circleV2SvmLut[this.network]?.[this.chain];
+
+    const transaction = await this.createVersionedTransaction(
+      senderPk,
+      instructions,
+      lutAddress
     );
 
     yield this.createUnsignedTx(
@@ -225,18 +270,25 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
   ): AsyncGenerator<SolanaUnsignedTransaction<N, C>> {
     const senderPk = new SolanaAddress(sender).unwrap();
 
-    const transaction = new Transaction();
-    transaction.feePayer = senderPk;
+    const instructions: TransactionInstruction[] = [];
 
-    transaction.add(
-      await createReceiveMessageInstruction(
+    instructions.push(
+      await this.createReceiveMessageInstructionV2(
         this.messageTransmitterV2ProgramId,
         this.tokenMessengerV2ProgramId,
         new PublicKey(circle.usdcContract.get(this.network, this.chain)!),
-        serializeCircleV2Message(message) as any,
+        message,
         attestation,
         senderPk
       )
+    );
+
+    const lutAddress = circleV2SvmLut[this.network]?.[this.chain];
+
+    const transaction = await this.createVersionedTransaction(
+      senderPk,
+      instructions,
+      lutAddress
     );
 
     yield this.createUnsignedTx(
@@ -248,6 +300,217 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
   async getCurrentBlock(): Promise<bigint> {
     const slot = await this.connection.getSlot();
     return BigInt(slot);
+  }
+
+  async createVersionedTransaction(
+    payerKey: PublicKey,
+    instructions: TransactionInstruction[],
+    lutAddress?: PublicKeyInitData
+  ) {
+    const lookupTableAccount = lutAddress
+      ? (await this.connection.getAddressLookupTable(new PublicKey(lutAddress)))
+          .value
+      : null;
+
+    const { blockhash: recentBlockhash } =
+      await this.connection.getLatestBlockhash();
+
+    const messageV0 = new TransactionMessage({
+      payerKey,
+      recentBlockhash,
+      instructions,
+    }).compileToV0Message(lookupTableAccount ? [lookupTableAccount] : []);
+
+    return new VersionedTransaction(messageV0);
+  }
+
+  private async createReceiveMessageInstructionV2(
+    messageTransmitterProgramId: PublicKey,
+    tokenMessengerProgramId: PublicKey,
+    usdcAddress: PublicKey,
+    message: CircleV2Message,
+    attestation: string,
+    payer: PublicKey
+  ): Promise<TransactionInstruction> {
+    const messageBytes = Buffer.from(serializeCircleV2Message(message));
+    const attestationBytes = Buffer.from(
+      encoding.stripPrefix("0x", attestation),
+      "hex"
+    );
+
+    const solanaUsdcAddress = new PublicKey(usdcAddress);
+
+    const sourceUsdcAddress = new PublicKey(
+      Buffer.from(message.messageBody.burnToken.toUint8Array())
+    );
+
+    const receiver = new PublicKey(
+      message.messageBody.mintRecipient.toUint8Array()
+    );
+    const srcDomain = message.sourceDomain.toString();
+
+    // V2 uses the message nonce directly as seed (different from V1)
+    const usedNonce = this.nonceAccountV2(
+      messageTransmitterProgramId,
+      messageBytes
+    );
+
+    const messageTransmitterAccount = findProgramAddress(
+      "message_transmitter",
+      messageTransmitterProgramId
+    );
+    const tokenMessenger = findProgramAddress(
+      "token_messenger",
+      tokenMessengerProgramId
+    );
+    const tokenMinter = findProgramAddress(
+      "token_minter",
+      tokenMessengerProgramId
+    );
+    const localToken = findProgramAddress(
+      "local_token",
+      tokenMessengerProgramId,
+      [solanaUsdcAddress]
+    );
+    const remoteTokenMessengerKey = findProgramAddress(
+      "remote_token_messenger",
+      tokenMessengerProgramId,
+      [srcDomain]
+    );
+    const tokenPair = findProgramAddress(
+      "token_pair",
+      tokenMessengerProgramId,
+      [srcDomain, sourceUsdcAddress]
+    );
+
+    const custodyTokenAccount = findProgramAddress(
+      "custody",
+      tokenMessengerProgramId,
+      [solanaUsdcAddress]
+    );
+
+    const tokenMessengerEventAuthority = findProgramAddress(
+      "__event_authority",
+      tokenMessengerProgramId
+    );
+
+    // Fetch the fee recipient token account
+    const tokenMessengerMinterProgram = new Program<TokenMessengerMinterV2>(
+      TokenMessengerMinterV2Idl as TokenMessengerMinterV2,
+      this.messageTransmitterV2ProgramId,
+      { connection: this.connection } as any
+    );
+
+    const tokenMessengerData =
+      await tokenMessengerMinterProgram.account.tokenMessenger.fetch(
+        tokenMessenger.publicKey
+      );
+
+    const feeRecipientTokenAccount = getAssociatedTokenAddressSync(
+      solanaUsdcAddress,
+      tokenMessengerData.feeRecipient
+    );
+
+    const accountMetas: AccountMeta[] = [
+      {
+        isSigner: false,
+        isWritable: false,
+        pubkey: tokenMessenger.publicKey,
+      },
+      {
+        isSigner: false,
+        isWritable: false,
+        pubkey: remoteTokenMessengerKey.publicKey,
+      },
+      {
+        isSigner: false,
+        isWritable: true,
+        pubkey: tokenMinter.publicKey,
+      },
+      {
+        isSigner: false,
+        isWritable: true,
+        pubkey: localToken.publicKey,
+      },
+      {
+        isSigner: false,
+        isWritable: false,
+        pubkey: tokenPair.publicKey,
+      },
+
+      // fee recipient token account has to be BEFORE the receiver
+      {
+        isSigner: false,
+        isWritable: true,
+        pubkey: feeRecipientTokenAccount,
+      },
+      {
+        isSigner: false,
+        isWritable: true,
+        pubkey: receiver,
+      },
+      {
+        isSigner: false,
+        isWritable: true,
+        pubkey: custodyTokenAccount.publicKey,
+      },
+      {
+        isSigner: false,
+        isWritable: false,
+        pubkey: TOKEN_PROGRAM_ID,
+      },
+      {
+        isSigner: false,
+        isWritable: false,
+        pubkey: tokenMessengerEventAuthority.publicKey,
+      },
+      {
+        isSigner: false,
+        isWritable: false,
+        pubkey: tokenMessengerProgramId,
+      },
+    ];
+
+    const messageTransmitterProgram = new Program<MessageTransmitterV2>(
+      MessageTransmitterV2Idl as MessageTransmitterV2,
+      this.messageTransmitterV2ProgramId,
+      { connection: null } as any
+    );
+
+    return await messageTransmitterProgram.methods
+      .receiveMessage({
+        message: messageBytes,
+        attestation: attestationBytes,
+      })
+      .accounts({
+        payer,
+        caller: payer,
+        messageTransmitter: messageTransmitterAccount.publicKey,
+        usedNonce,
+        receiver: tokenMessengerProgramId,
+        program: messageTransmitterProgram.programId,
+      })
+      .remainingAccounts(accountMetas)
+      .instruction();
+  }
+
+  private nonceAccountV2(
+    messageTransmitterProgramId: PublicKey,
+    messageBytes: Buffer
+  ): PublicKey {
+    // V2 uses the message nonce directly from the message bytes as seed
+    // Based on Rust code: &params.message[Message::NONCE_INDEX..Message::SENDER_INDEX]
+    const NONCE_INDEX = 12;
+    const SENDER_INDEX = 44;
+    const nonceBytes = messageBytes.slice(NONCE_INDEX, SENDER_INDEX);
+
+    const usedNonce = findProgramAddress(
+      "used_nonce",
+      messageTransmitterProgramId,
+      [nonceBytes]
+    ).publicKey;
+
+    return usedNonce;
   }
 
   private async createCCTPv2DepositInstruction(
@@ -356,7 +619,11 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
       { pubkey: eventAuthority, isSigner: false, isWritable: false },
-      { pubkey: this.tokenMessengerV2ProgramId, isSigner: false, isWritable: false },
+      {
+        pubkey: this.tokenMessengerV2ProgramId,
+        isSigner: false,
+        isWritable: false,
+      },
     ];
 
     return new TransactionInstruction({

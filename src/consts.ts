@@ -1,3 +1,4 @@
+import { PublicKeyInitData } from "@solana/web3.js";
 import { Chain, Network } from "@wormhole-foundation/sdk-connect";
 
 export const apiBaseUrl: Partial<Record<Network, string>> = {
@@ -279,6 +280,17 @@ export const circleV2Domains: Partial<
     Worldchain: 14,
     Seievm: 16,
     HyperEVM: 19,
+  },
+};
+
+export const circleV2SvmLut: Partial<
+  Record<Network, Partial<Record<Chain, PublicKeyInitData>>>
+> = {
+  Testnet: {
+    Solana: "8ZHaV5NQ218fLR85VtC9oK3Axyvj8uxGpnKdaswxsxe4",
+  },
+  Mainnet: {
+    Solana: "Ec9XVcN6YqFhqNFTYQD3985jmGFEDa7tHEQK8bbQi5xD",
   },
 };
 

@@ -1,0 +1,1316 @@
+// Type definitions based on the IDL
+export type MessageTransmitterV2 = {
+  version: "0.2.0";
+  name: "message_transmitter_v2";
+  instructions: [
+    {
+      name: "acceptOwnership";
+      accounts: [
+        {
+          name: "pendingOwner";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "AcceptOwnershipParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "disableAttester";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "attesterManager";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+          address: "11111111111111111111111111111111";
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "DisableAttesterParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "enableAttester";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "attesterManager";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+          address: "11111111111111111111111111111111";
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "EnableAttesterParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "initialize";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "upgradeAuthority";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "message_transmitter";
+              }
+            ];
+          };
+        },
+        {
+          name: "messageTransmitterProgramData";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "messageTransmitterProgram";
+          isMut: false;
+          isSigner: false;
+          address: "CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC";
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+          address: "11111111111111111111111111111111";
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "InitializeParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "isNonceUsed";
+      accounts: [
+        {
+          name: "usedNonce";
+          isMut: false;
+          isSigner: false;
+          docs: [
+            "Account will be explicitly loaded to avoid error when it's not initialized"
+          ];
+        }
+      ];
+      args: [];
+      returns: "bool";
+    },
+    {
+      name: "pause";
+      accounts: [
+        {
+          name: "pauser";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "PauseParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "receiveMessage";
+      accounts: [
+        {
+          name: "payer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "caller";
+          isMut: false;
+          isSigner: true;
+        },
+        {
+          name: "authorityPda";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "message_transmitter_authority";
+              },
+              {
+                kind: "account";
+                type: "publicKey";
+                path: "receiver";
+              }
+            ];
+          };
+        },
+        {
+          name: "messageTransmitter";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "usedNonce";
+          isMut: true;
+          isSigner: false;
+          docs: ["Each nonce is stored in a separate PDA"];
+        },
+        {
+          name: "receiver";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+          address: "11111111111111111111111111111111";
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "ReceiveMessageParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "reclaimEventAccount";
+      accounts: [
+        {
+          name: "payee";
+          isMut: true;
+          isSigner: true;
+          docs: ["rent SOL receiver, should match original rent payer"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "messageSentEventData";
+          isMut: true;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "ReclaimEventAccountParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "sendMessage";
+      accounts: [
+        {
+          name: "eventRentPayer";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "senderAuthorityPda";
+          isMut: false;
+          isSigner: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "sender_authority";
+              }
+            ];
+            programId: {
+              kind: "account";
+              type: "publicKey";
+              path: "senderProgram";
+            };
+          };
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "messageSentEventData";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "senderProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+          address: "11111111111111111111111111111111";
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "SendMessageParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "setMaxMessageBodySize";
+      accounts: [
+        {
+          name: "owner";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "SetMaxMessageBodySizeParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "setSignatureThreshold";
+      accounts: [
+        {
+          name: "attesterManager";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "SetSignatureThresholdParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "transferOwnership";
+      accounts: [
+        {
+          name: "owner";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "TransferOwnershipParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "unpause";
+      accounts: [
+        {
+          name: "pauser";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "UnpauseParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "updateAttesterManager";
+      accounts: [
+        {
+          name: "owner";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "UpdateAttesterManagerParams";
+          };
+        }
+      ];
+    },
+    {
+      name: "updatePauser";
+      accounts: [
+        {
+          name: "owner";
+          isMut: false;
+          isSigner: true;
+          relations: ["messageTransmitter"];
+        },
+        {
+          name: "messageTransmitter";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "eventAuthority";
+          isMut: false;
+          isSigner: false;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                type: "string";
+                value: "__event_authority";
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+          isMut: false;
+          isSigner: false;
+        }
+      ];
+      args: [
+        {
+          name: "params";
+          type: {
+            defined: "UpdatePauserParams";
+          };
+        }
+      ];
+    }
+  ];
+  accounts: [
+    {
+      name: "MessageSent";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "rentPayer";
+            type: "publicKey";
+          },
+          {
+            name: "createdAt";
+            type: "i64";
+          },
+          {
+            name: "message";
+            type: "bytes";
+          }
+        ];
+      };
+    },
+    {
+      name: "MessageTransmitter";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "owner";
+            type: "publicKey";
+          },
+          {
+            name: "pendingOwner";
+            type: "publicKey";
+          },
+          {
+            name: "attesterManager";
+            type: "publicKey";
+          },
+          {
+            name: "pauser";
+            type: "publicKey";
+          },
+          {
+            name: "paused";
+            type: "bool";
+          },
+          {
+            name: "localDomain";
+            type: "u32";
+          },
+          {
+            name: "version";
+            type: "u32";
+          },
+          {
+            name: "signatureThreshold";
+            type: "u32";
+          },
+          {
+            name: "enabledAttesters";
+            type: {
+              vec: "publicKey";
+            };
+          },
+          {
+            name: "maxMessageBodySize";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "UsedNonce";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "isUsed";
+            type: "bool";
+          }
+        ];
+      };
+    }
+  ];
+  types: [
+    {
+      name: "AcceptOwnershipParams";
+      type: {
+        kind: "struct";
+        fields: [];
+      };
+    },
+    {
+      name: "DisableAttesterParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "attester";
+            type: "publicKey";
+          }
+        ];
+      };
+    },
+    {
+      name: "EnableAttesterParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newAttester";
+            type: "publicKey";
+          }
+        ];
+      };
+    },
+    {
+      name: "InitializeParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "localDomain";
+            type: "u32";
+          },
+          {
+            name: "attester";
+            type: "publicKey";
+          },
+          {
+            name: "maxMessageBodySize";
+            type: "u64";
+          },
+          {
+            name: "version";
+            type: "u32";
+          }
+        ];
+      };
+    },
+    {
+      name: "PauseParams";
+      type: {
+        kind: "struct";
+        fields: [];
+      };
+    },
+    {
+      name: "ReceiveMessageParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "message";
+            type: "bytes";
+          },
+          {
+            name: "attestation";
+            type: "bytes";
+          }
+        ];
+      };
+    },
+    {
+      name: "ReclaimEventAccountParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "attestation";
+            type: "bytes";
+          },
+          {
+            name: "destinationMessage";
+            type: "bytes";
+          }
+        ];
+      };
+    },
+    {
+      name: "SendMessageParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "destinationDomain";
+            type: "u32";
+          },
+          {
+            name: "recipient";
+            type: "publicKey";
+          },
+          {
+            name: "destinationCaller";
+            type: "publicKey";
+          },
+          {
+            name: "minFinalityThreshold";
+            type: "u32";
+          },
+          {
+            name: "messageBody";
+            type: "bytes";
+          }
+        ];
+      };
+    },
+    {
+      name: "SetMaxMessageBodySizeParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newMaxMessageBodySize";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "SetSignatureThresholdParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newSignatureThreshold";
+            type: "u32";
+          }
+        ];
+      };
+    },
+    {
+      name: "TransferOwnershipParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newOwner";
+            type: "publicKey";
+          }
+        ];
+      };
+    },
+    {
+      name: "UnpauseParams";
+      type: {
+        kind: "struct";
+        fields: [];
+      };
+    },
+    {
+      name: "UpdateAttesterManagerParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newAttesterManager";
+            type: "publicKey";
+          }
+        ];
+      };
+    },
+    {
+      name: "UpdatePauserParams";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "newPauser";
+            type: "publicKey";
+          }
+        ];
+      };
+    }
+  ];
+  events: [
+    {
+      name: "AttesterDisabled";
+      fields: [
+        {
+          name: "attester";
+          type: "publicKey";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "AttesterEnabled";
+      fields: [
+        {
+          name: "attester";
+          type: "publicKey";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "AttesterManagerUpdated";
+      fields: [
+        {
+          name: "previousAttesterManager";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newAttesterManager";
+          type: "publicKey";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "MaxMessageBodySizeUpdated";
+      fields: [
+        {
+          name: "newMaxMessageBodySize";
+          type: "u64";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "MessageReceived";
+      fields: [
+        {
+          name: "caller";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "sourceDomain";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "nonce";
+          type: {
+            array: ["u8", 32];
+          };
+          index: false;
+        },
+        {
+          name: "sender";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "finalityThresholdExecuted";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "messageBody";
+          type: "bytes";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "OwnershipTransferStarted";
+      fields: [
+        {
+          name: "previousOwner";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newOwner";
+          type: "publicKey";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "OwnershipTransferred";
+      fields: [
+        {
+          name: "previousOwner";
+          type: "publicKey";
+          index: false;
+        },
+        {
+          name: "newOwner";
+          type: "publicKey";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "Pause";
+      fields: [];
+    },
+    {
+      name: "PauserChanged";
+      fields: [
+        {
+          name: "newAddress";
+          type: "publicKey";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "SignatureThresholdUpdated";
+      fields: [
+        {
+          name: "oldSignatureThreshold";
+          type: "u32";
+          index: false;
+        },
+        {
+          name: "newSignatureThreshold";
+          type: "u32";
+          index: false;
+        }
+      ];
+    },
+    {
+      name: "Unpause";
+      fields: [];
+    }
+  ];
+  errors: [
+    {
+      code: 6000;
+      name: "InvalidAuthority";
+      msg: "Invalid authority";
+    },
+    {
+      code: 6001;
+      name: "ProgramPaused";
+      msg: "Instruction is not allowed at this time";
+    },
+    {
+      code: 6002;
+      name: "InvalidMessageTransmitterState";
+      msg: "Invalid message transmitter state";
+    },
+    {
+      code: 6003;
+      name: "InvalidSignatureThreshold";
+      msg: "Invalid signature threshold";
+    },
+    {
+      code: 6004;
+      name: "SignatureThresholdAlreadySet";
+      msg: "Signature threshold already set";
+    },
+    {
+      code: 6005;
+      name: "InvalidOwner";
+      msg: "Invalid owner";
+    },
+    {
+      code: 6006;
+      name: "InvalidPauser";
+      msg: "Invalid pauser";
+    },
+    {
+      code: 6007;
+      name: "InvalidAttesterManager";
+      msg: "Invalid attester manager";
+    },
+    {
+      code: 6008;
+      name: "InvalidAttester";
+      msg: "Invalid attester";
+    },
+    {
+      code: 6009;
+      name: "AttesterAlreadyEnabled";
+      msg: "Attester already enabled";
+    },
+    {
+      code: 6010;
+      name: "TooFewEnabledAttesters";
+      msg: "Too few enabled attesters";
+    },
+    {
+      code: 6011;
+      name: "SignatureThresholdTooLow";
+      msg: "Signature threshold is too low";
+    },
+    {
+      code: 6012;
+      name: "AttesterAlreadyDisabled";
+      msg: "Attester already disabled";
+    },
+    {
+      code: 6013;
+      name: "MessageBodyLimitExceeded";
+      msg: "Message body exceeds max size";
+    },
+    {
+      code: 6014;
+      name: "InvalidDestinationCaller";
+      msg: "Invalid destination caller";
+    },
+    {
+      code: 6015;
+      name: "InvalidRecipient";
+      msg: "Invalid message recipient";
+    },
+    {
+      code: 6016;
+      name: "SenderNotPermitted";
+      msg: "Sender is not permitted";
+    },
+    {
+      code: 6017;
+      name: "InvalidSourceDomain";
+      msg: "Invalid source domain";
+    },
+    {
+      code: 6018;
+      name: "InvalidDestinationDomain";
+      msg: "Invalid destination domain";
+    },
+    {
+      code: 6019;
+      name: "InvalidMessageVersion";
+      msg: "Invalid message version";
+    },
+    {
+      code: 6020;
+      name: "InvalidUsedNoncesAccount";
+      msg: "Invalid used nonces account";
+    },
+    {
+      code: 6021;
+      name: "InvalidRecipientProgram";
+      msg: "Invalid recipient program";
+    },
+    {
+      code: 6022;
+      name: "InvalidNonce";
+      msg: "Invalid nonce";
+    },
+    {
+      code: 6023;
+      name: "NonceAlreadyUsed";
+      msg: "Nonce already used";
+    },
+    {
+      code: 6024;
+      name: "MessageTooShort";
+      msg: "Message is too short";
+    },
+    {
+      code: 6025;
+      name: "MalformedMessage";
+      msg: "Malformed message";
+    },
+    {
+      code: 6026;
+      name: "InvalidSignatureOrderOrDupe";
+      msg: "Invalid signature order or dupe";
+    },
+    {
+      code: 6027;
+      name: "InvalidAttesterSignature";
+      msg: "Invalid attester signature";
+    },
+    {
+      code: 6028;
+      name: "InvalidAttestationLength";
+      msg: "Invalid attestation length";
+    },
+    {
+      code: 6029;
+      name: "InvalidSignatureRecoveryId";
+      msg: "Invalid signature recovery ID";
+    },
+    {
+      code: 6030;
+      name: "InvalidSignatureSValue";
+      msg: "Invalid signature S value";
+    },
+    {
+      code: 6031;
+      name: "InvalidMessageHash";
+      msg: "Invalid message hash";
+    },
+    {
+      code: 6032;
+      name: "InvalidDestinationMessage";
+      msg: "Invalid destination message";
+    },
+    {
+      code: 6033;
+      name: "EventAccountWindowNotExpired";
+      msg: "Event account window not expired";
+    },
+    {
+      code: 6034;
+      name: "DestinationDomainIsLocalDomain";
+      msg: "Destination domain is local domain";
+    }
+  ];
+};
