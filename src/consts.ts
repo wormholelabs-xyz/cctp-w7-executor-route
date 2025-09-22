@@ -52,6 +52,7 @@ export const shimContractsV2: Partial<
     Seievm: "0xf4FefFc03EEFB06B009bFB168b60B30edf7abc12",
     Sonic: "0xc39BF082ec91D9bC385F956D24a8D66C0c26223d",
     Worldchain: "0x789f2b91f7B35D5B890983328340c4600339B354",
+    Plume: "0x486228859880ec6c05175035bEe2e5383D23B0fE",
   },
 };
 
@@ -114,6 +115,7 @@ export const gasLimits: Partial<
     Sonic: 250_000n,
     Sui: 8_000_000n,
     Worldchain: 250_000n,
+    Plume: 250_000n,
   },
 };
 
@@ -208,6 +210,10 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
+    Plume: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
   },
 };
 
@@ -280,6 +286,7 @@ export const circleV2Domains: Partial<
     Worldchain: 14,
     Seievm: 16,
     HyperEVM: 19,
+    Plume: 22,
   },
 };
 
@@ -352,6 +359,7 @@ export const fastTransferETAs: Partial<
     Unichain: 8_000,
     Seievm: 8_000,
     Worldchain: 8_000,
+    Plume: 8_000,
   },
 };
 
