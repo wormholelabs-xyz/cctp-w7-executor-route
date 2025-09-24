@@ -53,6 +53,7 @@ export const shimContractsV2: Partial<
     Sonic: "0xc39BF082ec91D9bC385F956D24a8D66C0c26223d",
     Worldchain: "0x789f2b91f7B35D5B890983328340c4600339B354",
     Plume: "0x486228859880ec6c05175035bEe2e5383D23B0fE",
+    Ink: "0xD71898Ec48D36eba65eeb104AF87b00C24A8F201",
   },
 };
 
@@ -116,6 +117,7 @@ export const gasLimits: Partial<
     Sui: 8_000_000n,
     Worldchain: 250_000n,
     Plume: 250_000n,
+    Ink: 250_000n,
   },
 };
 
