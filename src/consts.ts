@@ -216,6 +216,10 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
+    Ink: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
   },
 };
 
@@ -288,6 +292,7 @@ export const circleV2Domains: Partial<
     Worldchain: 14,
     Seievm: 16,
     HyperEVM: 19,
+    Ink: 21,
     Plume: 22,
   },
 };
@@ -362,6 +367,7 @@ export const fastTransferETAs: Partial<
     Seievm: 8_000,
     Worldchain: 8_000,
     Plume: 8_000,
+    Ink: 8_000,
   },
 };
 
