@@ -11,21 +11,29 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: "npm"
+          cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
       - run: |
           # Update the version in package.json
-          npm version ${{ inputs.version }} --no-git-tag-version
-      - run: npm run build --if-present
-      - run: npm test
+          pnpm version ${{ inputs.version }} --no-git-tag-version
+      - run: pnpm run build --if-present
+      - run: pnpm test
       - run: |
+          VERSION="${{ inputs.version }}"
+
           if [[ $VERSION == *"beta"* ]]; then
             tag=beta
           elif [[ $VERSION == *"alpha"* ]]; then
@@ -34,8 +42,7 @@ jobs:
             tag=latest
           fi
 
-          npm publish --access public --tag $tag
+          pnpm publish --access public --tag $tag --no-git-checks
 
         env:
           VERSION: ${{ inputs.version }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
