@@ -7,25 +7,52 @@ on:
         description: "Version to publish"
         required: true
         type: "string"
+  pull_request:
+    branches:
+      - main
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: "npm"
+          cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
       - run: |
-          # Update the version in package.json
-          npm version ${{ inputs.version }} --no-git-tag-version
-      - run: npm run build --if-present
-      - run: npm test
+          # For PRs, fetch latest version from npm and increment patch
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            LATEST_VERSION=$(npm view @wormhole-labs/cctp-executor-route version)
+            echo "Latest version from npm: $LATEST_VERSION"
+            pnpm version $LATEST_VERSION --no-git-tag-version
+            pnpm version patch --no-git-tag-version
+          elif [ -n "${{ inputs.version }}" ]; then
+            # For manual dispatch, use provided version
+            pnpm version ${{ inputs.version }} --no-git-tag-version
+          fi
+      - run: pnpm run build --if-present
+      - run: pnpm test
       - run: |
+          # Determine if this is a dry run (PR) or real publish (workflow_dispatch)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            DRY_RUN="--dry-run"
+            VERSION=$(node -p "require('./package.json').version")
+          else
+            DRY_RUN=""
+            VERSION="${{ inputs.version }}"
+          fi
+
+          # Determine tag based on version
           if [[ $VERSION == *"beta"* ]]; then
             tag=beta
           elif [[ $VERSION == *"alpha"* ]]; then
@@ -34,8 +61,8 @@ jobs:
             tag=latest
           fi
 
-          npm publish --access public --tag $tag
+          echo "Publishing version $VERSION with tag $tag (dry-run: $DRY_RUN)"
+          pnpm publish --access public --tag $tag --no-git-checks $DRY_RUN
 
         env:
           VERSION: ${{ inputs.version }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
