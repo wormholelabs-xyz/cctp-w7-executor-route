@@ -54,6 +54,7 @@ export const shimContractsV2: Partial<
     Worldchain: "0x789f2b91f7B35D5B890983328340c4600339B354",
     Plume: "0x486228859880ec6c05175035bEe2e5383D23B0fE",
     Ink: "0xD71898Ec48D36eba65eeb104AF87b00C24A8F201",
+    Monad: "0xA4d775410FB35d8cE49Ad98d3f483A55e532de73",
   },
 };
 
@@ -118,6 +119,7 @@ export const gasLimits: Partial<
     Worldchain: 250_000n,
     Plume: 250_000n,
     Ink: 250_000n,
+    Monad: 250_000n,
   },
 };
 
@@ -220,6 +222,10 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
+    Monad: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
   },
 };
 
@@ -294,6 +300,7 @@ export const circleV2Domains: Partial<
     HyperEVM: 19,
     Ink: 21,
     Plume: 22,
+    Monad: 15,
   },
 };
 
@@ -368,6 +375,7 @@ export const fastTransferETAs: Partial<
     Worldchain: 8_000,
     Plume: 8_000,
     Ink: 8_000,
+    Monad: 8_000, // To confirm, not in docs!
   },
 };
 
