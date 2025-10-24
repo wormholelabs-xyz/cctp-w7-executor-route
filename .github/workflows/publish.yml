@@ -25,6 +25,7 @@ jobs:
           node-version: 24
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
+          # Node 24 ships with npm 11.x which includes OIDC support (requires 11.5.1+)
       - run: pnpm install --frozen-lockfile
       - run: |
           # Update the version in package.json
@@ -43,6 +44,7 @@ jobs:
           fi
 
           pnpm publish --access public --tag $tag --no-git-checks
-
-        env:
-          VERSION: ${{ inputs.version }}
+        # OIDC authentication is used automatically by npm CLI 11.5.1+
+        # (pnpm delegates to npm for publishing)
+        # No NPM_TOKEN secret needed - authentication happens via OpenID Connect
+        # See: https://docs.npmjs.com/trusted-publishers/
