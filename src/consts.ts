@@ -13,7 +13,10 @@ export const shimContractsV1: Partial<
   Testnet: {
     Aptos: "0x14a12d1fd6ef371b70c2113155534ec152ec7f779e281b54866c796c9a4a58d3",
     Avalanche: "0x2cfEC91B50f657Cc86Ec693542527ac3e03bF742",
+    ArbitrumSepolia: "0xc9c0A1030331D5dA0599D243eFd4682D906066D9",
     BaseSepolia: "0x4983C6bD3bB7DA9EECe71cfa7AE4C67CAbf362F0",
+    OptimismSepolia: "0x1F2e73E9AF5eecEdAF03b4F295f83BD587290867",
+    PolygonSepolia: "0x2aE8EBeC0387759161B8D7680F0EF9bD0B962FbF",
     Sepolia: "0x0F78904c750801391EbBf308181e9d6fc892B0f3",
     Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
   },
