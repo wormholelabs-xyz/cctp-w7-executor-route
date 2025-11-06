@@ -244,7 +244,6 @@ export const circleV1Domains: Partial<
     ArbitrumSepolia: 3,
     Solana: 5,
     BaseSepolia: 6,
-    Polygon: 7,
     PolygonSepolia: 7,
     Sui: 8,
     Aptos: 9,
