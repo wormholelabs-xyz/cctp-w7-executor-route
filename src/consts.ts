@@ -119,7 +119,7 @@ export const gasLimits: Partial<
     Worldchain: 250_000n,
     Plume: 250_000n,
     Ink: 250_000n,
-    Monad: 250_000n,
+    Monad: 500_000n,
   },
 };
 
