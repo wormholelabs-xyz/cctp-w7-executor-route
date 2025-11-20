@@ -375,7 +375,6 @@ export const fastTransferETAs: Partial<
     Worldchain: 8_000,
     Plume: 8_000,
     Ink: 8_000,
-    Monad: 8_000, // To confirm, not in docs!
   },
 };
 
