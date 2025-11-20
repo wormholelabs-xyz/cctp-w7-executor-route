@@ -12,47 +12,56 @@ describe("calculateReferrerFee", () => {
   });
 
   it("should calculate the referrer fee and remaining amount correctly when referrerFeeThreshold is specified", () => {
-    const amount = 1_000_000n;
-    const dBps = 50n;
-    const threshold = 5n; // threshold is in whole units, so 5n = 5_000_000n in base units
-    const cappedResult = calculateReferrerFee(amount, dBps, threshold);
+    const amount = 1_000_000n; // $1 in base units
+    const dBps = 10n; // 1 basis point = 0.01%
+    const threshold = 500_000n; // $500k threshold in whole USDC
 
-    // using the capped dBps should yield the same result as the no threshold case
-    // capped dBps = min(dBps, threshold/amount) = min(50n, 5_000_000n / 1_000_000n) = 5n
-    const noCapResult = calculateReferrerFee(amount, 5n);
+    const result = calculateReferrerFee(amount, dBps, threshold);
 
-    expect(cappedResult.referrerFee).equal(noCapResult.referrerFee);
-    expect(cappedResult.referrerFee).toBe(50n);
-    expect(cappedResult.remainingAmount).toBe(999_950n);
+    // Amount ($1) is below threshold ($500k), so normal calculation applies
+    // fee = (1_000_000 * 10) / 100_000 = 100 base units = $0.0001
+    expect(result.referrerFee).toBe(100n);
+    expect(result.remainingAmount).toBe(999_900n);
   });
 
   it("should calculate referrer fees correctly with same threshold but different amounts", () => {
-    const dBps = 10n; // 1bp
-    const threshold = 5_000_000n;
+    const dBps = 10n; // 1 basis point = 0.01%
+    const threshold = 500_000n; // $500k threshold
 
-    let amount = 100_000_000n; // $100
+    // Test case 1: $100 transfer (below threshold)
+    let amount = 100_000_000n; // $100 in base units
     let result = calculateReferrerFee(amount, dBps, threshold);
-    expect(result.remainingAmount).toBe(99_990_000n);
+    // fee = (100_000_000 * 10) / 100_000 = 10_000 = $0.01
     expect(result.referrerFee).toBe(10_000n);
-    expect(result.referrerFeeDbps).toBe(10n);
+    expect(result.remainingAmount).toBe(99_990_000n);
 
-    amount = 1_000_000_000n; // $1,000
+    // Test case 2: $1,000 transfer (below threshold)
+    amount = 1_000_000_000n; // $1,000 in base units
     result = calculateReferrerFee(amount, dBps, threshold);
-    expect(result.remainingAmount).toBe(999_900_000n);
+    // fee = (1_000_000_000 * 10) / 100_000 = 100_000 = $0.10
     expect(result.referrerFee).toBe(100_000n);
-    expect(result.referrerFeeDbps).toBe(10n);
+    expect(result.remainingAmount).toBe(999_900_000n);
 
-    amount = 500_000_000_000n; // $500,000
+    // Test case 3: $500,000 transfer (at threshold exactly)
+    amount = 500_000_000_000n; // $500,000 in base units
     result = calculateReferrerFee(amount, dBps, threshold);
+    // fee = (500_000_000_000 * 10) / 100_000 = 50_000_000 = $50
+    expect(result.referrerFee).toBe(50_000_000n);
     expect(result.remainingAmount).toBe(499_950_000_000n);
-    expect(result.referrerFee).toBe(50_000_000n);
-    expect(result.referrerFeeDbps).toBe(10n);
 
-    amount = 1_000_000_000_000n; // $1,000,000
+    // Test case 4: $1,000,000 transfer (above threshold)
+    amount = 1_000_000_000_000n; // $1,000,000 in base units
     result = calculateReferrerFee(amount, dBps, threshold);
-    expect(result.remainingAmount).toBe(999_950_000_000n);
+    // Capped: fee = (500_000_000_000 * 10) / 100_000 = 50_000_000 = $50 (same as at threshold)
     expect(result.referrerFee).toBe(50_000_000n);
-    expect(result.referrerFeeDbps).toBe(5n);
+    expect(result.remainingAmount).toBe(999_950_000_000n);
+
+    // Test case 5: $10,000,000 transfer (way above threshold)
+    amount = 10_000_000_000_000n; // $10M in base units
+    result = calculateReferrerFee(amount, dBps, threshold);
+    // Capped: fee stays at $50
+    expect(result.referrerFee).toBe(50_000_000n);
+    expect(result.remainingAmount).toBe(9_999_950_000_000n);
   });
 
   it("should return the full amount as remaining and zero referrer fee when dBps is 0", () => {

@@ -161,20 +161,24 @@ export function calculateReferrerFee(
   if (dBps > MAX_U16) {
     throw new Error("dBps exceeds max u16");
   }
-  let referrerFeeDbps: bigint = dBps;
-  let remainingAmount: bigint = amount;
+
+  const referrerFeeDbps: bigint = dBps;
   let referrerFee: bigint = 0n;
+  let remainingAmount: bigint = amount;
+
   if (dBps > 0) {
     if (threshold !== undefined && amount > 0) {
       // We first need to convert the threshold value to base units
       const thresholdAmount = sdkAmount.parse(threshold.toString(), 6);
-      // Capped dBps is minimum of dBps and threshold/amount
-      const cappedMax = sdkAmount.units(thresholdAmount) / amount;
-      const cappedDBps = dBps < cappedMax ? dBps : cappedMax;
-      referrerFee = (amount * cappedDBps) / 100_000n;
-      referrerFeeDbps = cappedDBps;
+      const thresholdAmountUnits = sdkAmount.units(thresholdAmount);
+
+      // Cap the amount used for fee calculation at the threshold
+      // This creates a fee structure where fees plateau after the threshold
+      const cappedAmount =
+        amount < thresholdAmountUnits ? amount : thresholdAmountUnits;
+      referrerFee = (cappedAmount * referrerFeeDbps) / 100_000n;
     } else {
-      referrerFee = (amount * dBps) / 100_000n;
+      referrerFee = (amount * referrerFeeDbps) / 100_000n;
     }
     remainingAmount = amount - referrerFee;
   }
