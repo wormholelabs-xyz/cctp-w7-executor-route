@@ -153,6 +153,32 @@ export async function fetchStatus(
 }
 
 const MAX_U16 = 65_535n;
+
+/**
+ * Calculate referrer fee with optional amount-based capping.
+ *
+ * Fee Structure:
+ * - Without threshold: Fee scales linearly with amount at the specified dBps rate
+ * - With threshold: Fee scales until threshold amount, then plateaus at a fixed fee
+ *
+ * Example (1 bps / 10 dBps with $1M threshold):
+ * ┌─────────────────┬────────────┬──────────────────────┐
+ * │ Transfer Amount │ Fee Amount │ Effective Rate (dBps)│
+ * ├─────────────────┼────────────┼──────────────────────┤
+ * │ $0 - $1M        │ 0.01% scaling │ 10 (full rate)    │
+ * │ $1M (threshold) │ $100       │ 10 (full rate)       │
+ * │ $5M             │ $100       │ 2 (0.2%)             │
+ * │ $10M (max)      │ $100       │ 1 (0.1%)             │
+ * └─────────────────┴────────────┴──────────────────────┘
+ *
+ * The threshold is designed so that at the maximum expected transfer amount ($10M),
+ * the effective rate is still >= 1 dBps, avoiding integer division to zero.
+ *
+ * @param amount - Transfer amount in token base units (6 decimals for USDC)
+ * @param dBps - Referrer fee rate in tenths of basis points (10 = 1 bps = 0.01%)
+ * @param threshold - Optional amount threshold in whole USDC units where fee caps
+ * @returns Object containing fee amount, remaining amount, and effective dBps rate
+ */
 export function calculateReferrerFee(
   amount: bigint,
   dBps: bigint,
@@ -162,23 +188,33 @@ export function calculateReferrerFee(
     throw new Error("dBps exceeds max u16");
   }
 
-  const referrerFeeDbps: bigint = dBps;
+  let referrerFeeDbps: bigint = dBps;
   let referrerFee: bigint = 0n;
   let remainingAmount: bigint = amount;
 
   if (dBps > 0) {
     if (threshold !== undefined && amount > 0) {
-      // We first need to convert the threshold value to base units
+      // Convert threshold from whole USDC units to base units (6 decimals)
       const thresholdAmount = sdkAmount.parse(threshold.toString(), 6);
       const thresholdAmountUnits = sdkAmount.units(thresholdAmount);
 
       // Cap the amount used for fee calculation at the threshold
-      // This creates a fee structure where fees plateau after the threshold
+      // This creates a fee structure where fees plateau after the threshold amount
+      // For amounts below threshold: normal scaling applies
+      // For amounts at or above threshold: fee is fixed at (threshold * dBps / 100_000)
       const cappedAmount =
         amount < thresholdAmountUnits ? amount : thresholdAmountUnits;
-      referrerFee = (cappedAmount * referrerFeeDbps) / 100_000n;
+      referrerFee = (cappedAmount * dBps) / 100_000n;
+
+      // Calculate effective dBps rate based on actual amount transferred
+      // This represents what rate would produce the actual fee charged
+      // As transfer amounts grow beyond threshold, effective rate decreases
+      // Example: $100 fee on $10M transfer = 1 dBps effective rate
+      // This value is passed to the quote API to accurately represent the fee structure
+      referrerFeeDbps = (referrerFee * 100_000n) / amount;
     } else {
-      referrerFee = (amount * referrerFeeDbps) / 100_000n;
+      // Standard calculation without threshold: fee scales linearly with amount
+      referrerFee = (amount * dBps) / 100_000n;
     }
     remainingAmount = amount - referrerFee;
   }
