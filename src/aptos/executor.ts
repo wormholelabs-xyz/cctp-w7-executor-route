@@ -101,7 +101,7 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
       refundAddr,
       details.signedQuote,
       details.relayInstructions,
-      details.referrerFeeDbps,
+      Number(details.referrerFeeDbps),
       payee,
     ];
 
