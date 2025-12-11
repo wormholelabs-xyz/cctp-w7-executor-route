@@ -16,6 +16,7 @@ export const shimContractsV1: Partial<
     BaseSepolia: "0x4983C6bD3bB7DA9EECe71cfa7AE4C67CAbf362F0",
     Sepolia: "0x0F78904c750801391EbBf308181e9d6fc892B0f3",
     Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
+    Unichain: "0x63C79b78750649330920a769c8dB1817f7785F81",
   },
   Mainnet: {
     Aptos: "0x9f5ad7d5c2d067ca4abb6d8d6aba44c15596b71a1def8eb4596089b527bb2eb1",
@@ -38,6 +39,7 @@ export const shimContractsV2: Partial<
     Avalanche: "0x4058F0C3924eDaB19c15597C438968ed49C1a213",
     BaseSepolia: "0xC400FcC0e92d3406747FBb6f513D3aa8B038fcE9",
     Sepolia: "0x0F18DD26D0B41fb1eaa9cF34D1Ec6022aA69a8e2",
+    Unichain: "0xC35a5C2BEcE937143dD11FbB4962Adb1d393fF9B",
   },
   Mainnet: {
     Arbitrum: "0x8442d68524217601ed126f6859694E4B0C7c66A1",
@@ -98,6 +100,7 @@ export const gasLimits: Partial<
     Linea: 250_000n,
     Sepolia: 200_000n,
     Solana: 250_000n,
+    Unichain: 250_000n,
     Sonic: 250_000n,
     Sui: 8_000_000n,
   },
@@ -157,6 +160,10 @@ export const circleV2Contracts: Partial<
       messageTransmitterV2: "CCTPV2Sm4AdWt5296sk4P66VBZ7bEhcARwFaaS9YPbeC",
     },
     Sonic: {
+      tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+      messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    },
+    Unichain: {
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
     },
@@ -283,6 +290,7 @@ export const circleV2Domains: Partial<
     BaseSepolia: 6,
     Linea: 11,
     Sonic: 13,
+    Unichain: 10,
   },
   Mainnet: {
     Ethereum: 0,
@@ -362,6 +370,7 @@ export const fastTransferETAs: Partial<
     BaseSepolia: 8_000,
     Sepolia: 20_000,
     Linea: 8_000,
+    Unichain: 8_000,
   },
   Mainnet: {
     Arbitrum: 8_000,
