@@ -269,14 +269,42 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
     attestation: string
   ): AsyncGenerator<SolanaUnsignedTransaction<N, C>> {
     const senderPk = new SolanaAddress(sender).unwrap();
+    const usdc = new PublicKey(
+      circle.usdcContract.get(this.network, this.chain)!
+    );
+
+    const mintRecipient = new PublicKey(
+      message.messageBody.mintRecipient.toUint8Array()
+    );
 
     const instructions: TransactionInstruction[] = [];
+
+    // Only create the recipient ATA if it doesn't already exist
+    const mintRecipientAccount = await this.connection.getAccountInfo(
+      mintRecipient
+    );
+    if (!mintRecipientAccount) {
+      const senderAta = getAssociatedTokenAddressSync(usdc, senderPk, true);
+      if (!senderAta.equals(mintRecipient)) {
+        throw new Error(
+          `Sender ATA ${senderAta.toBase58()} does not match mint recipient ${mintRecipient.toBase58()}`
+        );
+      }
+      instructions.push(
+        createAssociatedTokenAccountIdempotentInstruction(
+          senderPk,
+          senderAta,
+          senderPk,
+          usdc
+        )
+      );
+    }
 
     instructions.push(
       await this.createReceiveMessageInstructionV2(
         this.messageTransmitterV2ProgramId,
         this.tokenMessengerV2ProgramId,
-        new PublicKey(circle.usdcContract.get(this.network, this.chain)!),
+        usdc,
         message,
         attestation,
         senderPk
