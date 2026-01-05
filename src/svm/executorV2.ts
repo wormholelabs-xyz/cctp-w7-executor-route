@@ -273,29 +273,32 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
       circle.usdcContract.get(this.network, this.chain)!
     );
 
-    // Derive the sender's ATA and validate it matches the message's mintRecipient
-    const senderAta = getAssociatedTokenAddressSync(usdc, senderPk);
     const mintRecipient = new PublicKey(
       message.messageBody.mintRecipient.toUint8Array()
     );
 
-    if (!senderAta.equals(mintRecipient)) {
-      throw new Error(
-        `Sender ATA ${senderAta.toBase58()} does not match mint recipient ${mintRecipient.toBase58()}`
-      );
-    }
-
     const instructions: TransactionInstruction[] = [];
 
-    // Add idempotent ATA creation instruction to ensure the recipient ATA exists
-    instructions.push(
-      createAssociatedTokenAccountIdempotentInstruction(
-        senderPk,
-        senderAta,
-        senderPk,
-        usdc
-      )
-    );
+    // Only create the recipient ATA if it doesn't already exist
+    const mintRecipientAccount =
+      await this.connection.getAccountInfo(mintRecipient);
+    if (!mintRecipientAccount) {
+      // Validate sender's ATA matches mintRecipient since sender can only create their own ATA
+      const senderAta = getAssociatedTokenAddressSync(usdc, senderPk, true);
+      if (!senderAta.equals(mintRecipient)) {
+        throw new Error(
+          `Sender ATA ${senderAta.toBase58()} does not match mint recipient ${mintRecipient.toBase58()}`
+        );
+      }
+      instructions.push(
+        createAssociatedTokenAccountIdempotentInstruction(
+          senderPk,
+          senderAta,
+          senderPk,
+          usdc
+        )
+      );
+    }
 
     instructions.push(
       await this.createReceiveMessageInstructionV2(
