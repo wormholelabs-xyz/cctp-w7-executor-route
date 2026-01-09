@@ -15,6 +15,7 @@ import {
 import axios from "axios";
 import {
   apiBaseUrl,
+  CircleV2FinalityThreshold,
   circleV2Api,
   getCircleV2Chain,
   getCircleV2Domain,
@@ -221,6 +222,24 @@ export function calculateReferrerFee(
   return { referrerFee, remainingAmount, referrerFeeDbps };
 }
 
+/**
+ * Calculates the fast burn max fee from the remaining amount and fee in basis points.
+ * The fee can be a decimal (e.g., 1.3 bps), so we scale by 10_000 to preserve precision.
+ *
+ * @param remainingAmount - The amount after other fees have been deducted
+ * @param feeBps - The fast burn fee in basis points (can be decimal, e.g., 1.3)
+ * @returns The max fee as a bigint, rounded up
+ */
+export function calculateFastBurnMaxFee(
+  remainingAmount: bigint,
+  feeBps: number
+): bigint {
+  // Scale fee by 10_000 to preserve decimal precision (e.g., 1.3 bps -> 13_000)
+  const scaledFeeBps = BigInt(Math.floor(feeBps * 10_000));
+  // Round up: (a + b - 1) / b
+  return (remainingAmount * scaledFeeBps + 100_000_000n - 1n) / 100_000_000n;
+}
+
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -285,7 +304,8 @@ export async function getCircleV2Attestation(
   );
 }
 
-interface CircleV2FastBurnFeeResponse {
+interface CircleV2BurnFeeResponse {
+  finalityThreshold: number;
   minimumFee: number; // The minimum fee for the transaction, in BPS (Basis Points) (1 = 0.01%).
 }
 
@@ -293,12 +313,18 @@ export async function getCircleV2FastBurnFee(
   network: Network,
   fromChain: Chain,
   toChain: Chain
-): Promise<bigint> {
+): Promise<number> {
   const sourceDomain = getCircleV2Domain(network, fromChain);
   const destinationDomain = getCircleV2Domain(network, toChain);
-  const url = `${circleV2Api[network]}/fastBurn/USDC/fees/${sourceDomain}/${destinationDomain}`;
-  const response = await axios.get<CircleV2FastBurnFeeResponse>(url);
-  return BigInt(response.data.minimumFee);
+  const url = `${circleV2Api[network]}/burn/USDC/fees/${sourceDomain}/${destinationDomain}`;
+  const response = await axios.get<CircleV2BurnFeeResponse[]>(url);
+  const feeTier = response.data.find(
+    (tier) => tier.finalityThreshold === CircleV2FinalityThreshold.CONFIRMED
+  );
+  if (!feeTier) {
+    throw new Error("No fee tier found for CONFIRMED finality threshold");
+  }
+  return feeTier.minimumFee;
 }
 
 interface CircleV2ReattestResponse {
