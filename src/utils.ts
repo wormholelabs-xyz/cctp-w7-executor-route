@@ -224,7 +224,7 @@ export function calculateReferrerFee(
 
 /**
  * Calculates the fast burn max fee from the remaining amount and fee in basis points.
- * The fee can be a decimal (e.g., 1.3 bps), so we scale by 10_000 to preserve precision.
+ * The fee can be a decimal (e.g., 1.3 bps), so we scale by 100 to preserve precision.
  *
  * @param remainingAmount - The amount after other fees have been deducted
  * @param feeBps - The fast burn fee in basis points (can be decimal, e.g., 1.3)
@@ -234,10 +234,12 @@ export function calculateFastBurnMaxFee(
   remainingAmount: bigint,
   feeBps: number
 ): bigint {
-  // Scale fee by 10_000 to preserve decimal precision (e.g., 1.3 bps -> 13_000)
-  const scaledFeeBps = BigInt(Math.round(feeBps * 10_000));
-  // Round up: (a + b - 1) / b
-  return (remainingAmount * scaledFeeBps + 100_000_000n - 1n) / 100_000_000n;
+  // Scale bps to preserve 1 decimal place (e.g. 1.3 -> 130)
+  const scaledBps = BigInt(Math.round(feeBps * 100));
+
+  // fee = amount * (bps / 100) / 10_000
+  // => amount * scaledBps / 1_000_000
+  return (remainingAmount * scaledBps + 1_000_000n - 1n) / 1_000_000n;
 }
 
 export function sleep(ms: number): Promise<void> {
