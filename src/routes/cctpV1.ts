@@ -42,15 +42,14 @@ export namespace CCTPExecutorRoute {
   }
 
   export type Config = {
-    // Referrer Fee in *tenths* of basis points
-    // e.g. 10 = 1 basis point (0.01%)
-    referrerFeeDbps: bigint;
-    // Optional threshold USDC amount used in the below referrer fee formula when specified.
-    // min(referrerFeeDbps, referrerFeeThreshold/amount)
-    // Note that this is in whole USDC, not in base units.
-    referrerFeeThreshold?: bigint;
-    // Referrer addresses (to whom the referrer fee should be paid)
-    // are required when the referrer fee is non-zero.
+    // Referrer fee amount in transfer token base units (e.g., USDC with 6 decimals).
+    // This fee is paid to the referrer from the transfer amount.
+    transferTokenFee?: bigint;
+    // Native token fee amount in native token base units (e.g., wei for ETH).
+    // This fee is paid to the referrer in the native token of the source chain.
+    nativeTokenFee?: bigint;
+    // Referrer addresses (to whom the fees should be paid).
+    // Required when either transferTokenFee or nativeTokenFee is non-zero.
     referrerAddresses?: Partial<
       Record<Network, Partial<Record<Chain, string>>>
     >;
@@ -67,10 +66,10 @@ export type QuoteDetails = {
   signedQuote: Uint8Array; // The signed quote from the /v0/quote endpoint
   relayInstructions: Uint8Array; // The relay instructions for the transfer
   estimatedCost: bigint; // The estimated cost of the transfer
-  referrer?: ChainAddress; // The referrer address (to whom the referrer fee should be paid)
-  referrerFee: bigint; // The referrer fee in USDC
-  remainingAmount: bigint; // The remaining amount after the referrer fee in USDC
-  referrerFeeDbps: bigint; // The referrer fee in *tenths* of basis points
+  referrer?: ChainAddress; // The referrer address (to whom the fees should be paid)
+  transferTokenFee: bigint; // The referrer fee in transfer token units (e.g., USDC)
+  nativeTokenFee: bigint; // The referrer fee in native token units (e.g., wei)
+  remainingAmount: bigint; // The remaining amount after the transfer token fee
   expiryTime: Date; // The expiry time of the quote
   gasDropOff: bigint; // The gas drop-off amount in native token units
 };
@@ -86,11 +85,8 @@ type R = routes.Receipt<AT>;
 
 // Use this function to create a new CCTPExecutorRoute with custom config
 export function cctpExecutorRoute(
-  config: CCTPExecutorRoute.Config = { referrerFeeDbps: 0n }
+  config: CCTPExecutorRoute.Config = { transferTokenFee: 0n, nativeTokenFee: 0n }
 ) {
-  if (config.referrerFeeDbps < 0 || config.referrerFeeDbps > 65535n) {
-    throw new Error("Referrer fee must be between 0 and 65535");
-  }
   class CCTPExecutorRouteImpl<N extends Network> extends CCTPExecutorRoute<N> {
     static override config = config;
   }
@@ -109,7 +105,7 @@ export class CCTPExecutorRoute<N extends Network>
   // Since we set the config on the static class, access it with this param
   // the CCTPExecutorRoute.config will always be empty
   readonly staticConfig = this.constructor.config;
-  static config: CCTPExecutorRoute.Config = { referrerFeeDbps: 0n };
+  static config: CCTPExecutorRoute.Config = { transferTokenFee: 0n, nativeTokenFee: 0n };
 
   static meta = {
     name: "CCTPExecutorRoute",

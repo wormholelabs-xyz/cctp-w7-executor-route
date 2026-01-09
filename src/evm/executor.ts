@@ -72,7 +72,7 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
       .toUniversalAddress()
       .toUint8Array();
 
-    const amount = details.remainingAmount + details.referrerFee;
+    const amount = details.remainingAmount + details.transferTokenFee;
 
     const tokenAddr = circle.usdcContract.get(this.network, this.chain)!;
 
@@ -100,7 +100,7 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
 
     // TODO: type safety. typechain brings in so much boilerplate code and is soft deprecated. use viem?
     const shimAbi = [
-      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint16 dbps, address payee) feeArgs) external payable returns (uint64 nonce)",
+      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint256 transferTokenFee, uint256 nativeTokenFee, address payee) feeArgs) external payable returns (uint64 nonce)",
     ];
 
     const shim = new Contract(this.shimContract, shimAbi, this.provider);
@@ -117,7 +117,8 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
         instructions: details.relayInstructions,
       },
       {
-        dbps: details.referrerFeeDbps,
+        transferTokenFee: details.transferTokenFee,
+        nativeTokenFee: details.nativeTokenFee,
         payee: details.referrer?.address?.toString() ?? senderAddress,
       }
     );

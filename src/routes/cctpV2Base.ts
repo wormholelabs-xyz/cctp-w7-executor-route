@@ -44,15 +44,14 @@ export namespace CCTPv2ExecutorRoute {
   }
 
   export type Config = {
-    // Referrer Fee in *tenths* of basis points
-    // e.g. 10 = 1 basis point (0.01%)
-    referrerFeeDbps: bigint;
-    // Optional threshold USDC amount used in the below referrer fee formula when specified.
-    // min(referrerFeeDbps, referrerFeeThreshold/amount)
-    // Note that this is in whole USDC, not in base units.
-    referrerFeeThreshold?: bigint;
-    // Referrer addresses (to whom the referrer fee should be paid)
-    // are required when the referrer fee is non-zero.
+    // Referrer fee amount in transfer token base units (e.g., USDC with 6 decimals).
+    // This fee is paid to the referrer from the transfer amount.
+    transferTokenFee?: bigint;
+    // Native token fee amount in native token base units (e.g., wei for ETH).
+    // This fee is paid to the referrer in the native token of the source chain.
+    nativeTokenFee?: bigint;
+    // Referrer addresses (to whom the fees should be paid).
+    // Required when either transferTokenFee or nativeTokenFee is non-zero.
     referrerAddresses?: Partial<
       Record<Network, Partial<Record<Chain, string>>>
     >;

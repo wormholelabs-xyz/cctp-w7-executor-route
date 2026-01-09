@@ -78,7 +78,7 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
     );
     const burnToken = AptosAccountAddress.from(this.usdcId);
 
-    const amount = details.remainingAmount + details.referrerFee;
+    const amount = details.remainingAmount + details.transferTokenFee;
 
     const destinationDomain = circle.circleChainId.get(
       this.network,
@@ -101,7 +101,8 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
       refundAddr,
       details.signedQuote,
       details.relayInstructions,
-      Number(details.referrerFeeDbps),
+      details.transferTokenFee,
+      details.nativeTokenFee,
       payee,
     ];
 

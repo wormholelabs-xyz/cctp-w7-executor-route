@@ -18,7 +18,6 @@ import {
 import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
 import { gasLimits, SOLANA_MSG_VALUE_BASE_FEE } from "../consts";
 import {
-  calculateReferrerFee,
   fetchCapabilities,
   fetchSignedQuote,
   fetchStatus,
@@ -59,8 +58,11 @@ export async function fetchExecutorQuote(
     throw new Error("Invalid transfer, no USDC contract on destination");
   }
 
+  const transferTokenFee = config.transferTokenFee ?? 0n;
+  const nativeTokenFee = config.nativeTokenFee ?? 0n;
+
   let referrerAddress: string | undefined = undefined;
-  if (config.referrerFeeDbps > 0n) {
+  if (transferTokenFee > 0n || nativeTokenFee > 0n) {
     referrerAddress =
       config.referrerAddresses?.[fromChain.network]?.[fromChain.chain];
     if (!referrerAddress) {
@@ -72,14 +74,12 @@ export async function fetchExecutorQuote(
     ? Wormhole.chainAddress(fromChain.chain, referrerAddress)
     : undefined;
 
-  const { referrerFee, remainingAmount, referrerFeeDbps } =
-    calculateReferrerFee(
-      amount.units(params.normalizedParams.amount),
-      config.referrerFeeDbps,
-      config.referrerFeeThreshold
-    );
+  const transferAmount = amount.units(params.normalizedParams.amount);
+  const remainingAmount = transferAmount - transferTokenFee;
   if (remainingAmount <= 0n) {
-    throw new Error("Amount after fee <= 0");
+    throw new Error(
+      `Transfer token fee (${transferTokenFee}) exceeds transfer amount (${transferAmount})`
+    );
   }
 
   const gasLimit = gasLimits[toChain.network]?.[toChain.chain];
@@ -195,11 +195,11 @@ export async function fetchExecutorQuote(
     relayInstructions: relayInstructions,
     estimatedCost,
     referrer,
-    referrerFee,
+    transferTokenFee,
     remainingAmount,
-    referrerFeeDbps,
     expiryTime: signedQuote.quote.expiryTime,
     gasDropOff: dropOff,
+    nativeTokenFee,
   };
 
   return details;

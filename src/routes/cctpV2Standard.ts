@@ -21,11 +21,8 @@ import { getUsdcDestinationAddress } from "../utils";
 
 // Use this function to create a new CCTPv2StandardExecutorRoute with custom config
 export function cctpV2StandardExecutorRoute(
-  config: CCTPv2ExecutorRoute.Config = { referrerFeeDbps: 0n }
+  config: CCTPv2ExecutorRoute.Config = { transferTokenFee: 0n, nativeTokenFee: 0n }
 ) {
-  if (config.referrerFeeDbps < 0 || config.referrerFeeDbps > 65535n) {
-    throw new Error("Referrer fee must be between 0 and 65535");
-  }
   class CCTPv2StandardExecutorRouteImpl<
     N extends Network
   > extends CCTPv2StandardExecutorRoute<N> {
@@ -43,7 +40,7 @@ export class CCTPv2StandardExecutorRoute<N extends Network>
   // Since we set the config on the static class, access it with this param
   // the CCTPv2StandardExecutorRoute.config will always be empty
   readonly staticConfig = this.constructor.config;
-  static config: CCTPv2ExecutorRoute.Config = { referrerFeeDbps: 0n };
+  static config: CCTPv2ExecutorRoute.Config = { transferTokenFee: 0n, nativeTokenFee: 0n };
 
   static meta = {
     name: "CCTPv2StandardExecutorRoute",

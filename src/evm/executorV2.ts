@@ -90,7 +90,7 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
       .toUniversalAddress()
       .toUint8Array();
 
-    const amount = details.remainingAmount + details.referrerFee;
+    const amount = details.remainingAmount + details.transferTokenFee;
 
     const tokenContract = EvmPlatform.getTokenImplementation(
       this.provider,
@@ -116,7 +116,7 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
 
     // TODO: type safety. typechain brings in so much boilerplate code and is soft deprecated. use viem?
     const shimAbi = [
-      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint16 dbps, address payee) feeArgs) external payable returns (uint64 nonce)",
+      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint256 transferTokenFee, uint256 nativeTokenFee, address payee) feeArgs) external payable returns (uint64 nonce)",
     ];
 
     // If equal to bytes32(0), any address can call receiveMessage() on destination domain.
@@ -144,7 +144,8 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
         instructions: details.relayInstructions,
       },
       {
-        dbps: details.referrerFeeDbps,
+        transferTokenFee: details.transferTokenFee,
+        nativeTokenFee: details.nativeTokenFee,
         payee: details.referrer?.address?.toString() ?? senderAddress,
       }
     );

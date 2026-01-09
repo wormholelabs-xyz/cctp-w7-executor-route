@@ -1,115 +1,188 @@
-import { cctpExecutorRoute } from "../src/routes/cctpV1";
-import { calculateReferrerFee } from "../src/utils";
+import { cctpExecutorRoute, CCTPExecutorRoute } from "../src/routes/cctpV1";
+import {
+  cctpV2StandardExecutorRoute,
+  CCTPv2StandardExecutorRoute,
+} from "../src/routes/cctpV2Standard";
+import {
+  cctpV2FastExecutorRoute,
+  CCTPv2FastExecutorRoute,
+} from "../src/routes/cctpV2Fast";
 
-describe("calculateReferrerFee", () => {
-  it("should calculate the referrer fee and remaining amount correctly when dBps is greater than 0", () => {
-    const amount = 1_000_000n;
-    const dBps = 5000n; // 5%
-    const result = calculateReferrerFee(amount, dBps);
-
-    expect(result.referrerFee).toBe(50_000n);
-    expect(result.remainingAmount).toBe(950_000n);
+describe("CCTPv1 Route Config", () => {
+  it("should create a route with default fee values when no config is provided", () => {
+    const Route = cctpExecutorRoute();
+    expect(Route.config).toEqual({
+      transferTokenFee: 0n,
+      nativeTokenFee: 0n,
+    });
   });
 
-  it("should calculate the referrer fee and remaining amount correctly when referrerFeeThreshold is specified", () => {
-    const amount = 1_000_000n; // $1 in base units
-    const dBps = 10n; // 1 basis point = 0.01%
-    const threshold = 1_000_000n; // $1M threshold in whole USDC
-
-    const result = calculateReferrerFee(amount, dBps, threshold);
-
-    // Amount ($1) is below threshold ($1M), so normal calculation applies
-    // fee = (1_000_000 * 10) / 100_000 = 100 base units = $0.0001
-    expect(result.referrerFee).toBe(100n);
-    expect(result.remainingAmount).toBe(999_900n);
-    expect(result.referrerFeeDbps).toBe(10n); // Full rate since below threshold
+  it("should create a route with explicit transferTokenFee", () => {
+    const config: CCTPExecutorRoute.Config = {
+      transferTokenFee: 50_000n, // $0.05 USDC
+    };
+    const Route = cctpExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(50_000n);
+    expect(Route.config.nativeTokenFee).toBeUndefined();
   });
 
-  it("should calculate referrer fees correctly with same threshold but different amounts", () => {
-    const dBps = 10n; // 1 basis point = 0.01%
-    const threshold = 1_000_000n; // $1M threshold
-
-    // Test case 1: $100 transfer (below threshold)
-    let amount = 100_000_000n; // $100 in base units
-    let result = calculateReferrerFee(amount, dBps, threshold);
-    // fee = (100_000_000 * 10) / 100_000 = 10_000 = $0.01
-    expect(result.referrerFee).toBe(10_000n);
-    expect(result.remainingAmount).toBe(99_990_000n);
-    expect(result.referrerFeeDbps).toBe(10n); // Full rate
-
-    // Test case 2: $1,000 transfer (below threshold)
-    amount = 1_000_000_000n; // $1,000 in base units
-    result = calculateReferrerFee(amount, dBps, threshold);
-    // fee = (1_000_000_000 * 10) / 100_000 = 100_000 = $0.10
-    expect(result.referrerFee).toBe(100_000n);
-    expect(result.remainingAmount).toBe(999_900_000n);
-    expect(result.referrerFeeDbps).toBe(10n); // Full rate
-
-    // Test case 3: $1,000,000 transfer (at threshold exactly)
-    amount = 1_000_000_000_000n; // $1,000,000 in base units
-    result = calculateReferrerFee(amount, dBps, threshold);
-    // fee = (1_000_000_000_000 * 10) / 100_000 = 100_000_000 = $100
-    expect(result.referrerFee).toBe(100_000_000n);
-    expect(result.remainingAmount).toBe(999_900_000_000n);
-    expect(result.referrerFeeDbps).toBe(10n); // Full rate at threshold
-
-    // Test case 4: $5,000,000 transfer (above threshold)
-    amount = 5_000_000_000_000n; // $5,000,000 in base units
-    result = calculateReferrerFee(amount, dBps, threshold);
-    // Capped: fee = (1_000_000_000_000 * 10) / 100_000 = 100_000_000 = $100 (same as at threshold)
-    expect(result.referrerFee).toBe(100_000_000n);
-    expect(result.remainingAmount).toBe(4_999_900_000_000n);
-    // Effective rate: (100_000_000 * 100_000) / 5_000_000_000_000 = 2 dBps
-    expect(result.referrerFeeDbps).toBe(2n);
-
-    // Test case 5: $10,000,000 transfer (max amount)
-    amount = 10_000_000_000_000n; // $10M in base units
-    result = calculateReferrerFee(amount, dBps, threshold);
-    // Capped: fee stays at $100
-    expect(result.referrerFee).toBe(100_000_000n);
-    expect(result.remainingAmount).toBe(9_999_900_000_000n);
-    // Effective rate: (100_000_000 * 100_000) / 10_000_000_000_000 = 1 dBps
-    expect(result.referrerFeeDbps).toBe(1n);
+  it("should create a route with explicit nativeTokenFee", () => {
+    const config: CCTPExecutorRoute.Config = {
+      nativeTokenFee: 1_000_000_000_000_000n, // 0.001 ETH in wei
+    };
+    const Route = cctpExecutorRoute(config);
+    expect(Route.config.nativeTokenFee).toBe(1_000_000_000_000_000n);
+    expect(Route.config.transferTokenFee).toBeUndefined();
   });
 
-  it("should return the full amount as remaining and zero referrer fee when dBps is 0", () => {
-    const amount = 1_000_000n;
-    const dBps = 0n;
-    const result = calculateReferrerFee(amount, dBps);
-
-    expect(result.referrerFee).toBe(0n);
-    expect(result.remainingAmount).toBe(1_000_000n);
-  });
-
-  it("should throw an error if dBps exceeds MAX_U16", () => {
-    const amount = 1_000_000n;
-    const dBps = 65_536n; // Exceeds MAX_U16 (65,535)
-
-    expect(() => calculateReferrerFee(amount, dBps)).toThrowError(
-      "dBps exceeds max u16"
+  it("should create a route with both fee types", () => {
+    const config: CCTPExecutorRoute.Config = {
+      transferTokenFee: 100_000n, // $0.10 USDC
+      nativeTokenFee: 5_000_000_000_000_000n, // 0.005 ETH in wei
+      referrerAddresses: {
+        Mainnet: {
+          Ethereum: "0x1234567890123456789012345678901234567890",
+        },
+      },
+    };
+    const Route = cctpExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(100_000n);
+    expect(Route.config.nativeTokenFee).toBe(5_000_000_000_000_000n);
+    expect(Route.config.referrerAddresses?.Mainnet?.Ethereum).toBe(
+      "0x1234567890123456789012345678901234567890"
     );
   });
 
-  it("should handle edge case where dBps is exactly MAX_U16", () => {
-    const amount = 1_000_000n;
-    const dBps = 65_535n; // Exactly MAX_U16
-    const result = calculateReferrerFee(amount, dBps);
+  it("should create a route with referrer addresses only", () => {
+    const config: CCTPExecutorRoute.Config = {
+      referrerAddresses: {
+        Mainnet: {
+          Ethereum: "0xaaaa567890123456789012345678901234567890",
+          Arbitrum: "0xbbbb567890123456789012345678901234567890",
+        },
+        Testnet: {
+          Sepolia: "0xcccc567890123456789012345678901234567890",
+        },
+      },
+    };
+    const Route = cctpExecutorRoute(config);
+    expect(Route.config.referrerAddresses?.Mainnet?.Ethereum).toBe(
+      "0xaaaa567890123456789012345678901234567890"
+    );
+    expect(Route.config.referrerAddresses?.Mainnet?.Arbitrum).toBe(
+      "0xbbbb567890123456789012345678901234567890"
+    );
+    expect(Route.config.referrerAddresses?.Testnet?.Sepolia).toBe(
+      "0xcccc567890123456789012345678901234567890"
+    );
+  });
+});
 
-    expect(result.referrerFee).toBe(655_350n); // 65.535% of 1,000,000
-    expect(result.remainingAmount).toBe(344_650n);
+describe("CCTPv2 Standard Route Config", () => {
+  it("should create a route with default fee values when no config is provided", () => {
+    const Route = cctpV2StandardExecutorRoute();
+    expect(Route.config).toEqual({
+      transferTokenFee: 0n,
+      nativeTokenFee: 0n,
+    });
   });
 
-  it("should handle edge case where amount is 0", () => {
-    const amount = 0n;
-    const dBps = 500n;
-    const result = calculateReferrerFee(amount, dBps);
-
-    expect(result.referrerFee).toBe(0n);
-    expect(result.remainingAmount).toBe(0n);
+  it("should create a route with explicit transferTokenFee", () => {
+    const config: CCTPv2StandardExecutorRoute.Config = {
+      transferTokenFee: 75_000n, // $0.075 USDC
+    };
+    const Route = cctpV2StandardExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(75_000n);
   });
 
-  it("fee should be between 0 and 65535", () => {
-    expect(() => cctpExecutorRoute({ referrerFeeDbps: -1n })).toThrow();
-    expect(() => cctpExecutorRoute({ referrerFeeDbps: 65_536n })).toThrow();
+  it("should create a route with both fee types and referrer addresses", () => {
+    const config: CCTPv2StandardExecutorRoute.Config = {
+      transferTokenFee: 200_000n, // $0.20 USDC
+      nativeTokenFee: 10_000_000_000_000_000n, // 0.01 ETH in wei
+      referrerAddresses: {
+        Mainnet: {
+          Base: "0x1111567890123456789012345678901234567890",
+        },
+      },
+    };
+    const Route = cctpV2StandardExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(200_000n);
+    expect(Route.config.nativeTokenFee).toBe(10_000_000_000_000_000n);
+    expect(Route.config.referrerAddresses?.Mainnet?.Base).toBe(
+      "0x1111567890123456789012345678901234567890"
+    );
+  });
+});
+
+describe("CCTPv2 Fast Route Config", () => {
+  it("should create a route with default fee values when no config is provided", () => {
+    const Route = cctpV2FastExecutorRoute();
+    expect(Route.config).toEqual({
+      transferTokenFee: 0n,
+      nativeTokenFee: 0n,
+    });
+  });
+
+  it("should create a route with explicit transferTokenFee", () => {
+    const config: CCTPv2FastExecutorRoute.Config = {
+      transferTokenFee: 150_000n, // $0.15 USDC
+    };
+    const Route = cctpV2FastExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(150_000n);
+  });
+
+  it("should create a route with both fee types and referrer addresses", () => {
+    const config: CCTPv2FastExecutorRoute.Config = {
+      transferTokenFee: 500_000n, // $0.50 USDC
+      nativeTokenFee: 20_000_000_000_000_000n, // 0.02 ETH in wei
+      referrerAddresses: {
+        Mainnet: {
+          Optimism: "0x2222567890123456789012345678901234567890",
+          Polygon: "0x3333567890123456789012345678901234567890",
+        },
+      },
+    };
+    const Route = cctpV2FastExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(500_000n);
+    expect(Route.config.nativeTokenFee).toBe(20_000_000_000_000_000n);
+    expect(Route.config.referrerAddresses?.Mainnet?.Optimism).toBe(
+      "0x2222567890123456789012345678901234567890"
+    );
+    expect(Route.config.referrerAddresses?.Mainnet?.Polygon).toBe(
+      "0x3333567890123456789012345678901234567890"
+    );
+  });
+});
+
+describe("Fee Amount Handling", () => {
+  it("should support zero fees (no referrer fee scenario)", () => {
+    const config: CCTPExecutorRoute.Config = {
+      transferTokenFee: 0n,
+      nativeTokenFee: 0n,
+    };
+    const Route = cctpExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(0n);
+    expect(Route.config.nativeTokenFee).toBe(0n);
+  });
+
+  it("should support large fee amounts", () => {
+    const config: CCTPExecutorRoute.Config = {
+      // Large USDC fee: $1000 (1,000,000,000 base units with 6 decimals)
+      transferTokenFee: 1_000_000_000n,
+      // Large ETH fee: 1 ETH in wei
+      nativeTokenFee: 1_000_000_000_000_000_000n,
+    };
+    const Route = cctpExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(1_000_000_000n);
+    expect(Route.config.nativeTokenFee).toBe(1_000_000_000_000_000_000n);
+  });
+
+  it("should handle typical fee amounts", () => {
+    // Common scenario: $0.05 USDC fee
+    const config: CCTPExecutorRoute.Config = {
+      transferTokenFee: 50_000n, // $0.05 with 6 decimals
+    };
+    const Route = cctpExecutorRoute(config);
+    expect(Route.config.transferTokenFee).toBe(50_000n);
   });
 });
