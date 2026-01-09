@@ -234,7 +234,7 @@ export function calculateFastBurnMaxFee(
   remainingAmount: bigint,
   feeBps: number
 ): bigint {
-  // Scale bps to preserve 1 decimal place (e.g. 1.3 -> 130)
+  // Scale bps to preserve 2 decimal places (e.g. 1.3 -> 130)
   const scaledBps = BigInt(Math.round(feeBps * 100));
 
   // fee = amount * (bps / 100) / 10_000
