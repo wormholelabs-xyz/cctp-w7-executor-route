@@ -7,6 +7,7 @@ import {
 } from "@wormhole-foundation/sdk-definitions";
 import { routes } from "@wormhole-foundation/sdk-connect";
 import {
+  calculateFastBurnMaxFee,
   getCircleV2FastBurnAllowance,
   getCircleV2FastBurnFee,
   getUsdcDestinationAddress,
@@ -153,9 +154,10 @@ export class CCTPv2FastExecutorRoute<N extends Network>
         toChain.chain
       );
 
-      // round up or the fee may be too low and the transfer will be slow
-      const fastTransferMaxFee =
-        (remainingAmount * fastBurnFeeBps + 10_000n - 1n) / 10_000n;
+      const fastTransferMaxFee = calculateFastBurnMaxFee(
+        remainingAmount,
+        fastBurnFeeBps
+      );
 
       const receivedAmount = remainingAmount - fastTransferMaxFee;
       if (receivedAmount <= 0n) {
