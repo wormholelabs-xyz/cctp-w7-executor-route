@@ -35,9 +35,10 @@ export const shimContractsV2: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
   Testnet: {
-    Avalanche: "0x4058F0C3924eDaB19c15597C438968ed49C1a213",
-    BaseSepolia: "0xC400FcC0e92d3406747FBb6f513D3aa8B038fcE9",
-    Sepolia: "0x0F18DD26D0B41fb1eaa9cF34D1Ec6022aA69a8e2",
+    ArbitrumSepolia: "0x239D8D2Ea8d12fcd428696442411719B65908962",
+    Avalanche: "0x949d1c6Da779C599E70C78AE075A7Ad17C53A5bF",
+    BaseSepolia: "0xa2B4F26b85206EA838B6A1fcD41590D6061f7D53",
+    Sepolia: "0x6BC3a8275e3DC861977e9244990283cDecA5Fa2F",
   },
   Mainnet: {
     Arbitrum: "0x8442d68524217601ed126f6859694E4B0C7c66A1",
