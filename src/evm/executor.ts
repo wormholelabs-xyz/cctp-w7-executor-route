@@ -122,7 +122,7 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
         payee: details.referrer?.address?.toString() ?? senderAddress,
       }
     );
-    txReq.value = details.estimatedCost;
+    txReq.value = details.estimatedCost + details.nativeTokenFee;
 
     yield this.createUnsignedTx(
       addFrom(txReq, senderAddress),
