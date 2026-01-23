@@ -12,9 +12,9 @@ export const shimContractsV1: Partial<
 > = {
   Testnet: {
     Aptos: "0x14a12d1fd6ef371b70c2113155534ec152ec7f779e281b54866c796c9a4a58d3",
-    Avalanche: "0x2cfEC91B50f657Cc86Ec693542527ac3e03bF742",
-    BaseSepolia: "0x4983C6bD3bB7DA9EECe71cfa7AE4C67CAbf362F0",
-    Sepolia: "0x0F78904c750801391EbBf308181e9d6fc892B0f3",
+    Avalanche: "0x62819ab61cc7fcc864af7bcfc92e6c1965eb69a6",
+    BaseSepolia: "0x96846c31e4f87c0f186a322926c61d4183439f0a",
+    Sepolia: "0x2fcc7b2332d924764f17f1cf5eda1cd4b36751a2",
     Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
   },
   Mainnet: {
@@ -35,10 +35,9 @@ export const shimContractsV2: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
   Testnet: {
-    ArbitrumSepolia: "0x239D8D2Ea8d12fcd428696442411719B65908962",
-    Avalanche: "0x949d1c6Da779C599E70C78AE075A7Ad17C53A5bF",
-    BaseSepolia: "0xa2B4F26b85206EA838B6A1fcD41590D6061f7D53",
-    Sepolia: "0x6BC3a8275e3DC861977e9244990283cDecA5Fa2F",
+    Avalanche: "0x10018394905f70daa1d740040d64cbed5a82301e",
+    BaseSepolia: "0x1effdcfedc6d45e44b3133257debfb522adb1cae",
+    Sepolia: "0xc58475c97ebde9cf4fefa0d4fb2774df81905d43",
   },
   Mainnet: {
     Arbitrum: "0x8442d68524217601ed126f6859694E4B0C7c66A1",
