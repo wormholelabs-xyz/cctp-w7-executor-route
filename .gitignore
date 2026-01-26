@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.tgz
 *.tsbuildinfo
+.claude/settings.local.json

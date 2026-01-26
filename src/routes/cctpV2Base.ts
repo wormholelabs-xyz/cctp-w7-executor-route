@@ -38,18 +38,23 @@ export namespace CCTPv2ExecutorRoute {
     amount: amount.Amount;
   };
 
-  export interface ValidatedParams
-    extends routes.ValidatedTransferParams<Options> {
+  export interface ValidatedParams extends routes.ValidatedTransferParams<Options> {
     normalizedParams: NormalizedParams;
   }
 
   export type Config = {
     // Referrer fee amount in transfer token base units (e.g., USDC with 6 decimals).
     // This fee is paid to the referrer from the transfer amount.
-    transferTokenFee?: bigint;
+    // Can be a fixed amount or a callback that receives the transfer amount
+    // and returns the fee. Use a callback to implement dynamic fee models
+    // such as proportional fees or fees with threshold-based capping.
+    transferTokenFee?: bigint | ((amount: bigint) => bigint);
     // Native token fee amount in native token base units (e.g., wei for ETH).
     // This fee is paid to the referrer in the native token of the source chain.
-    nativeTokenFee?: bigint;
+    // Can be a fixed amount or a callback that receives the transfer amount
+    // and returns the fee. Use a callback to implement dynamic fee models
+    // such as proportional fees or fees with threshold-based capping.
+    nativeTokenFee?: bigint | ((amount: bigint) => bigint);
     // Referrer addresses (to whom the fees should be paid).
     // Required when either transferTokenFee or nativeTokenFee is non-zero.
     referrerAddresses?: Partial<
@@ -80,7 +85,7 @@ export type Qr = routes.QuoteResult<Op, Vp>;
 export type R = routes.Receipt<CCTPv2ExecutorRoute.Attestation>;
 
 export abstract class CCTPv2BaseRoute<
-  N extends Network
+  N extends Network,
 > extends routes.AutomaticRoute<N, Op, Vp, R> {
   static NATIVE_GAS_DROPOFF_SUPPORTED = true;
 
@@ -102,7 +107,7 @@ export abstract class CCTPv2BaseRoute<
     request: routes.RouteTransferRequest<N>,
     signer: Signer,
     quote: Q,
-    to: ChainAddress
+    to: ChainAddress,
   ): Promise<R> {
     if (!quote.details) {
       throw new Error("Missing quote details");
@@ -134,7 +139,7 @@ export abstract class CCTPv2BaseRoute<
           if (isSourceInitiated(receipt) || isSourceFinalized(receipt)) {
             const attestation = await getCircleV2Attestation(
               { chain: receipt.from, txid: txId },
-              this.wh.network
+              this.wh.network,
             );
 
             if (attestation) {
@@ -156,7 +161,7 @@ export abstract class CCTPv2BaseRoute<
             const [txStatus] = await fetchStatus(
               this.wh.network,
               txId,
-              receipt.from
+              receipt.from,
             );
 
             if (!txStatus) {
@@ -180,7 +185,7 @@ export abstract class CCTPv2BaseRoute<
                 ...receipt,
                 state: TransferState.Failed,
                 error: new routes.RelayFailedError(
-                  `Relay failed with status: ${relayStatus}`
+                  `Relay failed with status: ${relayStatus}`,
                 ),
               };
             }
@@ -203,7 +208,7 @@ export abstract class CCTPv2BaseRoute<
               .getProtocol("CCTPv2Executor");
 
             const isTransferCompleted = await executor.isTransferCompleted(
-              attestation.attestation.message
+              attestation.attestation.message,
             );
 
             if (isTransferCompleted) {
@@ -224,7 +229,7 @@ export abstract class CCTPv2BaseRoute<
           }
         } catch (error: any) {
           console.error(
-            `Error fetching transaction status: ${error.message || error}`
+            `Error fetching transaction status: ${error.message || error}`,
           );
         }
       }
@@ -256,7 +261,7 @@ export abstract class CCTPv2BaseRoute<
     if (expirationBlock !== 0n && expirationBlock < currentBlock) {
       const newAttestation = await reattestCircleV2Message(
         toChain.network,
-        receipt.attestation
+        receipt.attestation,
       );
 
       if (!newAttestation) {
@@ -273,7 +278,7 @@ export abstract class CCTPv2BaseRoute<
     const dstTxIds = await signSendWait(
       this.wh.getChain(receipt.to),
       xfer,
-      signer
+      signer,
     );
 
     return {

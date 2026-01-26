@@ -38,13 +38,13 @@ export async function fetchExecutorQuote(
     | CCTPExecutorRoute.ValidatedParams
     | CCTPv2ExecutorRoute.ValidatedParams,
   config: CCTPExecutorRoute.Config | CCTPv2ExecutorRoute.Config,
-  capability: "ERC1" | "ERC2"
+  capability: "ERC1" | "ERC2",
 ): Promise<QuoteDetails> {
   const { fromChain, toChain } = request;
 
   const srcUsdcAddress = circle.usdcContract.get(
     fromChain.network,
-    fromChain.chain
+    fromChain.chain,
   );
   if (!srcUsdcAddress) {
     throw new Error("Invalid transfer, no USDC contract on source");
@@ -52,14 +52,22 @@ export async function fetchExecutorQuote(
 
   const dstUsdcAddress = circle.usdcContract.get(
     toChain.network,
-    toChain.chain
+    toChain.chain,
   );
   if (!dstUsdcAddress) {
     throw new Error("Invalid transfer, no USDC contract on destination");
   }
 
-  const transferTokenFee = config.transferTokenFee ?? 0n;
-  const nativeTokenFee = config.nativeTokenFee ?? 0n;
+  const transferAmount = amount.units(params.normalizedParams.amount);
+
+  const transferTokenFee =
+    typeof config.transferTokenFee === "function"
+      ? config.transferTokenFee(transferAmount)
+      : (config.transferTokenFee ?? 0n);
+  const nativeTokenFee =
+    typeof config.nativeTokenFee === "function"
+      ? config.nativeTokenFee(transferAmount)
+      : (config.nativeTokenFee ?? 0n);
 
   let referrerAddress: string | undefined = undefined;
   if (transferTokenFee > 0n || nativeTokenFee > 0n) {
@@ -74,11 +82,10 @@ export async function fetchExecutorQuote(
     ? Wormhole.chainAddress(fromChain.chain, referrerAddress)
     : undefined;
 
-  const transferAmount = amount.units(params.normalizedParams.amount);
   const remainingAmount = transferAmount - transferTokenFee;
   if (remainingAmount <= 0n) {
     throw new Error(
-      `Transfer token fee (${transferTokenFee}) exceeds transfer amount (${transferAmount})`
+      `Transfer token fee (${transferTokenFee}) exceeds transfer amount (${transferAmount})`,
     );
   }
 
@@ -113,12 +120,12 @@ export async function fetchExecutorQuote(
     const ata = await toChain.getTokenAccount(recipient.address, usdcAddress);
     const connection: Connection = await toChain.getRpc();
     const ataAccount = await connection.getAccountInfo(
-      new SolanaAddress(ata.address).unwrap()
+      new SolanaAddress(ata.address).unwrap(),
     );
     tokenAccountExists = ataAccount !== null;
     if (!tokenAccountExists && !ataMinRentAmount) {
       ataMinRentAmount = BigInt(
-        await connection.getMinimumBalanceForRentExemption(165)
+        await connection.getMinimumBalanceForRentExemption(165),
       );
     }
   }
@@ -178,7 +185,7 @@ export async function fetchExecutorQuote(
     fromChain.network,
     fromChain.chain,
     toChain.chain,
-    encoding.hex.encode(relayInstructions, true)
+    encoding.hex.encode(relayInstructions, true),
   );
 
   if (!quote.estimatedCost) {
@@ -211,11 +218,11 @@ export async function initiateTransfer(
   to: ChainAddress,
   params:
     | { protocol: "CCTPExecutor"; details: QuoteDetails }
-    | { protocol: "CCTPv2Executor"; details: CCTPv2QuoteDetails }
+    | { protocol: "CCTPv2Executor"; details: CCTPv2QuoteDetails },
 ): Promise<SourceInitiatedTransferReceipt> {
   const relayInstructions = deserializeLayout(
     relayInstructionsLayout,
-    params.details.relayInstructions
+    params.details.relayInstructions,
   );
 
   // Make sure that the gas drop-off recipient matches the actual recipient
@@ -252,7 +259,7 @@ export async function initiateTransfer(
         const [txStatus] = await fetchStatus(
           request.fromChain.network,
           txids.at(-1)!.txid,
-          request.fromChain.chain
+          request.fromChain.chain,
         );
 
         if (txStatus) {
@@ -281,14 +288,14 @@ export async function initiateTransfer(
 
 async function resolveRecipient(
   to: ChainAddress,
-  request: routes.RouteTransferRequest<Network>
+  request: routes.RouteTransferRequest<Network>,
 ): Promise<ChainAddress> {
   if (to.chain !== "Solana") return to;
 
   // When transferring to Solana, the recipient address is the ATA
   const solanaUsdc = circle.usdcContract.get(
     request.toChain.network,
-    request.toChain.chain
+    request.toChain.chain,
   );
   if (!solanaUsdc) throw new Error("No USDC contract found for Solana");
 
