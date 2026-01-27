@@ -38,6 +38,7 @@ export const shimContractsV2: Partial<
     Avalanche: "0x4058F0C3924eDaB19c15597C438968ed49C1a213",
     BaseSepolia: "0xC400FcC0e92d3406747FBb6f513D3aa8B038fcE9",
     Sepolia: "0x0F18DD26D0B41fb1eaa9cF34D1Ec6022aA69a8e2",
+    Linea: "0xe8Ad216e23fc9425E65aB315F0EC13737e75afEF",
   },
   Mainnet: {
     Arbitrum: "0x8442d68524217601ed126f6859694E4B0C7c66A1",
@@ -266,7 +267,7 @@ export const getCircleV1Domain = (network: Network, chain: Chain): number => {
   const domain = circleV1Domains[network]?.[chain];
   if (domain === undefined) {
     throw new Error(
-      `CircleV1 domain not found for network ${network} and chain ${chain}`
+      `CircleV1 domain not found for network ${network} and chain ${chain}`,
     );
   }
   return domain;
@@ -323,7 +324,7 @@ export const getCircleV2Domain = (network: Network, chain: Chain): number => {
   const domain = circleV2Domains[network]?.[chain];
   if (domain === undefined) {
     throw new Error(
-      `CircleV2 domain not found for network ${network} and chain ${chain}`
+      `CircleV2 domain not found for network ${network} and chain ${chain}`,
     );
   }
   return domain;
@@ -331,11 +332,11 @@ export const getCircleV2Domain = (network: Network, chain: Chain): number => {
 
 export const getCircleV2Chain = (network: Network, domain: number): Chain => {
   const chain = Object.entries(circleV2Domains[network] ?? {}).find(
-    ([, d]) => d === domain
+    ([, d]) => d === domain,
   )?.[0];
   if (chain === undefined) {
     throw new Error(
-      `CircleV2 chain not found for network ${network} and domain ${domain}`
+      `CircleV2 chain not found for network ${network} and domain ${domain}`,
     );
   }
   return chain as Chain;
@@ -380,7 +381,7 @@ export const fastTransferETAs: Partial<
 
 export const isCircleV2FastChain = (
   network: Network,
-  chain: Chain
+  chain: Chain,
 ): boolean => {
   return fastTransferETAs[network]?.[chain] !== undefined;
 };
