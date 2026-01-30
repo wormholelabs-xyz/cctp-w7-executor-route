@@ -27,7 +27,7 @@ export const shimContractsV1: Partial<
     Avalanche: "0x58aC806cd205083E7E048E196f36Ff6C4Ae17bE5",
     Base: "0x4D1Cc8921e291555044C01761f581fa52a24C33d",
     Ethereum: "0x6DDE92942DbB24F7c9B75765b74a33446980C1e3",
-    Optimism: "0x6826c075973a4393CEf0e131c4B18869426563a7",
+    Optimism: "0x6826c075973a4393CEf0e131c4B16869426563a7",
     Polygon: "0x7e6Ae241101B355447A4B471D0C6968b132eC4Ab",
     Unichain: "0xa997Ef229E4D2a1fEca249eB41fBf5D4b2217d6E",
     Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
@@ -276,7 +276,7 @@ export const getCircleV1Domain = (network: Network, chain: Chain): number => {
   const domain = circleV1Domains[network]?.[chain];
   if (domain === undefined) {
     throw new Error(
-      `CircleV1 domain not found for network ${network} and chain ${chain}`
+      `CircleV1 domain not found for network ${network} and chain ${chain}`,
     );
   }
   return domain;
@@ -333,7 +333,7 @@ export const getCircleV2Domain = (network: Network, chain: Chain): number => {
   const domain = circleV2Domains[network]?.[chain];
   if (domain === undefined) {
     throw new Error(
-      `CircleV2 domain not found for network ${network} and chain ${chain}`
+      `CircleV2 domain not found for network ${network} and chain ${chain}`,
     );
   }
   return domain;
@@ -341,11 +341,11 @@ export const getCircleV2Domain = (network: Network, chain: Chain): number => {
 
 export const getCircleV2Chain = (network: Network, domain: number): Chain => {
   const chain = Object.entries(circleV2Domains[network] ?? {}).find(
-    ([, d]) => d === domain
+    ([, d]) => d === domain,
   )?.[0];
   if (chain === undefined) {
     throw new Error(
-      `CircleV2 chain not found for network ${network} and domain ${domain}`
+      `CircleV2 chain not found for network ${network} and domain ${domain}`,
     );
   }
   return chain as Chain;
@@ -390,7 +390,7 @@ export const fastTransferETAs: Partial<
 
 export const isCircleV2FastChain = (
   network: Network,
-  chain: Chain
+  chain: Chain,
 ): boolean => {
   return fastTransferETAs[network]?.[chain] !== undefined;
 };

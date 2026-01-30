@@ -149,6 +149,16 @@ export class SuiCCTPExecutor<N extends Network, C extends SuiChains>
       coin = txCoin;
     }
 
+    if (details.nativeTokenFee > 0n) {
+      const [nativeFeeCoin] = tx.splitCoins(tx.gas, [
+        tx.pure.u64(details.nativeTokenFee),
+      ]);
+      tx.transferObjects(
+        [nativeFeeCoin],
+        details.referrer ? canonicalAddress(details.referrer) : senderAddress
+      );
+    }
+
     const [_, message] = tx.moveCall({
       target: `${this.tokenMessengerId}::deposit_for_burn::deposit_for_burn`,
       arguments: [

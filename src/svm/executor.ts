@@ -21,7 +21,7 @@ import {
 } from "@wormhole-foundation/sdk-solana";
 import { CCTPExecutor } from "../types";
 import { shimContractsV1, solanaExecutorId } from "../consts";
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { QuoteDetails } from "../routes/cctpV1";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -134,6 +134,16 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
           senderPk,
           details.transferTokenFee
         )
+      );
+    }
+
+    if (details.nativeTokenFee > 0n) {
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: senderPk,
+          toPubkey: referrer,
+          lamports: details.nativeTokenFee,
+        })
       );
     }
 

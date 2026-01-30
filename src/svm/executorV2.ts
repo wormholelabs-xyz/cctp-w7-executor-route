@@ -183,6 +183,16 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
       );
     }
 
+    if (details.nativeTokenFee > 0n) {
+      instructions.push(
+        SystemProgram.transfer({
+          fromPubkey: senderPk,
+          toPubkey: referrer,
+          lamports: details.nativeTokenFee,
+        })
+      );
+    }
+
     const destinationDomain = getCircleV2Domain(this.network, recipient.chain);
     const destinationAddress = recipient.address.toUniversalAddress();
 
