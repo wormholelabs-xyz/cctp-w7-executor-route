@@ -81,11 +81,11 @@ export async function fetchExecutorQuote(
 
   const transferTokenFee =
     typeof config.transferTokenFee === "function"
-      ? config.transferTokenFee(transferAmount)
+      ? config.transferTokenFee(transferAmount, fromChain.chain)
       : (config.transferTokenFee ?? 0n);
   const nativeTokenFee =
     typeof config.nativeTokenFee === "function"
-      ? config.nativeTokenFee(transferAmount)
+      ? config.nativeTokenFee(transferAmount, fromChain.chain)
       : (config.nativeTokenFee ?? 0n);
 
   let referrerAddress: string | undefined = undefined;

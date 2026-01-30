@@ -193,7 +193,7 @@ describe("Fee Config Validation", () => {
 
   it("should throw if callback fee is set without referrerAddresses", () => {
     expect(() =>
-      cctpExecutorRoute({ transferTokenFee: (amount) => amount / 100n })
+      cctpExecutorRoute({ transferTokenFee: (amount, _chain) => amount / 100n })
     ).toThrow("referrerAddresses must be provided when fees are configured");
   });
 

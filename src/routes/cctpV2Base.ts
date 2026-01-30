@@ -48,13 +48,13 @@ export namespace CCTPv2ExecutorRoute {
     // Can be a fixed amount or a callback that receives the transfer amount
     // and returns the fee. Use a callback to implement dynamic fee models
     // such as proportional fees or fees with threshold-based capping.
-    transferTokenFee?: bigint | ((amount: bigint) => bigint);
+    transferTokenFee?: bigint | ((amount: bigint, sourceChain: Chain) => bigint);
     // Native token fee amount in native token base units (e.g., wei for ETH).
     // This fee is paid to the referrer in the native token of the source chain.
     // Can be a fixed amount or a callback that receives the transfer amount
     // and returns the fee. Use a callback to implement dynamic fee models
     // such as proportional fees or fees with threshold-based capping.
-    nativeTokenFee?: bigint | ((amount: bigint) => bigint);
+    nativeTokenFee?: bigint | ((amount: bigint, sourceChain: Chain) => bigint);
     // Referrer addresses (to whom the fees should be paid).
     // Required when either transferTokenFee or nativeTokenFee is non-zero.
     referrerAddresses?: Partial<
