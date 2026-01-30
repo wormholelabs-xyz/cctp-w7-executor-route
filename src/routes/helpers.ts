@@ -28,6 +28,25 @@ import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
 import { relayInstructionsLayout, signedQuoteLayout } from "../layouts";
 import { CCTPv2ExecutorRoute, CCTPv2QuoteDetails } from "./cctpV2Base";
 
+export function validateFeeConfig(
+  config: CCTPExecutorRoute.Config | CCTPv2ExecutorRoute.Config,
+) {
+  if (typeof config.transferTokenFee === "bigint" && config.transferTokenFee < 0n) {
+    throw new Error("transferTokenFee must be non-negative");
+  }
+  if (typeof config.nativeTokenFee === "bigint" && config.nativeTokenFee < 0n) {
+    throw new Error("nativeTokenFee must be non-negative");
+  }
+
+  const hasFee =
+    typeof config.transferTokenFee === "function" || (config.transferTokenFee ?? 0n) > 0n ||
+    typeof config.nativeTokenFee === "function" || (config.nativeTokenFee ?? 0n) > 0n;
+
+  if (hasFee && !config.referrerAddresses) {
+    throw new Error("referrerAddresses must be provided when fees are configured");
+  }
+}
+
 // The minimum rent exemption amount for a 165 byte account (e.g. an ATA)
 // cache it here to avoid fetching it from the Solana RPC
 let ataMinRentAmount: bigint | undefined = undefined;

@@ -27,12 +27,14 @@ import {
   Vp,
   Vr,
 } from "./cctpV2Base";
-import { fetchExecutorQuote } from "./helpers";
+import { fetchExecutorQuote, validateFeeConfig } from "./helpers";
 
 // Use this function to create a new CCTPv2FastExecutorRoute with custom config
 export function cctpV2FastExecutorRoute(
   config: CCTPv2ExecutorRoute.Config = { transferTokenFee: 0n, nativeTokenFee: 0n }
 ) {
+  validateFeeConfig(config);
+
   class CCTPv2FastExecutorRouteImpl<
     N extends Network
   > extends CCTPv2FastExecutorRoute<N> {

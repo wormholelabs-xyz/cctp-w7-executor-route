@@ -16,13 +16,15 @@ import {
   Vp,
   Vr,
 } from "./cctpV2Base";
-import { fetchExecutorQuote } from "./helpers";
+import { fetchExecutorQuote, validateFeeConfig } from "./helpers";
 import { getUsdcDestinationAddress } from "../utils";
 
 // Use this function to create a new CCTPv2StandardExecutorRoute with custom config
 export function cctpV2StandardExecutorRoute(
   config: CCTPv2ExecutorRoute.Config = { transferTokenFee: 0n, nativeTokenFee: 0n }
 ) {
+  validateFeeConfig(config);
+
   class CCTPv2StandardExecutorRouteImpl<
     N extends Network
   > extends CCTPv2StandardExecutorRoute<N> {

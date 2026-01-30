@@ -24,7 +24,7 @@ import {
 } from "../utils";
 import { CCTPExecutor } from "../types";
 import { circleV1Domains, isCircleV1Chain } from "../consts";
-import { fetchExecutorQuote, initiateTransfer } from "./helpers";
+import { fetchExecutorQuote, initiateTransfer, validateFeeConfig } from "./helpers";
 
 export namespace CCTPExecutorRoute {
   export type Options = {
@@ -95,6 +95,8 @@ export function cctpExecutorRoute(
     nativeTokenFee: 0n,
   },
 ) {
+  validateFeeConfig(config);
+
   class CCTPExecutorRouteImpl<N extends Network> extends CCTPExecutorRoute<N> {
     static override config = config;
   }

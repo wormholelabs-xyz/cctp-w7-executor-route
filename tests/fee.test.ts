@@ -20,6 +20,9 @@ describe("CCTPv1 Route Config", () => {
   it("should create a route with explicit transferTokenFee", () => {
     const config: CCTPExecutorRoute.Config = {
       transferTokenFee: 50_000n, // $0.05 USDC
+      referrerAddresses: {
+        Mainnet: { Ethereum: "0x1234567890123456789012345678901234567890" },
+      },
     };
     const Route = cctpExecutorRoute(config);
     expect(Route.config.transferTokenFee).toBe(50_000n);
@@ -29,6 +32,9 @@ describe("CCTPv1 Route Config", () => {
   it("should create a route with explicit nativeTokenFee", () => {
     const config: CCTPExecutorRoute.Config = {
       nativeTokenFee: 1_000_000_000_000_000n, // 0.001 ETH in wei
+      referrerAddresses: {
+        Mainnet: { Ethereum: "0x1234567890123456789012345678901234567890" },
+      },
     };
     const Route = cctpExecutorRoute(config);
     expect(Route.config.nativeTokenFee).toBe(1_000_000_000_000_000n);
@@ -90,6 +96,9 @@ describe("CCTPv2 Standard Route Config", () => {
   it("should create a route with explicit transferTokenFee", () => {
     const config: CCTPv2StandardExecutorRoute.Config = {
       transferTokenFee: 75_000n, // $0.075 USDC
+      referrerAddresses: {
+        Mainnet: { Base: "0x1111567890123456789012345678901234567890" },
+      },
     };
     const Route = cctpV2StandardExecutorRoute(config);
     expect(Route.config.transferTokenFee).toBe(75_000n);
@@ -126,6 +135,9 @@ describe("CCTPv2 Fast Route Config", () => {
   it("should create a route with explicit transferTokenFee", () => {
     const config: CCTPv2FastExecutorRoute.Config = {
       transferTokenFee: 150_000n, // $0.15 USDC
+      referrerAddresses: {
+        Mainnet: { Optimism: "0x2222567890123456789012345678901234567890" },
+      },
     };
     const Route = cctpV2FastExecutorRoute(config);
     expect(Route.config.transferTokenFee).toBe(150_000n);
@@ -154,6 +166,44 @@ describe("CCTPv2 Fast Route Config", () => {
   });
 });
 
+describe("Fee Config Validation", () => {
+  it("should throw if transferTokenFee is negative", () => {
+    expect(() =>
+      cctpExecutorRoute({ transferTokenFee: -1n })
+    ).toThrow("transferTokenFee must be non-negative");
+  });
+
+  it("should throw if nativeTokenFee is negative", () => {
+    expect(() =>
+      cctpExecutorRoute({ nativeTokenFee: -1n })
+    ).toThrow("nativeTokenFee must be non-negative");
+  });
+
+  it("should throw if transferTokenFee is set without referrerAddresses", () => {
+    expect(() =>
+      cctpExecutorRoute({ transferTokenFee: 1000n })
+    ).toThrow("referrerAddresses must be provided when fees are configured");
+  });
+
+  it("should throw if nativeTokenFee is set without referrerAddresses", () => {
+    expect(() =>
+      cctpExecutorRoute({ nativeTokenFee: 1000n })
+    ).toThrow("referrerAddresses must be provided when fees are configured");
+  });
+
+  it("should throw if callback fee is set without referrerAddresses", () => {
+    expect(() =>
+      cctpExecutorRoute({ transferTokenFee: (amount) => amount / 100n })
+    ).toThrow("referrerAddresses must be provided when fees are configured");
+  });
+
+  it("should not throw for zero fees without referrerAddresses", () => {
+    expect(() =>
+      cctpExecutorRoute({ transferTokenFee: 0n, nativeTokenFee: 0n })
+    ).not.toThrow();
+  });
+});
+
 describe("Fee Amount Handling", () => {
   it("should support zero fees (no referrer fee scenario)", () => {
     const config: CCTPExecutorRoute.Config = {
@@ -171,6 +221,9 @@ describe("Fee Amount Handling", () => {
       transferTokenFee: 1_000_000_000n,
       // Large ETH fee: 1 ETH in wei
       nativeTokenFee: 1_000_000_000_000_000_000n,
+      referrerAddresses: {
+        Mainnet: { Ethereum: "0x1234567890123456789012345678901234567890" },
+      },
     };
     const Route = cctpExecutorRoute(config);
     expect(Route.config.transferTokenFee).toBe(1_000_000_000n);
@@ -181,6 +234,9 @@ describe("Fee Amount Handling", () => {
     // Common scenario: $0.05 USDC fee
     const config: CCTPExecutorRoute.Config = {
       transferTokenFee: 50_000n, // $0.05 with 6 decimals
+      referrerAddresses: {
+        Mainnet: { Ethereum: "0x1234567890123456789012345678901234567890" },
+      },
     };
     const Route = cctpExecutorRoute(config);
     expect(Route.config.transferTokenFee).toBe(50_000n);
