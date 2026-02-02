@@ -56,10 +56,18 @@ export namespace CCTPv2ExecutorRoute {
     // such as proportional fees or fees with threshold-based capping.
     nativeTokenFee?: bigint | ((amount: bigint, sourceChain: Chain) => bigint);
     // Referrer addresses (to whom the fees should be paid).
-    // Required when either transferTokenFee or nativeTokenFee is non-zero.
+    // Required when fees are non-zero.
     referrerAddresses?: Partial<
       Record<Network, Partial<Record<Chain, string>>>
     >;
+    // --- Legacy dBPS fields (used when useLegacyFees is true) ---
+    // When true, use the old referrerFeeDbps percentage-based logic and legacy shim contracts.
+    // When false/undefined, use the new transferTokenFee/nativeTokenFee flat fee logic.
+    useLegacyFees?: boolean;
+    // Referrer fee in deci-basis points (0-65535). 1 dBPS = 0.001%.
+    referrerFeeDbps?: bigint;
+    // Threshold in whole USDC units. Fees are only charged up to this amount.
+    referrerFeeThreshold?: bigint;
   };
 
   export type Attestation = {

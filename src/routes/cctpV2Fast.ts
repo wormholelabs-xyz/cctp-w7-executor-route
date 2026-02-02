@@ -17,6 +17,7 @@ import {
   fastTransferETAs,
   isCircleV2Chain,
   isCircleV2FastChain,
+  shimContractsV2Legacy,
 } from "../consts";
 import {
   CCTPv2BaseRoute,
@@ -133,7 +134,8 @@ export class CCTPv2FastExecutorRoute<N extends Network>
         request,
         params,
         this.staticConfig,
-        "ERC2"
+        "ERC2",
+        this.staticConfig.useLegacyFees ? shimContractsV2Legacy : undefined,
       );
 
       const { remainingAmount, estimatedCost, gasDropOff, expiryTime } =

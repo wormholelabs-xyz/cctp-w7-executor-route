@@ -1,5 +1,6 @@
 import {
   amount,
+  Chain,
   ChainAddress,
   circle,
   deserializeLayout,
@@ -28,22 +29,57 @@ import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
 import { relayInstructionsLayout, signedQuoteLayout } from "../layouts";
 import { CCTPv2ExecutorRoute, CCTPv2QuoteDetails } from "./cctpV2Base";
 
+const MAX_U16 = 65_535n;
+
+export function calculateReferrerFee(
+  amount: bigint,
+  dBps: bigint,
+  threshold?: bigint,
+): { referrerFee: bigint; remainingAmount: bigint } {
+  if (dBps > MAX_U16) throw new Error("dBps exceeds max u16");
+  let referrerFee = 0n;
+  let remainingAmount = amount;
+  if (dBps > 0n) {
+    if (threshold !== undefined && amount > 0n) {
+      const thresholdUnits = threshold * 1_000_000n; // whole USDC -> 6 decimals
+      const cappedAmount = amount < thresholdUnits ? amount : thresholdUnits;
+      referrerFee = (cappedAmount * dBps) / 100_000n;
+    } else {
+      referrerFee = (amount * dBps) / 100_000n;
+    }
+    remainingAmount = amount - referrerFee;
+  }
+  return { referrerFee, remainingAmount };
+}
+
 export function validateFeeConfig(
   config: CCTPExecutorRoute.Config | CCTPv2ExecutorRoute.Config,
 ) {
-  if (typeof config.transferTokenFee === "bigint" && config.transferTokenFee < 0n) {
-    throw new Error("transferTokenFee must be non-negative");
-  }
-  if (typeof config.nativeTokenFee === "bigint" && config.nativeTokenFee < 0n) {
-    throw new Error("nativeTokenFee must be non-negative");
-  }
+  if (config.useLegacyFees) {
+    // Legacy dBPS mode validation
+    const dBps = config.referrerFeeDbps ?? 0n;
+    if (dBps < 0n || dBps > MAX_U16) {
+      throw new Error("referrerFeeDbps must be between 0 and 65535");
+    }
+    if (dBps > 0n && !config.referrerAddresses) {
+      throw new Error("referrerAddresses must be provided when referrerFeeDbps > 0");
+    }
+  } else {
+    // Flat fee mode validation (default)
+    if (typeof config.transferTokenFee === "bigint" && config.transferTokenFee < 0n) {
+      throw new Error("transferTokenFee must be non-negative");
+    }
+    if (typeof config.nativeTokenFee === "bigint" && config.nativeTokenFee < 0n) {
+      throw new Error("nativeTokenFee must be non-negative");
+    }
 
-  const hasFee =
-    typeof config.transferTokenFee === "function" || (config.transferTokenFee ?? 0n) > 0n ||
-    typeof config.nativeTokenFee === "function" || (config.nativeTokenFee ?? 0n) > 0n;
+    const hasFee =
+      typeof config.transferTokenFee === "function" || (config.transferTokenFee ?? 0n) > 0n ||
+      typeof config.nativeTokenFee === "function" || (config.nativeTokenFee ?? 0n) > 0n;
 
-  if (hasFee && !config.referrerAddresses) {
-    throw new Error("referrerAddresses must be provided when fees are configured");
+    if (hasFee && !config.referrerAddresses) {
+      throw new Error("referrerAddresses must be provided when fees are configured");
+    }
   }
 }
 
@@ -58,6 +94,7 @@ export async function fetchExecutorQuote(
     | CCTPv2ExecutorRoute.ValidatedParams,
   config: CCTPExecutorRoute.Config | CCTPv2ExecutorRoute.Config,
   capability: "ERC1" | "ERC2",
+  legacyShimContracts?: Partial<Record<Network, Partial<Record<Chain, string>>>>,
 ): Promise<QuoteDetails> {
   const { fromChain, toChain } = request;
 
@@ -79,29 +116,55 @@ export async function fetchExecutorQuote(
 
   const transferAmount = amount.units(params.normalizedParams.amount);
 
-  const transferTokenFee =
-    typeof config.transferTokenFee === "function"
-      ? config.transferTokenFee(transferAmount, fromChain.chain)
-      : (config.transferTokenFee ?? 0n);
-  const nativeTokenFee =
-    typeof config.nativeTokenFee === "function"
-      ? config.nativeTokenFee(transferAmount, fromChain.chain)
-      : (config.nativeTokenFee ?? 0n);
-
+  let transferTokenFee: bigint;
+  let nativeTokenFee: bigint;
+  let remainingAmount: bigint;
   let referrerAddress: string | undefined = undefined;
-  if (transferTokenFee > 0n || nativeTokenFee > 0n) {
-    referrerAddress =
-      config.referrerAddresses?.[fromChain.network]?.[fromChain.chain];
-    if (!referrerAddress) {
-      throw new Error(`Referrer address not configured for ${fromChain.chain}`);
+
+  if (config.useLegacyFees) {
+    // Legacy dBPS mode
+    const dBps = config.referrerFeeDbps ?? 0n;
+    const result = calculateReferrerFee(
+      transferAmount,
+      dBps,
+      config.referrerFeeThreshold,
+    );
+    transferTokenFee = result.referrerFee;
+    nativeTokenFee = 0n;
+    remainingAmount = result.remainingAmount;
+
+    if (dBps > 0n) {
+      referrerAddress =
+        config.referrerAddresses?.[fromChain.network]?.[fromChain.chain];
+      if (!referrerAddress) {
+        throw new Error(`Referrer address not configured for ${fromChain.chain}`);
+      }
     }
+  } else {
+    // Flat fee mode (default)
+    transferTokenFee =
+      typeof config.transferTokenFee === "function"
+        ? config.transferTokenFee(transferAmount, fromChain.chain)
+        : (config.transferTokenFee ?? 0n);
+    nativeTokenFee =
+      typeof config.nativeTokenFee === "function"
+        ? config.nativeTokenFee(transferAmount, fromChain.chain)
+        : (config.nativeTokenFee ?? 0n);
+
+    if (transferTokenFee > 0n || nativeTokenFee > 0n) {
+      referrerAddress =
+        config.referrerAddresses?.[fromChain.network]?.[fromChain.chain];
+      if (!referrerAddress) {
+        throw new Error(`Referrer address not configured for ${fromChain.chain}`);
+      }
+    }
+
+    remainingAmount = transferAmount - transferTokenFee;
   }
 
   const referrer = referrerAddress
     ? Wormhole.chainAddress(fromChain.chain, referrerAddress)
     : undefined;
-
-  const remainingAmount = transferAmount - transferTokenFee;
   if (remainingAmount <= 0n) {
     throw new Error(
       `Transfer token fee (${transferTokenFee}) exceeds transfer amount (${transferAmount})`,
@@ -216,7 +279,11 @@ export async function fetchExecutorQuote(
 
   const estimatedCost = BigInt(quote.estimatedCost);
 
+  // Only override the shim contract when using legacy fee contracts
+  const shimContract = legacyShimContracts?.[fromChain.network]?.[fromChain.chain];
+
   const details: QuoteDetails = {
+    shimContract,
     signedQuote: signedQuoteBytes,
     relayInstructions: relayInstructions,
     estimatedCost,

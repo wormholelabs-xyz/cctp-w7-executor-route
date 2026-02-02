@@ -90,6 +90,8 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
       .toUniversalAddress()
       .toUint8Array();
 
+    const shimAddress = details.shimContract ?? this.shimContract;
+
     // The shim contract pulls tokens in two separate transferFrom calls:
     // 1. custodyTokens: transfers `amount` (the burn amount)
     // 2. payFee: transfers `transferTokenFee` (the referrer fee)
@@ -103,12 +105,12 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
 
     const allowance = await tokenContract.allowance(
       senderAddress,
-      this.shimContract
+      shimAddress
     );
 
     if (allowance < totalAmount) {
       const txReq = await tokenContract.approve.populateTransaction(
-        this.shimContract,
+        shimAddress,
         totalAmount
       );
       yield this.createUnsignedTx(
@@ -126,7 +128,7 @@ export class EvmCCTPv2Executor<N extends Network, C extends EvmChains>
     // If equal to bytes32(0), any address can call receiveMessage() on destination domain.
     const destinationCaller = new Uint8Array(32);
 
-    const shim = new Contract(this.shimContract, shimAbi, this.provider);
+    const shim = new Contract(shimAddress, shimAbi, this.provider);
 
     const destinationCircleDomain = getCircleV2Domain(
       this.network,

@@ -105,8 +105,9 @@ export class AptosCCTPExecutor<
       payee,
     ];
 
+    const shimContract = details.shimContract ?? this.shimContract;
     const tx: InputGenerateTransactionPayloadData = {
-      function: `${this.shimContract}::cctp_v1_with_executor::deposit_for_burn_entry`,
+      function: `${shimContract}::cctp_v1_with_executor::deposit_for_burn_entry`,
       functionArguments,
     };
 

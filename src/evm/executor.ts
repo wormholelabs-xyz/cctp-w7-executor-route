@@ -72,6 +72,8 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
       .toUniversalAddress()
       .toUint8Array();
 
+    const shimAddress = details.shimContract ?? this.shimContract;
+
     // The shim contract pulls tokens in two separate transferFrom calls:
     // 1. custodyTokens: transfers `amount` (the burn amount)
     // 2. payFee: transfers `transferTokenFee` (the referrer fee)
@@ -87,12 +89,12 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
 
     const allowance = await tokenContract.allowance(
       senderAddress,
-      this.shimContract
+      shimAddress
     );
 
     if (allowance < totalAmount) {
       const txReq = await tokenContract.approve.populateTransaction(
-        this.shimContract,
+        shimAddress,
         totalAmount
       );
       yield this.createUnsignedTx(
@@ -107,7 +109,7 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
       "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint256 transferTokenFee, uint256 nativeTokenFee, address payee) feeArgs) external payable returns (uint64 nonce)",
     ];
 
-    const shim = new Contract(this.shimContract, shimAbi, this.provider);
+    const shim = new Contract(shimAddress, shimAbi, this.provider);
 
     // Pass remainingAmount as the contract's `amount` parameter (the burn amount).
     // The fee is collected separately by the contract via feeArgs.transferTokenFee.
