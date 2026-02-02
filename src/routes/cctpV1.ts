@@ -86,6 +86,9 @@ export type QuoteDetails = {
   remainingAmount: bigint; // The remaining amount after the transfer token fee
   expiryTime: Date; // The expiry time of the quote
   gasDropOff: bigint; // The gas drop-off amount in native token units
+  // --- Legacy fields (only set when useLegacyFees is true) ---
+  useLegacyFees?: boolean; // When true, executors should use the old dBPS-based contract ABI
+  referrerFeeDbps?: bigint; // The original dBPS value for the legacy contract call
 };
 
 type Q = routes.Quote<Op, Vp, QuoteDetails>;

@@ -88,24 +88,45 @@ export class AptosCCTPExecutor<
     const payee = new AptosAddress(
       details.referrer?.address?.toString() ?? senderAddress,
     ).unwrap();
-    const functionArguments: Array<
-      EntryFunctionArgumentTypes | SimpleEntryFunctionArgumentTypes
-    > = [
-      details.remainingAmount,
-      destinationDomain,
-      mintRecipient.toString(),
-      burnToken.toString(),
-      details.estimatedCost,
-      toChainId(recipient.chain),
-      refundAddr,
-      details.signedQuote,
-      details.relayInstructions,
-      details.transferTokenFee,
-      details.nativeTokenFee,
-      payee,
-    ];
 
     const shimContract = details.shimContract ?? this.shimContract;
+    let functionArguments: Array<
+      EntryFunctionArgumentTypes | SimpleEntryFunctionArgumentTypes
+    >;
+
+    if (details.useLegacyFees) {
+      // Legacy contract: accepts full amount and dBPS, calculates fee internally
+      functionArguments = [
+        details.remainingAmount + details.transferTokenFee,
+        destinationDomain,
+        mintRecipient.toString(),
+        burnToken.toString(),
+        details.estimatedCost,
+        toChainId(recipient.chain),
+        refundAddr,
+        details.signedQuote,
+        details.relayInstructions,
+        Number(details.referrerFeeDbps ?? 0n),
+        payee,
+      ];
+    } else {
+      // New contract: receives remainingAmount and collects fee separately
+      functionArguments = [
+        details.remainingAmount,
+        destinationDomain,
+        mintRecipient.toString(),
+        burnToken.toString(),
+        details.estimatedCost,
+        toChainId(recipient.chain),
+        refundAddr,
+        details.signedQuote,
+        details.relayInstructions,
+        details.transferTokenFee,
+        details.nativeTokenFee,
+        payee,
+      ];
+    }
+
     const tx: InputGenerateTransactionPayloadData = {
       function: `${shimContract}::cctp_v1_with_executor::deposit_for_burn_entry`,
       functionArguments,

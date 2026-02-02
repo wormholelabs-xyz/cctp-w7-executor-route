@@ -293,6 +293,10 @@ export async function fetchExecutorQuote(
     expiryTime: signedQuote.quote.expiryTime,
     gasDropOff: dropOff,
     nativeTokenFee,
+    ...(config.useLegacyFees && {
+      useLegacyFees: true,
+      referrerFeeDbps: config.referrerFeeDbps ?? 0n,
+    }),
   };
 
   return details;

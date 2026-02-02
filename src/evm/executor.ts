@@ -74,10 +74,8 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
 
     const shimAddress = details.shimContract ?? this.shimContract;
 
-    // The shim contract pulls tokens in two separate transferFrom calls:
-    // 1. custodyTokens: transfers `amount` (the burn amount)
-    // 2. payFee: transfers `transferTokenFee` (the referrer fee)
-    // So the total allowance needed is remainingAmount + transferTokenFee.
+    // Both old and new contracts require allowance for the full transfer amount
+    // (remainingAmount + transferTokenFee).
     const totalAmount = details.remainingAmount + details.transferTokenFee;
 
     const tokenAddr = circle.usdcContract.get(this.network, this.chain)!;
@@ -104,33 +102,59 @@ export class EvmCCTPExecutor<N extends Network, C extends EvmChains>
       );
     }
 
-    // TODO: type safety. typechain brings in so much boilerplate code and is soft deprecated. use viem?
-    const shimAbi = [
-      "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint256 transferTokenFee, uint256 nativeTokenFee, address payee) feeArgs) external payable returns (uint64 nonce)",
-    ];
+    const payee = details.referrer?.address?.toString() ?? senderAddress;
 
-    const shim = new Contract(shimAddress, shimAbi, this.provider);
+    let txReq;
+    if (details.useLegacyFees) {
+      // Legacy contract ABI: accepts full amount and calculates fee from dBPS internally
+      const shimAbi = [
+        "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint16 dbps, address payee) feeArgs) external payable returns (uint64 nonce)",
+      ];
+      const shim = new Contract(shimAddress, shimAbi, this.provider);
 
-    // Pass remainingAmount as the contract's `amount` parameter (the burn amount).
-    // The fee is collected separately by the contract via feeArgs.transferTokenFee.
-    const txReq = await shim.getFunction("depositForBurn").populateTransaction(
-      details.remainingAmount,
-      toChainId(recipient.chain),
-      circle.circleChainId.get(this.network, recipient.chain)!,
-      recipientAddress,
-      tokenAddr,
-      {
-        refundAddress: senderAddress,
-        signedQuote: details.signedQuote,
-        instructions: details.relayInstructions,
-      },
-      {
-        transferTokenFee: details.transferTokenFee,
-        nativeTokenFee: details.nativeTokenFee,
-        payee: details.referrer?.address?.toString() ?? senderAddress,
-      }
-    );
-    txReq.value = details.estimatedCost + details.nativeTokenFee;
+      txReq = await shim.getFunction("depositForBurn").populateTransaction(
+        totalAmount,
+        toChainId(recipient.chain),
+        circle.circleChainId.get(this.network, recipient.chain)!,
+        recipientAddress,
+        tokenAddr,
+        {
+          refundAddress: senderAddress,
+          signedQuote: details.signedQuote,
+          instructions: details.relayInstructions,
+        },
+        {
+          dbps: details.referrerFeeDbps ?? 0n,
+          payee,
+        }
+      );
+      txReq.value = details.estimatedCost;
+    } else {
+      // New contract ABI: receives remainingAmount and collects fee separately
+      const shimAbi = [
+        "function depositForBurn(uint256 amount, uint16 destinationChain, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, (address refundAddress, bytes signedQuote, bytes instructions) executorArgs, (uint256 transferTokenFee, uint256 nativeTokenFee, address payee) feeArgs) external payable returns (uint64 nonce)",
+      ];
+      const shim = new Contract(shimAddress, shimAbi, this.provider);
+
+      txReq = await shim.getFunction("depositForBurn").populateTransaction(
+        details.remainingAmount,
+        toChainId(recipient.chain),
+        circle.circleChainId.get(this.network, recipient.chain)!,
+        recipientAddress,
+        tokenAddr,
+        {
+          refundAddress: senderAddress,
+          signedQuote: details.signedQuote,
+          instructions: details.relayInstructions,
+        },
+        {
+          transferTokenFee: details.transferTokenFee,
+          nativeTokenFee: details.nativeTokenFee,
+          payee,
+        }
+      );
+      txReq.value = details.estimatedCost + details.nativeTokenFee;
+    }
 
     yield this.createUnsignedTx(
       addFrom(txReq, senderAddress),
