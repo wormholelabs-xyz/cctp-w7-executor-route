@@ -23,8 +23,8 @@ import {
   RelayStatus,
 } from "../utils";
 import { CCTPExecutor } from "../types";
-import { circleV1Domains, isCircleV1Chain } from "../consts";
-import { fetchExecutorQuote, initiateTransfer } from "./helpers";
+import { circleV1Domains, isCircleV1Chain, shimContractsV1Legacy } from "../consts";
+import { fetchExecutorQuote, initiateTransfer, validateFeeConfig } from "./helpers";
 
 export namespace CCTPExecutorRoute {
   export type Options = {
@@ -36,24 +36,36 @@ export namespace CCTPExecutorRoute {
     amount: amount.Amount;
   };
 
-  export interface ValidatedParams
-    extends routes.ValidatedTransferParams<Options> {
+  export interface ValidatedParams extends routes.ValidatedTransferParams<Options> {
     normalizedParams: NormalizedParams;
   }
 
   export type Config = {
-    // Referrer Fee in *tenths* of basis points
-    // e.g. 10 = 1 basis point (0.01%)
-    referrerFeeDbps: bigint;
-    // Optional threshold USDC amount used in the below referrer fee formula when specified.
-    // min(referrerFeeDbps, referrerFeeThreshold/amount)
-    // Note that this is in whole USDC, not in base units.
-    referrerFeeThreshold?: bigint;
-    // Referrer addresses (to whom the referrer fee should be paid)
-    // are required when the referrer fee is non-zero.
+    // Referrer fee amount in transfer token base units (e.g., USDC with 6 decimals).
+    // This fee is paid to the referrer from the transfer amount.
+    // Can be a fixed amount or a callback that receives the transfer amount
+    // and returns the fee. Use a callback to implement dynamic fee models
+    // such as proportional fees or fees with threshold-based capping.
+    transferTokenFee?: bigint | ((amount: bigint, sourceChain: Chain) => bigint);
+    // Native token fee amount in native token base units (e.g., wei for ETH).
+    // This fee is paid to the referrer in the native token of the source chain.
+    // Can be a fixed amount or a callback that receives the transfer amount
+    // and returns the fee. Use a callback to implement dynamic fee models
+    // such as proportional fees or fees with threshold-based capping.
+    nativeTokenFee?: bigint | ((amount: bigint, sourceChain: Chain) => bigint);
+    // Referrer addresses (to whom the fees should be paid).
+    // Required when fees are non-zero.
     referrerAddresses?: Partial<
       Record<Network, Partial<Record<Chain, string>>>
     >;
+    // --- Legacy dBPS fields (used when useLegacyFees is true) ---
+    // When true, use the old referrerFeeDbps percentage-based logic and legacy shim contracts.
+    // When false/undefined, use the new transferTokenFee/nativeTokenFee flat fee logic.
+    useLegacyFees?: boolean;
+    // Referrer fee in deci-basis points (0-65535). 1 dBPS = 0.001%.
+    referrerFeeDbps?: bigint;
+    // Threshold in whole USDC units. Fees are only charged up to this amount.
+    referrerFeeThreshold?: bigint;
   };
 }
 
@@ -64,15 +76,19 @@ type Tp = routes.TransferParams<Op>;
 type Vr = routes.ValidationResult<Op>;
 
 export type QuoteDetails = {
+  shimContract?: string; // The shim contract address to use (overrides the default)
   signedQuote: Uint8Array; // The signed quote from the /v0/quote endpoint
   relayInstructions: Uint8Array; // The relay instructions for the transfer
   estimatedCost: bigint; // The estimated cost of the transfer
-  referrer?: ChainAddress; // The referrer address (to whom the referrer fee should be paid)
-  referrerFee: bigint; // The referrer fee in USDC
-  remainingAmount: bigint; // The remaining amount after the referrer fee in USDC
-  referrerFeeDbps: bigint; // The referrer fee in *tenths* of basis points
+  referrer?: ChainAddress; // The referrer address (to whom the fees should be paid)
+  transferTokenFee: bigint; // The referrer fee in transfer token units (e.g., USDC)
+  nativeTokenFee: bigint; // The referrer fee in native token units (e.g., wei)
+  remainingAmount: bigint; // The remaining amount after the transfer token fee
   expiryTime: Date; // The expiry time of the quote
   gasDropOff: bigint; // The gas drop-off amount in native token units
+  // --- Legacy fields (only set when useLegacyFees is true) ---
+  useLegacyFees?: boolean; // When true, executors should use the old dBPS-based contract ABI
+  referrerFeeDbps?: bigint; // The original dBPS value for the legacy contract call
 };
 
 type Q = routes.Quote<Op, Vp, QuoteDetails>;
@@ -86,11 +102,13 @@ type R = routes.Receipt<AT>;
 
 // Use this function to create a new CCTPExecutorRoute with custom config
 export function cctpExecutorRoute(
-  config: CCTPExecutorRoute.Config = { referrerFeeDbps: 0n }
+  config: CCTPExecutorRoute.Config = {
+    transferTokenFee: 0n,
+    nativeTokenFee: 0n,
+  },
 ) {
-  if (config.referrerFeeDbps < 0 || config.referrerFeeDbps > 65535n) {
-    throw new Error("Referrer fee must be between 0 and 65535");
-  }
+  validateFeeConfig(config);
+
   class CCTPExecutorRouteImpl<N extends Network> extends CCTPExecutorRoute<N> {
     static override config = config;
   }
@@ -109,7 +127,10 @@ export class CCTPExecutorRoute<N extends Network>
   // Since we set the config on the static class, access it with this param
   // the CCTPExecutorRoute.config will always be empty
   readonly staticConfig = this.constructor.config;
-  static config: CCTPExecutorRoute.Config = { referrerFeeDbps: 0n };
+  static config: CCTPExecutorRoute.Config = {
+    transferTokenFee: 0n,
+    nativeTokenFee: 0n,
+  };
 
   static meta = {
     name: "CCTPExecutorRoute",
@@ -127,7 +148,7 @@ export class CCTPExecutorRoute<N extends Network>
   static async supportedDestinationTokens<N extends Network>(
     sourceToken: TokenId,
     fromChain: ChainContext<N>,
-    toChain: ChainContext<N>
+    toChain: ChainContext<N>,
   ): Promise<TokenId[]> {
     if (
       !isCircleV1Chain(fromChain.network, fromChain.chain) ||
@@ -147,7 +168,7 @@ export class CCTPExecutorRoute<N extends Network>
 
   async validate(
     request: routes.RouteTransferRequest<N>,
-    params: Tp
+    params: Tp,
   ): Promise<Vr> {
     const { fromChain, toChain } = request;
     if (
@@ -185,7 +206,7 @@ export class CCTPExecutorRoute<N extends Network>
 
   async quote(
     request: routes.RouteTransferRequest<N>,
-    params: Vp
+    params: Vp,
   ): Promise<QR> {
     const { fromChain, toChain } = request;
 
@@ -194,7 +215,8 @@ export class CCTPExecutorRoute<N extends Network>
         request,
         params,
         this.staticConfig,
-        "ERC1"
+        "ERC1",
+        this.staticConfig.useLegacyFees ? shimContractsV1Legacy : undefined,
       );
 
       const { remainingAmount, estimatedCost, gasDropOff, expiryTime } =
@@ -222,7 +244,7 @@ export class CCTPExecutorRoute<N extends Network>
           token: request.destination.id,
           amount: amount.fromBaseUnits(
             remainingAmount,
-            request.destination.decimals
+            request.destination.decimals,
           ),
         },
         relayFee: {
@@ -231,7 +253,7 @@ export class CCTPExecutorRoute<N extends Network>
         },
         destinationNativeGas: amount.fromBaseUnits(
           gasDropOff,
-          dstNativeDecimals
+          dstNativeDecimals,
         ),
         eta,
         expires: expiryTime,
@@ -249,7 +271,7 @@ export class CCTPExecutorRoute<N extends Network>
     request: routes.RouteTransferRequest<N>,
     signer: Signer,
     quote: Q,
-    to: ChainAddress
+    to: ChainAddress,
   ): Promise<R> {
     if (!quote.details) {
       throw new Error("Missing quote details");
@@ -277,7 +299,7 @@ export class CCTPExecutorRoute<N extends Network>
           const [txStatus] = await fetchTxStatus(
             this.wh.network,
             receipt.originTxs.at(-1)!.txid,
-            receipt.from
+            receipt.from,
           );
 
           if (!txStatus) {
@@ -296,7 +318,7 @@ export class CCTPExecutorRoute<N extends Network>
               ...receipt,
               state: TransferState.Failed,
               error: new routes.RelayFailedError(
-                `Relay failed with status: ${relayStatus}`
+                `Relay failed with status: ${relayStatus}`,
               ),
             };
           }
@@ -318,7 +340,7 @@ export class CCTPExecutorRoute<N extends Network>
           }
         } catch (error: any) {
           console.error(
-            `Error fetching transaction status: ${error.message || error}`
+            `Error fetching transaction status: ${error.message || error}`,
           );
         }
       }

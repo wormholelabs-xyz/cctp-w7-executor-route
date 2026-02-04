@@ -1,5 +1,6 @@
 import {
   amount,
+  Chain,
   ChainAddress,
   circle,
   deserializeLayout,
@@ -18,7 +19,6 @@ import {
 import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
 import { gasLimits, SOLANA_MSG_VALUE_BASE_FEE } from "../consts";
 import {
-  calculateReferrerFee,
   fetchCapabilities,
   fetchSignedQuote,
   fetchStatus,
@@ -28,6 +28,60 @@ import { Connection } from "@solana/web3.js";
 import { SolanaAddress } from "@wormhole-foundation/sdk-solana";
 import { relayInstructionsLayout, signedQuoteLayout } from "../layouts";
 import { CCTPv2ExecutorRoute, CCTPv2QuoteDetails } from "./cctpV2Base";
+
+const MAX_U16 = 65_535n;
+
+export function calculateReferrerFee(
+  amount: bigint,
+  dBps: bigint,
+  threshold?: bigint,
+): { referrerFee: bigint; remainingAmount: bigint } {
+  if (dBps > MAX_U16) throw new Error("dBps exceeds max u16");
+  let referrerFee = 0n;
+  let remainingAmount = amount;
+  if (dBps > 0n) {
+    if (threshold !== undefined && amount > 0n) {
+      const thresholdUnits = threshold * 1_000_000n; // whole USDC -> 6 decimals
+      const cappedAmount = amount < thresholdUnits ? amount : thresholdUnits;
+      referrerFee = (cappedAmount * dBps) / 100_000n;
+    } else {
+      referrerFee = (amount * dBps) / 100_000n;
+    }
+    remainingAmount = amount - referrerFee;
+  }
+  return { referrerFee, remainingAmount };
+}
+
+export function validateFeeConfig(
+  config: CCTPExecutorRoute.Config | CCTPv2ExecutorRoute.Config,
+) {
+  if (config.useLegacyFees) {
+    // Legacy dBPS mode validation
+    const dBps = config.referrerFeeDbps ?? 0n;
+    if (dBps < 0n || dBps > MAX_U16) {
+      throw new Error("referrerFeeDbps must be between 0 and 65535");
+    }
+    if (dBps > 0n && !config.referrerAddresses) {
+      throw new Error("referrerAddresses must be provided when referrerFeeDbps > 0");
+    }
+  } else {
+    // Flat fee mode validation (default)
+    if (typeof config.transferTokenFee === "bigint" && config.transferTokenFee < 0n) {
+      throw new Error("transferTokenFee must be non-negative");
+    }
+    if (typeof config.nativeTokenFee === "bigint" && config.nativeTokenFee < 0n) {
+      throw new Error("nativeTokenFee must be non-negative");
+    }
+
+    const hasFee =
+      typeof config.transferTokenFee === "function" || (config.transferTokenFee ?? 0n) > 0n ||
+      typeof config.nativeTokenFee === "function" || (config.nativeTokenFee ?? 0n) > 0n;
+
+    if (hasFee && !config.referrerAddresses) {
+      throw new Error("referrerAddresses must be provided when fees are configured");
+    }
+  }
+}
 
 // The minimum rent exemption amount for a 165 byte account (e.g. an ATA)
 // cache it here to avoid fetching it from the Solana RPC
@@ -39,13 +93,14 @@ export async function fetchExecutorQuote(
     | CCTPExecutorRoute.ValidatedParams
     | CCTPv2ExecutorRoute.ValidatedParams,
   config: CCTPExecutorRoute.Config | CCTPv2ExecutorRoute.Config,
-  capability: "ERC1" | "ERC2"
+  capability: "ERC1" | "ERC2",
+  legacyShimContracts?: Partial<Record<Network, Partial<Record<Chain, string>>>>,
 ): Promise<QuoteDetails> {
   const { fromChain, toChain } = request;
 
   const srcUsdcAddress = circle.usdcContract.get(
     fromChain.network,
-    fromChain.chain
+    fromChain.chain,
   );
   if (!srcUsdcAddress) {
     throw new Error("Invalid transfer, no USDC contract on source");
@@ -53,33 +108,67 @@ export async function fetchExecutorQuote(
 
   const dstUsdcAddress = circle.usdcContract.get(
     toChain.network,
-    toChain.chain
+    toChain.chain,
   );
   if (!dstUsdcAddress) {
     throw new Error("Invalid transfer, no USDC contract on destination");
   }
 
+  const transferAmount = amount.units(params.normalizedParams.amount);
+
+  let transferTokenFee: bigint;
+  let nativeTokenFee: bigint;
+  let remainingAmount: bigint;
   let referrerAddress: string | undefined = undefined;
-  if (config.referrerFeeDbps > 0n) {
-    referrerAddress =
-      config.referrerAddresses?.[fromChain.network]?.[fromChain.chain];
-    if (!referrerAddress) {
-      throw new Error(`Referrer address not configured for ${fromChain.chain}`);
+
+  if (config.useLegacyFees) {
+    // Legacy dBPS mode
+    const dBps = config.referrerFeeDbps ?? 0n;
+    const result = calculateReferrerFee(
+      transferAmount,
+      dBps,
+      config.referrerFeeThreshold,
+    );
+    transferTokenFee = result.referrerFee;
+    nativeTokenFee = 0n;
+    remainingAmount = result.remainingAmount;
+
+    if (dBps > 0n) {
+      referrerAddress =
+        config.referrerAddresses?.[fromChain.network]?.[fromChain.chain];
+      if (!referrerAddress) {
+        throw new Error(`Referrer address not configured for ${fromChain.chain}`);
+      }
     }
+  } else {
+    // Flat fee mode (default)
+    transferTokenFee =
+      typeof config.transferTokenFee === "function"
+        ? config.transferTokenFee(transferAmount, fromChain.chain)
+        : (config.transferTokenFee ?? 0n);
+    nativeTokenFee =
+      typeof config.nativeTokenFee === "function"
+        ? config.nativeTokenFee(transferAmount, fromChain.chain)
+        : (config.nativeTokenFee ?? 0n);
+
+    if (transferTokenFee > 0n || nativeTokenFee > 0n) {
+      referrerAddress =
+        config.referrerAddresses?.[fromChain.network]?.[fromChain.chain];
+      if (!referrerAddress) {
+        throw new Error(`Referrer address not configured for ${fromChain.chain}`);
+      }
+    }
+
+    remainingAmount = transferAmount - transferTokenFee;
   }
 
   const referrer = referrerAddress
     ? Wormhole.chainAddress(fromChain.chain, referrerAddress)
     : undefined;
-
-  const { referrerFee, remainingAmount, referrerFeeDbps } =
-    calculateReferrerFee(
-      amount.units(params.normalizedParams.amount),
-      config.referrerFeeDbps,
-      config.referrerFeeThreshold
-    );
   if (remainingAmount <= 0n) {
-    throw new Error("Amount after fee <= 0");
+    throw new Error(
+      `Transfer token fee (${transferTokenFee}) exceeds transfer amount (${transferAmount})`,
+    );
   }
 
   const gasLimit = gasLimits[toChain.network]?.[toChain.chain];
@@ -113,12 +202,12 @@ export async function fetchExecutorQuote(
     const ata = await toChain.getTokenAccount(recipient.address, usdcAddress);
     const connection: Connection = await toChain.getRpc();
     const ataAccount = await connection.getAccountInfo(
-      new SolanaAddress(ata.address).unwrap()
+      new SolanaAddress(ata.address).unwrap(),
     );
     tokenAccountExists = ataAccount !== null;
     if (!tokenAccountExists && !ataMinRentAmount) {
       ataMinRentAmount = BigInt(
-        await connection.getMinimumBalanceForRentExemption(165)
+        await connection.getMinimumBalanceForRentExemption(165),
       );
     }
   }
@@ -178,7 +267,7 @@ export async function fetchExecutorQuote(
     fromChain.network,
     fromChain.chain,
     toChain.chain,
-    encoding.hex.encode(relayInstructions, true)
+    encoding.hex.encode(relayInstructions, true),
   );
 
   if (!quote.estimatedCost) {
@@ -190,16 +279,24 @@ export async function fetchExecutorQuote(
 
   const estimatedCost = BigInt(quote.estimatedCost);
 
+  // Only override the shim contract when using legacy fee contracts
+  const shimContract = legacyShimContracts?.[fromChain.network]?.[fromChain.chain];
+
   const details: QuoteDetails = {
+    shimContract,
     signedQuote: signedQuoteBytes,
     relayInstructions: relayInstructions,
     estimatedCost,
     referrer,
-    referrerFee,
+    transferTokenFee,
     remainingAmount,
-    referrerFeeDbps,
     expiryTime: signedQuote.quote.expiryTime,
     gasDropOff: dropOff,
+    nativeTokenFee,
+    ...(config.useLegacyFees && {
+      useLegacyFees: true,
+      referrerFeeDbps: config.referrerFeeDbps ?? 0n,
+    }),
   };
 
   return details;
@@ -211,11 +308,11 @@ export async function initiateTransfer(
   to: ChainAddress,
   params:
     | { protocol: "CCTPExecutor"; details: QuoteDetails }
-    | { protocol: "CCTPv2Executor"; details: CCTPv2QuoteDetails }
+    | { protocol: "CCTPv2Executor"; details: CCTPv2QuoteDetails },
 ): Promise<SourceInitiatedTransferReceipt> {
   const relayInstructions = deserializeLayout(
     relayInstructionsLayout,
-    params.details.relayInstructions
+    params.details.relayInstructions,
   );
 
   // Make sure that the gas drop-off recipient matches the actual recipient
@@ -252,7 +349,7 @@ export async function initiateTransfer(
         const [txStatus] = await fetchStatus(
           request.fromChain.network,
           txids.at(-1)!.txid,
-          request.fromChain.chain
+          request.fromChain.chain,
         );
 
         if (txStatus) {
@@ -281,14 +378,14 @@ export async function initiateTransfer(
 
 async function resolveRecipient(
   to: ChainAddress,
-  request: routes.RouteTransferRequest<Network>
+  request: routes.RouteTransferRequest<Network>,
 ): Promise<ChainAddress> {
   if (to.chain !== "Solana") return to;
 
   // When transferring to Solana, the recipient address is the ATA
   const solanaUsdc = circle.usdcContract.get(
     request.toChain.network,
-    request.toChain.chain
+    request.toChain.chain,
   );
   if (!solanaUsdc) throw new Error("No USDC contract found for Solana");
 

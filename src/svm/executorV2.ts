@@ -157,8 +157,8 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
 
     const instructions: TransactionInstruction[] = [];
 
-    // Handle referrer fee if applicable
-    if (details.referrerFee > 0n) {
+    // Handle transfer token fee if applicable
+    if (details.transferTokenFee > 0n) {
       const referrerAta = getAssociatedTokenAddressSync(usdc, referrer, true);
       const referrerAtaAccount = await this.connection.getAccountInfo(
         referrerAta
@@ -178,8 +178,18 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
           senderAta,
           referrerAta,
           senderPk,
-          details.referrerFee
+          details.transferTokenFee
         )
+      );
+    }
+
+    if (details.nativeTokenFee > 0n) {
+      instructions.push(
+        SystemProgram.transfer({
+          fromPubkey: senderPk,
+          toPubkey: referrer,
+          lamports: details.nativeTokenFee,
+        })
       );
     }
 

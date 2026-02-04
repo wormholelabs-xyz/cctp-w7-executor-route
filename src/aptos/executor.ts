@@ -25,9 +25,10 @@ import { CCTPExecutor } from "../types";
 import { shimContractsV1 } from "../consts";
 import { QuoteDetails } from "../routes/cctpV1";
 
-export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
-  implements CCTPExecutor<N, C>
-{
+export class AptosCCTPExecutor<
+  N extends Network,
+  C extends AptosChains,
+> implements CCTPExecutor<N, C> {
   readonly usdcId: string;
   readonly shimContract: string;
 
@@ -35,7 +36,7 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
     readonly network: N,
     readonly chain: C,
     readonly provider: Aptos,
-    readonly contracts: Contracts
+    readonly contracts: Contracts,
   ) {
     if (network === "Devnet")
       throw new Error("CCTPExecutor not supported on Devnet");
@@ -43,7 +44,7 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
     const usdcId = circle.usdcContract.get(this.network, this.chain);
     if (!usdcId) {
       throw new Error(
-        `No USDC contract configured for network=${this.network} chain=${this.chain}`
+        `No USDC contract configured for network=${this.network} chain=${this.chain}`,
       );
     }
     this.usdcId = usdcId;
@@ -55,7 +56,7 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
 
   static async fromRpc<N extends Network>(
     provider: Aptos,
-    config: ChainsConfig<N, Platform>
+    config: ChainsConfig<N, Platform>,
   ): Promise<AptosCCTPExecutor<N, AptosChains>> {
     const [network, chain] = await AptosPlatform.chainFromRpc(provider);
 
@@ -70,43 +71,64 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
   async *transfer(
     sender: AccountAddress<C>,
     recipient: ChainAddress,
-    details: QuoteDetails
+    details: QuoteDetails,
   ): AsyncGenerator<AptosUnsignedTransaction<N, C>> {
     const senderAddress = new AptosAddress(sender).unwrap();
     const mintRecipient = AptosAccountAddress.from(
-      recipient.address.toUniversalAddress().toUint8Array()
+      recipient.address.toUniversalAddress().toUint8Array(),
     );
     const burnToken = AptosAccountAddress.from(this.usdcId);
 
-    const amount = details.remainingAmount + details.referrerFee;
-
     const destinationDomain = circle.circleChainId.get(
       this.network,
-      recipient.chain
+      recipient.chain,
     )!;
 
     const refundAddr = senderAddress;
     const payee = new AptosAddress(
-      details.referrer?.address?.toString() ?? senderAddress
+      details.referrer?.address?.toString() ?? senderAddress,
     ).unwrap();
-    const functionArguments: Array<
+
+    const shimContract = details.shimContract ?? this.shimContract;
+    let functionArguments: Array<
       EntryFunctionArgumentTypes | SimpleEntryFunctionArgumentTypes
-    > = [
-      amount,
-      destinationDomain,
-      mintRecipient.toString(),
-      burnToken.toString(),
-      details.estimatedCost,
-      toChainId(recipient.chain),
-      refundAddr,
-      details.signedQuote,
-      details.relayInstructions,
-      Number(details.referrerFeeDbps),
-      payee,
-    ];
+    >;
+
+    if (details.useLegacyFees) {
+      // Legacy contract: accepts full amount and dBPS, calculates fee internally
+      functionArguments = [
+        details.remainingAmount + details.transferTokenFee,
+        destinationDomain,
+        mintRecipient.toString(),
+        burnToken.toString(),
+        details.estimatedCost,
+        toChainId(recipient.chain),
+        refundAddr,
+        details.signedQuote,
+        details.relayInstructions,
+        Number(details.referrerFeeDbps ?? 0n),
+        payee,
+      ];
+    } else {
+      // New contract: receives remainingAmount and collects fee separately
+      functionArguments = [
+        details.remainingAmount,
+        destinationDomain,
+        mintRecipient.toString(),
+        burnToken.toString(),
+        details.estimatedCost,
+        toChainId(recipient.chain),
+        refundAddr,
+        details.signedQuote,
+        details.relayInstructions,
+        details.transferTokenFee,
+        details.nativeTokenFee,
+        payee,
+      ];
+    }
 
     const tx: InputGenerateTransactionPayloadData = {
-      function: `${this.shimContract}::cctp_v1_with_executor::deposit_for_burn_entry`,
+      function: `${shimContract}::cctp_v1_with_executor::deposit_for_burn_entry`,
       functionArguments,
     };
 
@@ -116,14 +138,14 @@ export class AptosCCTPExecutor<N extends Network, C extends AptosChains>
   private createUnsignedTx(
     txReq: InputGenerateTransactionPayloadData,
     description: string,
-    parallelizable: boolean = false
+    parallelizable: boolean = false,
   ): AptosUnsignedTransaction<N, C> {
     return new AptosUnsignedTransaction(
       txReq,
       this.network,
       this.chain,
       description,
-      parallelizable
+      parallelizable,
     );
   }
 }

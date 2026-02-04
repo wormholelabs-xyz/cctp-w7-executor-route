@@ -21,7 +21,7 @@ import {
 } from "@wormhole-foundation/sdk-solana";
 import { CCTPExecutor } from "../types";
 import { shimContractsV1, solanaExecutorId } from "../consts";
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { QuoteDetails } from "../routes/cctpV1";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -112,7 +112,7 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
     const transaction = new Transaction();
     transaction.feePayer = senderPk;
 
-    if (details.referrerFee > 0n) {
+    if (details.transferTokenFee > 0n) {
       const referrerAta = getAssociatedTokenAddressSync(usdc, referrer, true);
       const referrerAtaAccount = await this.connection.getAccountInfo(
         referrerAta
@@ -132,8 +132,18 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
           senderAta,
           referrerAta,
           senderPk,
-          details.referrerFee
+          details.transferTokenFee
         )
+      );
+    }
+
+    if (details.nativeTokenFee > 0n) {
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: senderPk,
+          toPubkey: referrer,
+          lamports: details.nativeTokenFee,
+        })
       );
     }
 
@@ -159,9 +169,12 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
       )
     );
 
+    const shimProgramId = details.shimContract
+      ? new PublicKey(details.shimContract)
+      : this.shimProgramId;
     const shimProgram = new Program<ExampleCctpWithExecutor>(
       ExampleCctpWithExecutorIdl,
-      this.shimProgramId,
+      shimProgramId,
       { connection: null } as any
     );
 

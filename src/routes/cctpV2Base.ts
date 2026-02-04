@@ -38,24 +38,36 @@ export namespace CCTPv2ExecutorRoute {
     amount: amount.Amount;
   };
 
-  export interface ValidatedParams
-    extends routes.ValidatedTransferParams<Options> {
+  export interface ValidatedParams extends routes.ValidatedTransferParams<Options> {
     normalizedParams: NormalizedParams;
   }
 
   export type Config = {
-    // Referrer Fee in *tenths* of basis points
-    // e.g. 10 = 1 basis point (0.01%)
-    referrerFeeDbps: bigint;
-    // Optional threshold USDC amount used in the below referrer fee formula when specified.
-    // min(referrerFeeDbps, referrerFeeThreshold/amount)
-    // Note that this is in whole USDC, not in base units.
-    referrerFeeThreshold?: bigint;
-    // Referrer addresses (to whom the referrer fee should be paid)
-    // are required when the referrer fee is non-zero.
+    // Referrer fee amount in transfer token base units (e.g., USDC with 6 decimals).
+    // This fee is paid to the referrer from the transfer amount.
+    // Can be a fixed amount or a callback that receives the transfer amount
+    // and returns the fee. Use a callback to implement dynamic fee models
+    // such as proportional fees or fees with threshold-based capping.
+    transferTokenFee?: bigint | ((amount: bigint, sourceChain: Chain) => bigint);
+    // Native token fee amount in native token base units (e.g., wei for ETH).
+    // This fee is paid to the referrer in the native token of the source chain.
+    // Can be a fixed amount or a callback that receives the transfer amount
+    // and returns the fee. Use a callback to implement dynamic fee models
+    // such as proportional fees or fees with threshold-based capping.
+    nativeTokenFee?: bigint | ((amount: bigint, sourceChain: Chain) => bigint);
+    // Referrer addresses (to whom the fees should be paid).
+    // Required when fees are non-zero.
     referrerAddresses?: Partial<
       Record<Network, Partial<Record<Chain, string>>>
     >;
+    // --- Legacy dBPS fields (used when useLegacyFees is true) ---
+    // When true, use the old referrerFeeDbps percentage-based logic and legacy shim contracts.
+    // When false/undefined, use the new transferTokenFee/nativeTokenFee flat fee logic.
+    useLegacyFees?: boolean;
+    // Referrer fee in deci-basis points (0-65535). 1 dBPS = 0.001%.
+    referrerFeeDbps?: bigint;
+    // Threshold in whole USDC units. Fees are only charged up to this amount.
+    referrerFeeThreshold?: bigint;
   };
 
   export type Attestation = {
@@ -81,7 +93,7 @@ export type Qr = routes.QuoteResult<Op, Vp>;
 export type R = routes.Receipt<CCTPv2ExecutorRoute.Attestation>;
 
 export abstract class CCTPv2BaseRoute<
-  N extends Network
+  N extends Network,
 > extends routes.AutomaticRoute<N, Op, Vp, R> {
   static NATIVE_GAS_DROPOFF_SUPPORTED = true;
 
@@ -103,7 +115,7 @@ export abstract class CCTPv2BaseRoute<
     request: routes.RouteTransferRequest<N>,
     signer: Signer,
     quote: Q,
-    to: ChainAddress
+    to: ChainAddress,
   ): Promise<R> {
     if (!quote.details) {
       throw new Error("Missing quote details");
@@ -135,7 +147,7 @@ export abstract class CCTPv2BaseRoute<
           if (isSourceInitiated(receipt) || isSourceFinalized(receipt)) {
             const attestation = await getCircleV2Attestation(
               { chain: receipt.from, txid: txId },
-              this.wh.network
+              this.wh.network,
             );
 
             if (attestation) {
@@ -157,7 +169,7 @@ export abstract class CCTPv2BaseRoute<
             const [txStatus] = await fetchStatus(
               this.wh.network,
               txId,
-              receipt.from
+              receipt.from,
             );
 
             if (!txStatus) {
@@ -181,7 +193,7 @@ export abstract class CCTPv2BaseRoute<
                 ...receipt,
                 state: TransferState.Failed,
                 error: new routes.RelayFailedError(
-                  `Relay failed with status: ${relayStatus}`
+                  `Relay failed with status: ${relayStatus}`,
                 ),
               };
             }
@@ -204,7 +216,7 @@ export abstract class CCTPv2BaseRoute<
               .getProtocol("CCTPv2Executor");
 
             const isTransferCompleted = await executor.isTransferCompleted(
-              attestation.attestation.message
+              attestation.attestation.message,
             );
 
             if (isTransferCompleted) {
@@ -225,7 +237,7 @@ export abstract class CCTPv2BaseRoute<
           }
         } catch (error: any) {
           console.error(
-            `Error fetching transaction status: ${error.message || error}`
+            `Error fetching transaction status: ${error.message || error}`,
           );
         }
       }
@@ -257,7 +269,7 @@ export abstract class CCTPv2BaseRoute<
     if (expirationBlock !== 0n && expirationBlock < currentBlock) {
       const newAttestation = await reattestCircleV2Message(
         toChain.network,
-        receipt.attestation
+        receipt.attestation,
       );
 
       if (!newAttestation) {
@@ -274,7 +286,7 @@ export abstract class CCTPv2BaseRoute<
     const dstTxIds = await signSendWait(
       this.wh.getChain(receipt.to),
       xfer,
-      signer
+      signer,
     );
 
     return {

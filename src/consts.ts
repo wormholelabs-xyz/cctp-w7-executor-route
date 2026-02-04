@@ -6,8 +6,8 @@ export const apiBaseUrl: Partial<Record<Network, string>> = {
   Mainnet: "https://executor.labsapis.com",
 };
 
-// CCTPv1 Shim Contract Addresses (CCTPv1WithExecutor.sol)
-export const shimContractsV1: Partial<
+// CCTPv1 Shim Contract Addresses — legacy (dBPS-based referrer fee)
+export const shimContractsV1Legacy: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
   Testnet: {
@@ -30,8 +30,36 @@ export const shimContractsV1: Partial<
   },
 };
 
-// CCTPv2 Shim Contract Addresses (CCTPv2WithExecutor.sol)
-export const shimContractsV2: Partial<
+// CCTPv1 Shim Contract Addresses — flat fee (CCTPv1WithExecutor.sol)
+export const shimContractsV1: Partial<
+  Record<Network, Partial<Record<Chain, string>>>
+> = {
+  Testnet: {
+    Aptos: "0x14a12d1fd6ef371b70c2113155534ec152ec7f779e281b54866c796c9a4a58d3",
+    ArbitrumSepolia: "0x8158305d331594f3e8d18c33ca4e6d3cdc109b75",
+    Avalanche: "0x62819ab61cc7fcc864af7bcfc92e6c1965eb69a6",
+    BaseSepolia: "0x96846c31e4f87c0f186a322926c61d4183439f0a",
+    OptimismSepolia: "0xe17de8e29f1f0941b541b053829af74ac81c89a6",
+    Polygon: "0xdce63172e9ad15243c97acafd01cc4fdda98bead",
+    Sepolia: "0x2fcc7b2332d924764f17f1cf5eda1cd4b36751a2",
+    Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
+    Unichain: "0x2c1354296a11029056e0d7d7abbdd58743dbaf59",
+  },
+  Mainnet: {
+    Aptos: "0xc89bf3746dfc70bb3f2de7c35a98f327a40b9d55a443743a5935c5e3de90b7ac",
+    Arbitrum: "0x772373214238F09a494828A5323574E3d7e27558",
+    Avalanche: "0x58aC806cd205083E7E048E196f36Ff6C4Ae17bE5",
+    Base: "0x4D1Cc8921e291555044C01761f581fa52a24C33d",
+    Ethereum: "0x6DDE92942DbB24F7c9B75765b74a33446980C1e3",
+    Optimism: "0x6826c075973a4393CEf0e131c4B16869426563a7",
+    Polygon: "0x7e6Ae241101B355447A4B471D0C6968b132eC4Ab",
+    Unichain: "0xa997Ef229E4D2a1fEca249eB41fBf5D4b2217d6E",
+    Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
+  },
+};
+
+// CCTPv2 Shim Contract Addresses — legacy (dBPS-based referrer fee)
+export const shimContractsV2Legacy: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
   Testnet: {
@@ -55,6 +83,40 @@ export const shimContractsV2: Partial<
     Plume: "0x486228859880ec6c05175035bEe2e5383D23B0fE",
     Ink: "0xD71898Ec48D36eba65eeb104AF87b00C24A8F201",
     Monad: "0xA4d775410FB35d8cE49Ad98d3f483A55e532de73",
+  },
+};
+
+// CCTPv2 Shim Contract Addresses — flat fee (CCTPv2WithExecutor.sol)
+export const shimContractsV2: Partial<
+  Record<Network, Partial<Record<Chain, string>>>
+> = {
+  Testnet: {
+    ArbitrumSepolia: "0xf601f9988d62943cb842baae1e46be9b17d0b2a4",
+    Avalanche: "0x10018394905f70daa1d740040d64cbed5a82301e",
+    BaseSepolia: "0x1effdcfedc6d45e44b3133257debfb522adb1cae",
+    Ink: "0x63993ee08bda32ecb0ba5cdc751b404f5c5c0458",
+    Linea: "0xe8Ad216e23fc9425E65aB315F0EC13737e75afEF",
+    OptimismSepolia: "0x49f386393c26439b74e62f5794062925dfb7c1db",
+    Polygon: "0x05da7c69db265b37b4d3530d476ec4b33bd9dd45",
+    Sepolia: "0xc58475c97ebde9cf4fefa0d4fb2774df81905d43",
+    Unichain: "0xf082af7668f000f60bc519b378f6363708fc302b",
+  },
+  Mainnet: {
+    Arbitrum: "0x760feC4425B46E3D8FEf8E2CE49786e5a6f74446",
+    Avalanche: "0xE42aE9e352157fcEf74E971F2C5c74A5963a71D7",
+    Base: "0x52892976559fB2fc8b7f850440eD9AA5Dc26f7D9",
+    Ethereum: "0xDD68aBa3E04CB1a05082402B9325753314803005",
+    HyperEVM: "0x001319beBA062d918d7007E4D2D76a0A9cc439Db",
+    Linea: "0x257dBB6AD7C7AC19360bEe1A107ebE631D568776",
+    Optimism: "0x9b51579e67D4ab18D79609105509ad37B2a0D342",
+    Polygon: "0x5116F1358ae2445f571AA702dA1feB5e13094E59",
+    Unichain: "0xaf7f4FbB6C220baf57ABC7babF81D47Fd628bdb4",
+    Seievm: "0xe067C0D378C50CDc34bCd973F202736D5A19e5D2",
+    Sonic: "0x8A850b2077F1eFccA89eAa9c35b45C4dC9227cdb",
+    Worldchain: "0xAA4841e5d9652593852403E3ce9e8003f8D579D0",
+    Plume: "0x9be9C6B420eAfaaC1162D680fd7E61446b38Cf29",
+    Ink: "0xef0B43b49315A4aDF11bA2617Be81a304c5D6ecc",
+    Monad: "0x1FdCCf65318b34CFd3F5903fFb747C17e76330ac",
   },
 };
 
@@ -266,7 +328,7 @@ export const getCircleV1Domain = (network: Network, chain: Chain): number => {
   const domain = circleV1Domains[network]?.[chain];
   if (domain === undefined) {
     throw new Error(
-      `CircleV1 domain not found for network ${network} and chain ${chain}`
+      `CircleV1 domain not found for network ${network} and chain ${chain}`,
     );
   }
   return domain;
@@ -323,7 +385,7 @@ export const getCircleV2Domain = (network: Network, chain: Chain): number => {
   const domain = circleV2Domains[network]?.[chain];
   if (domain === undefined) {
     throw new Error(
-      `CircleV2 domain not found for network ${network} and chain ${chain}`
+      `CircleV2 domain not found for network ${network} and chain ${chain}`,
     );
   }
   return domain;
@@ -331,11 +393,11 @@ export const getCircleV2Domain = (network: Network, chain: Chain): number => {
 
 export const getCircleV2Chain = (network: Network, domain: number): Chain => {
   const chain = Object.entries(circleV2Domains[network] ?? {}).find(
-    ([, d]) => d === domain
+    ([, d]) => d === domain,
   )?.[0];
   if (chain === undefined) {
     throw new Error(
-      `CircleV2 chain not found for network ${network} and domain ${domain}`
+      `CircleV2 chain not found for network ${network} and domain ${domain}`,
     );
   }
   return chain as Chain;
@@ -380,7 +442,7 @@ export const fastTransferETAs: Partial<
 
 export const isCircleV2FastChain = (
   network: Network,
-  chain: Chain
+  chain: Chain,
 ): boolean => {
   return fastTransferETAs[network]?.[chain] !== undefined;
 };

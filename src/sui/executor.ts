@@ -132,14 +132,14 @@ export class SuiCCTPExecutor<N extends Network, C extends SuiChains>
     }
 
     let coin: any;
-    if (details.referrerFee > 0n) {
-      const [txCoin, referrerFeeCoin] = tx.splitCoins(primaryCoinInput, [
+    if (details.transferTokenFee > 0n) {
+      const [txCoin, transferFeeCoin] = tx.splitCoins(primaryCoinInput, [
         details.remainingAmount,
-        details.referrerFee,
+        details.transferTokenFee,
       ]);
       coin = txCoin;
       tx.transferObjects(
-        [referrerFeeCoin],
+        [transferFeeCoin],
         details.referrer ? canonicalAddress(details.referrer) : senderAddress
       );
     } else {
@@ -147,6 +147,16 @@ export class SuiCCTPExecutor<N extends Network, C extends SuiChains>
         details.remainingAmount,
       ]);
       coin = txCoin;
+    }
+
+    if (details.nativeTokenFee > 0n) {
+      const [nativeFeeCoin] = tx.splitCoins(tx.gas, [
+        tx.pure.u64(details.nativeTokenFee),
+      ]);
+      tx.transferObjects(
+        [nativeFeeCoin],
+        details.referrer ? canonicalAddress(details.referrer) : senderAddress
+      );
     }
 
     const [_, message] = tx.moveCall({

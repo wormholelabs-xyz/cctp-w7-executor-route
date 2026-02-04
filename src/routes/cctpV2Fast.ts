@@ -17,6 +17,7 @@ import {
   fastTransferETAs,
   isCircleV2Chain,
   isCircleV2FastChain,
+  shimContractsV2Legacy,
 } from "../consts";
 import {
   CCTPv2BaseRoute,
@@ -27,15 +28,14 @@ import {
   Vp,
   Vr,
 } from "./cctpV2Base";
-import { fetchExecutorQuote } from "./helpers";
+import { fetchExecutorQuote, validateFeeConfig } from "./helpers";
 
 // Use this function to create a new CCTPv2FastExecutorRoute with custom config
 export function cctpV2FastExecutorRoute(
-  config: CCTPv2ExecutorRoute.Config = { referrerFeeDbps: 0n }
+  config: CCTPv2ExecutorRoute.Config = { transferTokenFee: 0n, nativeTokenFee: 0n }
 ) {
-  if (config.referrerFeeDbps < 0 || config.referrerFeeDbps > 65535n) {
-    throw new Error("Referrer fee must be between 0 and 65535");
-  }
+  validateFeeConfig(config);
+
   class CCTPv2FastExecutorRouteImpl<
     N extends Network
   > extends CCTPv2FastExecutorRoute<N> {
@@ -53,7 +53,7 @@ export class CCTPv2FastExecutorRoute<N extends Network>
   // Since we set the config on the static class, access it with this param
   // the CCTPv2FastExecutorRoute.config will always be empty
   readonly staticConfig = this.constructor.config;
-  static config: CCTPv2ExecutorRoute.Config = { referrerFeeDbps: 0n };
+  static config: CCTPv2ExecutorRoute.Config = { transferTokenFee: 0n, nativeTokenFee: 0n };
 
   static meta = {
     name: "CCTPv2FastExecutorRoute",
@@ -134,7 +134,8 @@ export class CCTPv2FastExecutorRoute<N extends Network>
         request,
         params,
         this.staticConfig,
-        "ERC2"
+        "ERC2",
+        this.staticConfig.useLegacyFees ? shimContractsV2Legacy : undefined,
       );
 
       const { remainingAmount, estimatedCost, gasDropOff, expiryTime } =
