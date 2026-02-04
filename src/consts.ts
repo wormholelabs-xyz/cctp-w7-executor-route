@@ -46,7 +46,7 @@ export const shimContractsV1: Partial<
     Unichain: "0x2c1354296a11029056e0d7d7abbdd58743dbaf59",
   },
   Mainnet: {
-    Aptos: "0x9f5ad7d5c2d067ca4abb6d8d6aba44c15596b71a1def8eb4596089b527bb2eb1",
+    Aptos: "0xc89bf3746dfc70bb3f2de7c35a98f327a40b9d55a443743a5935c5e3de90b7ac",
     Arbitrum: "0x772373214238F09a494828A5323574E3d7e27558",
     Avalanche: "0x58aC806cd205083E7E048E196f36Ff6C4Ae17bE5",
     Base: "0x4D1Cc8921e291555044C01761f581fa52a24C33d",
