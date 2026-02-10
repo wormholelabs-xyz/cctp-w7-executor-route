@@ -14,6 +14,7 @@ import {
   signSendWait,
   TransactionId,
   TransferState,
+  UnsignedTransaction,
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
 import {
@@ -26,7 +27,11 @@ import { CircleV2Message } from "../layouts";
 import { QuoteDetails } from "./cctpV1";
 import { circleV2Domains, getCircleV2Chain } from "../consts";
 import { CCTPv2Executor } from "../types";
-import { initiateTransfer } from "./helpers";
+import {
+  buildInitiateTransactions as buildInitiateTxns,
+  collectTransactions,
+  initiateTransfer,
+} from "./helpers";
 
 export namespace CCTPv2ExecutorRoute {
   export type Options = {
@@ -125,6 +130,22 @@ export abstract class CCTPv2BaseRoute<
       protocol: "CCTPv2Executor",
       details: quote.details,
     });
+  }
+
+  async buildInitiateTransactions(
+    request: routes.RouteTransferRequest<N>,
+    sender: ChainAddress,
+    recipient: ChainAddress,
+    quote: Q,
+  ): Promise<UnsignedTransaction<N, Chain>[]> {
+    if (!quote.details) {
+      throw new Error("Missing quote details");
+    }
+
+    return buildInitiateTxns(request, sender, recipient, {
+      protocol: "CCTPv2Executor",
+      details: quote.details,
+    }) as Promise<UnsignedTransaction<N, Chain>[]>;
   }
 
   async *track(receipt: R, timeout?: number) {
@@ -259,17 +280,36 @@ export abstract class CCTPv2BaseRoute<
       throw new Error("No attestation found");
     }
 
+    const sender = Wormhole.chainAddress(signer.chain(), signer.address());
+    const xfer = await this._buildCompleteXfer(sender, receipt);
+    const toChain = this.wh.getChain(receipt.to);
+    const dstTxIds = await signSendWait(toChain, xfer, signer);
+
+    return {
+      ...receipt,
+      state: TransferState.DestinationInitiated,
+      attestation: receipt.attestation,
+      destinationTxs: dstTxIds,
+    };
+  }
+
+  async _buildCompleteXfer(
+    sender: ChainAddress,
+    receipt: R,
+  ) {
     const toChain = this.wh.getChain(receipt.to);
     const executor = await toChain.getProtocol("CCTPv2Executor");
 
+    const attestedReceipt = receipt as any;
+
     // check if the attestation is expired and, if so, re-attest and fetch
-    let { attestation, message } = receipt.attestation.attestation;
+    let { attestation, message } = attestedReceipt.attestation.attestation;
     const { expirationBlock } = message.messageBody;
     const currentBlock = await executor.getCurrentBlock();
     if (expirationBlock !== 0n && expirationBlock < currentBlock) {
       const newAttestation = await reattestCircleV2Message(
         toChain.network,
-        receipt.attestation,
+        attestedReceipt.attestation,
       );
 
       if (!newAttestation) {
@@ -280,21 +320,24 @@ export abstract class CCTPv2BaseRoute<
       message = newAttestation.message;
     }
 
-    const sender = Wormhole.parseAddress(signer.chain(), signer.address());
-    const xfer = executor.redeem(sender, message, attestation);
+    const senderAddress = Wormhole.parseAddress(sender.chain, sender.address.toString());
+    return executor.redeem(senderAddress, message, attestation);
+  }
 
-    const dstTxIds = await signSendWait(
-      this.wh.getChain(receipt.to),
-      xfer,
-      signer,
-    );
+  async buildCompleteTransactions(
+    sender: ChainAddress,
+    receipt: R,
+  ): Promise<UnsignedTransaction<N, Chain>[]> {
+    if (!isAttested(receipt) && !isFailed(receipt)) {
+      throw new Error("Transfer is not attested");
+    }
 
-    return {
-      ...receipt,
-      state: TransferState.DestinationInitiated,
-      attestation: receipt.attestation,
-      destinationTxs: dstTxIds,
-    };
+    if (!receipt.attestation) {
+      throw new Error("No attestation found");
+    }
+
+    const txs = await collectTransactions(await this._buildCompleteXfer(sender, receipt));
+    return txs as UnsignedTransaction<N, Chain>[];
   }
 
   async resume(tx: TransactionId): Promise<R> {

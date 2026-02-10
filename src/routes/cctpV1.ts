@@ -7,6 +7,7 @@ import {
   type ChainContext,
   type Signer,
   type TokenId,
+  type UnsignedTransaction,
 } from "@wormhole-foundation/sdk-definitions";
 import {
   isAttested,
@@ -24,7 +25,12 @@ import {
 } from "../utils";
 import { CCTPExecutor } from "../types";
 import { circleV1Domains, isCircleV1Chain, shimContractsV1Legacy } from "../consts";
-import { fetchExecutorQuote, initiateTransfer, validateFeeConfig } from "./helpers";
+import {
+  buildInitiateTransactions as buildInitiateTxns,
+  fetchExecutorQuote,
+  initiateTransfer,
+  validateFeeConfig,
+} from "./helpers";
 
 export namespace CCTPExecutorRoute {
   export type Options = {
@@ -281,6 +287,22 @@ export class CCTPExecutorRoute<N extends Network>
       protocol: "CCTPExecutor",
       details: quote.details,
     });
+  }
+
+  async buildInitiateTransactions(
+    request: routes.RouteTransferRequest<N>,
+    sender: ChainAddress,
+    recipient: ChainAddress,
+    quote: Q,
+  ): Promise<UnsignedTransaction<N, Chain>[]> {
+    if (!quote.details) {
+      throw new Error("Missing quote details");
+    }
+
+    return buildInitiateTxns(request, sender, recipient, {
+      protocol: "CCTPExecutor",
+      details: quote.details,
+    }) as Promise<UnsignedTransaction<N, Chain>[]>;
   }
 
   public override async *track(receipt: R, timeout?: number) {

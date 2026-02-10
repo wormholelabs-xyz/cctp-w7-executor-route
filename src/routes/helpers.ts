@@ -13,6 +13,7 @@ import {
   SourceInitiatedTransferReceipt,
   toChainId,
   TransferState,
+  UnsignedTransaction,
   UniversalAddress,
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
@@ -302,14 +303,25 @@ export async function fetchExecutorQuote(
   return details;
 }
 
-export async function initiateTransfer(
+// TODO: remove when wormhole-sdk-ts exports this
+export async function collectTransactions<N extends Network, C extends Chain>(
+  xfer: AsyncGenerator<UnsignedTransaction<N, C>>,
+): Promise<UnsignedTransaction<N, C>[]> {
+  const transactions: UnsignedTransaction<N, C>[] = [];
+  for await (const tx of xfer) {
+    transactions.push(tx);
+  }
+  return transactions;
+}
+
+export async function buildInitiateXfer(
   request: routes.RouteTransferRequest<Network>,
-  signer: Signer,
+  sender: ChainAddress,
   to: ChainAddress,
   params:
     | { protocol: "CCTPExecutor"; details: QuoteDetails }
     | { protocol: "CCTPv2Executor"; details: CCTPv2QuoteDetails },
-): Promise<SourceInitiatedTransferReceipt> {
+) {
   const relayInstructions = deserializeLayout(
     relayInstructionsLayout,
     params.details.relayInstructions,
@@ -325,19 +337,40 @@ export async function initiateTransfer(
     }
   });
 
-  const sender = Wormhole.parseAddress(signer.chain(), signer.address());
-
+  const senderAddress = Wormhole.parseAddress(sender.chain, sender.address.toString());
   const recipient = await resolveRecipient(to, request);
 
-  let xfer;
   if (params.protocol === "CCTPExecutor") {
     const executor = await request.fromChain.getProtocol(params.protocol);
-    xfer = await executor.transfer(sender, recipient, params.details);
+    return executor.transfer(senderAddress, recipient, params.details);
   } else {
     const executor = await request.fromChain.getProtocol(params.protocol);
-    xfer = await executor.transfer(sender, recipient, params.details);
+    return executor.transfer(senderAddress, recipient, params.details);
   }
+}
 
+export async function buildInitiateTransactions(
+  request: routes.RouteTransferRequest<Network>,
+  sender: ChainAddress,
+  to: ChainAddress,
+  params:
+    | { protocol: "CCTPExecutor"; details: QuoteDetails }
+    | { protocol: "CCTPv2Executor"; details: CCTPv2QuoteDetails },
+) {
+  const xfer = await buildInitiateXfer(request, sender, to, params);
+  return collectTransactions(xfer);
+}
+
+export async function initiateTransfer(
+  request: routes.RouteTransferRequest<Network>,
+  signer: Signer,
+  to: ChainAddress,
+  params:
+    | { protocol: "CCTPExecutor"; details: QuoteDetails }
+    | { protocol: "CCTPv2Executor"; details: CCTPv2QuoteDetails },
+): Promise<SourceInitiatedTransferReceipt> {
+  const sender = Wormhole.chainAddress(signer.chain(), signer.address());
+  const xfer = await buildInitiateXfer(request, sender, to, params);
   const txids = await signSendWait(request.fromChain, xfer, signer);
 
   // Status the transfer immediately before returning
