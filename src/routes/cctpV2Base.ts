@@ -272,14 +272,6 @@ export abstract class CCTPv2BaseRoute<
   }
 
   async complete(signer: Signer, receipt: R): Promise<R> {
-    if (!isAttested(receipt) && !isFailed(receipt)) {
-      throw new Error("Transfer is not attested");
-    }
-
-    if (!receipt.attestation) {
-      throw new Error("No attestation found");
-    }
-
     const sender = Wormhole.chainAddress(signer.chain(), signer.address());
     const xfer = await this._buildCompleteXfer(sender, receipt);
     const toChain = this.wh.getChain(receipt.to);
@@ -288,28 +280,33 @@ export abstract class CCTPv2BaseRoute<
     return {
       ...receipt,
       state: TransferState.DestinationInitiated,
-      attestation: receipt.attestation,
       destinationTxs: dstTxIds,
-    };
+    } as R;
   }
 
   async _buildCompleteXfer(
     sender: ChainAddress,
     receipt: R,
   ) {
+    if (!isAttested(receipt) && !isFailed(receipt)) {
+      throw new Error("Transfer is not attested");
+    }
+
+    if (!receipt.attestation) {
+      throw new Error("No attestation found");
+    }
+
     const toChain = this.wh.getChain(receipt.to);
     const executor = await toChain.getProtocol("CCTPv2Executor");
 
-    const attestedReceipt = receipt as any;
-
     // check if the attestation is expired and, if so, re-attest and fetch
-    let { attestation, message } = attestedReceipt.attestation.attestation;
+    let { attestation, message } = receipt.attestation.attestation;
     const { expirationBlock } = message.messageBody;
     const currentBlock = await executor.getCurrentBlock();
     if (expirationBlock !== 0n && expirationBlock < currentBlock) {
       const newAttestation = await reattestCircleV2Message(
         toChain.network,
-        attestedReceipt.attestation,
+        receipt.attestation,
       );
 
       if (!newAttestation) {
@@ -328,14 +325,6 @@ export abstract class CCTPv2BaseRoute<
     sender: ChainAddress,
     receipt: R,
   ): Promise<UnsignedTransaction<N, Chain>[]> {
-    if (!isAttested(receipt) && !isFailed(receipt)) {
-      throw new Error("Transfer is not attested");
-    }
-
-    if (!receipt.attestation) {
-      throw new Error("No attestation found");
-    }
-
     const txs = await collectTransactions(await this._buildCompleteXfer(sender, receipt));
     return txs as UnsignedTransaction<N, Chain>[];
   }
