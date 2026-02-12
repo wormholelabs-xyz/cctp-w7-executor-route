@@ -4,12 +4,8 @@ import { register as registerEvm } from "./evm/index.js";
 import { register as registerSui } from "./sui/index.js";
 import { register as registerSvm } from "./svm/index.js";
 
-let _registered = false;
-
 /** Register all CCTP executor platform protocols. Idempotent. */
 export function register(): void {
-  if (_registered) return;
-  _registered = true;
   registerAptos();
   registerEvm();
   registerSui();

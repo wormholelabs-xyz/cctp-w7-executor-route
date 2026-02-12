@@ -1,4 +1,7 @@
-import { registerProtocol } from "@wormhole-foundation/sdk-definitions";
+import {
+  registerProtocol,
+  protocolIsRegistered,
+} from "@wormhole-foundation/sdk-definitions";
 import { _platform } from "@wormhole-foundation/sdk-evm";
 import { EvmCCTPExecutor } from "./executor";
 import { EvmCCTPv2Executor } from "./executorV2";
@@ -6,14 +9,14 @@ import { EvmCCTPv2Executor } from "./executorV2";
 export * from "./executor";
 export * from "./executorV2";
 
-let _registered = false;
-
 /** Explicitly register EVM CCTP executor protocols. Idempotent. */
 export function register(): void {
-  if (_registered) return;
-  _registered = true;
-  registerProtocol(_platform, "CCTPExecutor", EvmCCTPExecutor);
-  registerProtocol(_platform, "CCTPv2Executor", EvmCCTPv2Executor);
+  if (!protocolIsRegistered(_platform, "CCTPExecutor")) {
+    registerProtocol(_platform, "CCTPExecutor", EvmCCTPExecutor);
+  }
+  if (!protocolIsRegistered(_platform, "CCTPv2Executor")) {
+    registerProtocol(_platform, "CCTPv2Executor", EvmCCTPv2Executor);
+  }
 }
 
 // Backward-compatible: auto-register on import

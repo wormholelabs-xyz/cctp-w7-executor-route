@@ -1,16 +1,17 @@
-import { registerProtocol } from "@wormhole-foundation/sdk-definitions";
+import {
+  registerProtocol,
+  protocolIsRegistered,
+} from "@wormhole-foundation/sdk-definitions";
 import { _platform } from "@wormhole-foundation/sdk-aptos";
 import { AptosCCTPExecutor } from "./executor";
 
 export * from "./executor";
 
-let _registered = false;
-
 /** Explicitly register Aptos CCTP executor protocol. Idempotent. */
 export function register(): void {
-  if (_registered) return;
-  _registered = true;
-  registerProtocol(_platform, "CCTPExecutor", AptosCCTPExecutor);
+  if (!protocolIsRegistered(_platform, "CCTPExecutor")) {
+    registerProtocol(_platform, "CCTPExecutor", AptosCCTPExecutor);
+  }
 }
 
 // Backward-compatible: auto-register on import
