@@ -4,4 +4,15 @@ import { AptosCCTPExecutor } from "./executor";
 
 export * from "./executor";
 
-registerProtocol(_platform, "CCTPExecutor", AptosCCTPExecutor);
+let _registered = false;
+
+/** Explicitly register Aptos CCTP executor protocol. Idempotent. */
+export function register(): void {
+  if (_registered) return;
+  _registered = true;
+  registerProtocol(_platform, "CCTPExecutor", AptosCCTPExecutor);
+}
+
+// Backward-compatible: auto-register on import
+// TODO: remove this next time we are cool with a major version bump and are OK requiring integrators to make code changes
+register();
