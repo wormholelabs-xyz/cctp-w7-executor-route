@@ -10,7 +10,12 @@ export * from "./executor";
 export * from "./executorV2";
 
 /** Explicitly register EVM CCTP executor protocols. Idempotent. */
-export function register(): void {
+export function register(topLevel = false): void {
+  if (topLevel) {
+    console.warn(
+      "@wormhole-labs/cctp-executor-route/evm: auto-registration on import is deprecated. Import { register } and call it explicitly.",
+    );
+  }
   if (!protocolIsRegistered(_platform, "CCTPExecutor")) {
     registerProtocol(_platform, "CCTPExecutor", EvmCCTPExecutor);
   }
@@ -21,4 +26,4 @@ export function register(): void {
 
 // Backward-compatible: auto-register on import
 // TODO: remove this next time we are cool with a major version bump and are OK requiring integrators to make code changes
-register();
+register(true);
