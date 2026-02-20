@@ -111,6 +111,8 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
 
     const transaction = new Transaction();
     transaction.feePayer = senderPk;
+    const { blockhash } = await this.connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
 
     if (details.transferTokenFee > 0n) {
       const referrerAta = getAssociatedTokenAddressSync(usdc, referrer, true);
