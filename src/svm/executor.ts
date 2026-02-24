@@ -171,12 +171,9 @@ export class SvmCCTPExecutor<N extends Network, C extends SolanaChains>
       )
     );
 
-    const shimProgramId = details.shimContract
-      ? new PublicKey(details.shimContract)
-      : this.shimProgramId;
     const shimProgram = new Program<ExampleCctpWithExecutor>(
       ExampleCctpWithExecutorIdl,
-      shimProgramId,
+      this.shimProgramId,
       { connection: null } as any
     );
 

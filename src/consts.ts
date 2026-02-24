@@ -6,30 +6,6 @@ export const apiBaseUrl: Partial<Record<Network, string>> = {
   Mainnet: "https://executor.labsapis.com",
 };
 
-// CCTPv1 Shim Contract Addresses — legacy (dBPS-based referrer fee)
-export const shimContractsV1Legacy: Partial<
-  Record<Network, Partial<Record<Chain, string>>>
-> = {
-  Testnet: {
-    Aptos: "0x14a12d1fd6ef371b70c2113155534ec152ec7f779e281b54866c796c9a4a58d3",
-    Avalanche: "0x2cfEC91B50f657Cc86Ec693542527ac3e03bF742",
-    BaseSepolia: "0x4983C6bD3bB7DA9EECe71cfa7AE4C67CAbf362F0",
-    Sepolia: "0x0F78904c750801391EbBf308181e9d6fc892B0f3",
-    Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
-  },
-  Mainnet: {
-    Aptos: "0x9f5ad7d5c2d067ca4abb6d8d6aba44c15596b71a1def8eb4596089b527bb2eb1",
-    Arbitrum: "0x55Dd4466BFec29527C54A72fd306efb54e5F7027",
-    Avalanche: "0xd331819478b74d8a7B8EA631118B4a4e50F6EbD1",
-    Base: "0x08FEB1838C3d7F8509DA1EBb9a11a94c1f006cb2",
-    Ethereum: "0xeEFb36c4458dA7798742cf038C5c27E07aB9c51E",
-    Optimism: "0xBC6f9d1CBa49DB365728478cefa02F6743617637",
-    Polygon: "0x007995f2AEcfBC745f20a7AE8D3a02c0EbF46264",
-    Unichain: "0xA7aBDb8f2108901c586543BD5e10E4fA263F4A47",
-    Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
-  },
-};
-
 // CCTPv1 Shim Contract Addresses — flat fee (CCTPv1WithExecutor.sol)
 export const shimContractsV1: Partial<
   Record<Network, Partial<Record<Chain, string>>>
@@ -55,34 +31,6 @@ export const shimContractsV1: Partial<
     Polygon: "0x7e6Ae241101B355447A4B471D0C6968b132eC4Ab",
     Unichain: "0xa997Ef229E4D2a1fEca249eB41fBf5D4b2217d6E",
     Solana: "CXGRA5SCc8jxDbaQPZrmmZNu2JV34DP7gFW4m31uC1zs",
-  },
-};
-
-// CCTPv2 Shim Contract Addresses — legacy (dBPS-based referrer fee)
-export const shimContractsV2Legacy: Partial<
-  Record<Network, Partial<Record<Chain, string>>>
-> = {
-  Testnet: {
-    Avalanche: "0x4058F0C3924eDaB19c15597C438968ed49C1a213",
-    BaseSepolia: "0xC400FcC0e92d3406747FBb6f513D3aa8B038fcE9",
-    Sepolia: "0x0F18DD26D0B41fb1eaa9cF34D1Ec6022aA69a8e2",
-  },
-  Mainnet: {
-    Arbitrum: "0x8442d68524217601ed126f6859694E4B0C7c66A1",
-    Avalanche: "0x3952914628650Ca510404872D84DfF10A844C5B5",
-    Base: "0xbd8d42f40a11b37bD1b3770D754f9629F7cd5679",
-    Ethereum: "0x2cCf230467FE7387674BAa657747F0B5485c7fEC",
-    HyperEVM: "0xACD054f83c0b852d02503191e2c26527A7E72B1f",
-    Linea: "0xc48c126468BE919068dE1983F00F65af759a4E87",
-    Optimism: "0xd0a8940b2e743e33b682daec4d52b46713606c9d",
-    Polygon: "0xc8a8e6d760dcbd5d6746e2f66cd2ffa722dd1e59",
-    Unichain: "0xD5D5D640D8b758672Cc7A078734175c4433866d5",
-    Seievm: "0xf4FefFc03EEFB06B009bFB168b60B30edf7abc12",
-    Sonic: "0xc39BF082ec91D9bC385F956D24a8D66C0c26223d",
-    Worldchain: "0x789f2b91f7B35D5B890983328340c4600339B354",
-    Plume: "0x486228859880ec6c05175035bEe2e5383D23B0fE",
-    Ink: "0xD71898Ec48D36eba65eeb104AF87b00C24A8F201",
-    Monad: "0xA4d775410FB35d8cE49Ad98d3f483A55e532de73",
   },
 };
 

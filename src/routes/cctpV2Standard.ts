@@ -6,7 +6,7 @@ import {
   TokenId,
 } from "@wormhole-foundation/sdk-definitions";
 import { routes } from "@wormhole-foundation/sdk-connect";
-import { CircleV2FinalityThreshold, isCircleV2Chain, shimContractsV2Legacy } from "../consts";
+import { CircleV2FinalityThreshold, isCircleV2Chain } from "../consts";
 import {
   CCTPv2BaseRoute,
   CCTPv2ExecutorRoute,
@@ -125,7 +125,6 @@ export class CCTPv2StandardExecutorRoute<N extends Network>
         params,
         this.staticConfig,
         "ERC2",
-        this.staticConfig.useLegacyFees ? shimContractsV2Legacy : undefined,
       );
 
       const { remainingAmount, estimatedCost, gasDropOff, expiryTime } =

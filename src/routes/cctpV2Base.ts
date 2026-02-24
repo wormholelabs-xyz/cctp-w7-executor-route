@@ -65,14 +65,6 @@ export namespace CCTPv2ExecutorRoute {
     referrerAddresses?: Partial<
       Record<Network, Partial<Record<Chain, string>>>
     >;
-    // --- Legacy dBPS fields (used when useLegacyFees is true) ---
-    // When true, use the old referrerFeeDbps percentage-based logic and legacy shim contracts.
-    // When false/undefined, use the new transferTokenFee/nativeTokenFee flat fee logic.
-    useLegacyFees?: boolean;
-    // Referrer fee in deci-basis points (0-65535). 1 dBPS = 0.001%.
-    referrerFeeDbps?: bigint;
-    // Threshold in whole USDC units. Fees are only charged up to this amount.
-    referrerFeeThreshold?: bigint;
   };
 
   export type Attestation = {
