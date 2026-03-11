@@ -30,8 +30,7 @@ import { cctpExecutorRoute, cctpV2StandardExecutorRoute } from "../src";
   );
 
   // Create a new Wormhole route resolver, adding the CCTP route to the default list
-  const referrerFeeDbps = 0n;
-  const route = cctpV2StandardExecutorRoute({ referrerFeeDbps });
+  const route = cctpV2StandardExecutorRoute({});
   const resolver = wh.resolver([route]);
 
   //const dstTokens = await resolver.supportedDestinationTokens(
