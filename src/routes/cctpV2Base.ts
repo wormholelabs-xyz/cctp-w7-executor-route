@@ -17,11 +17,12 @@ import {
   UnsignedTransaction,
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
+import type { CapabilitiesResponse } from "@wormhole-foundation/sdk-definitions";
+import { RelayStatus } from "@wormhole-foundation/sdk-definitions";
 import {
   fetchStatus,
   getCircleV2Attestation,
   reattestCircleV2Message,
-  RelayStatus,
 } from "../utils";
 import { CircleV2Message } from "../layouts";
 import { QuoteDetails } from "./cctpV1";
@@ -65,6 +66,10 @@ export namespace CCTPv2ExecutorRoute {
     referrerAddresses?: Partial<
       Record<Network, Partial<Record<Chain, string>>>
     >;
+    executor?: {
+      /** Override the default capabilities fetcher (e.g. to cache or use a custom endpoint). */
+      getCapabilities?: (network: Network) => Promise<CapabilitiesResponse>;
+    };
   };
 
   export type Attestation = {

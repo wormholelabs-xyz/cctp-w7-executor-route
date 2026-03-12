@@ -116,7 +116,9 @@ export async function fetchExecutorQuote(
     throw new Error("Gas limit not found");
   }
 
-  const capabilities = await fetchCapabilities(fromChain.network);
+  const capabilities = config.executor?.getCapabilities
+    ? await config.executor.getCapabilities(fromChain.network)
+    : await fetchCapabilities(fromChain.network);
   const srcCapabilities = capabilities[toChainId(fromChain.chain)];
   if (!srcCapabilities) {
     throw new Error("Unsupported source chain");
