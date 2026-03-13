@@ -18,10 +18,11 @@ import {
   routes,
   TransferState,
 } from "@wormhole-foundation/sdk-connect";
+import type { CapabilitiesResponse } from "@wormhole-foundation/sdk-definitions";
+import { RelayStatus } from "@wormhole-foundation/sdk-definitions";
 import {
   fetchStatus as fetchTxStatus,
   getUsdcDestinationAddress,
-  RelayStatus,
 } from "../utils";
 import { CCTPExecutor } from "../types";
 import { circleV1Domains, isCircleV1Chain } from "../consts";
@@ -64,6 +65,10 @@ export namespace CCTPExecutorRoute {
     referrerAddresses?: Partial<
       Record<Network, Partial<Record<Chain, string>>>
     >;
+    executor?: {
+      /** Override the default capabilities fetcher (e.g. to cache or use a custom endpoint). */
+      getCapabilities?: (network: Network) => Promise<CapabilitiesResponse>;
+    };
   };
 }
 
