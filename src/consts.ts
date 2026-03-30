@@ -101,7 +101,7 @@ export const gasLimits: Partial<
   Record<Network, Partial<Record<Chain, bigint>>>
 > = {
   Testnet: {
-    Aptos: 5_000n,
+    Aptos: 50_000n,
     ArbitrumSepolia: 800_000n,
     Avalanche: 200_000n,
     BaseSepolia: 200_000n,
@@ -112,7 +112,7 @@ export const gasLimits: Partial<
     Sui: 8_000_000n,
   },
   Mainnet: {
-    Aptos: 5_000n,
+    Aptos: 50_000n,
     Arbitrum: 800_000n,
     Avalanche: 250_000n,
     Base: 250_000n,
