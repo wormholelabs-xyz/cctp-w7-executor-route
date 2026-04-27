@@ -1,6 +1,6 @@
 {
   "name": "@wormhole-labs/cctp-executor-route",
-  "version": "0.0.1-beta.11",
+  "version": "1.0.0",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -8,9 +8,29 @@
   "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/esm/index.d.ts",
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/esm/index.d.ts"
+      "require": "./dist/cjs/index.js"
+    },
+    "./aptos": {
+      "types": "./dist/esm/aptos/index.d.ts",
+      "import": "./dist/esm/aptos/index.js",
+      "require": "./dist/cjs/aptos/index.js"
+    },
+    "./evm": {
+      "types": "./dist/esm/evm/index.d.ts",
+      "import": "./dist/esm/evm/index.js",
+      "require": "./dist/cjs/evm/index.js"
+    },
+    "./sui": {
+      "types": "./dist/esm/sui/index.d.ts",
+      "import": "./dist/esm/sui/index.js",
+      "require": "./dist/cjs/sui/index.js"
+    },
+    "./svm": {
+      "types": "./dist/esm/svm/index.d.ts",
+      "import": "./dist/esm/svm/index.js",
+      "require": "./dist/cjs/svm/index.js"
     }
   },
   "description": "This package implements an AutomaticRoute for use with the Wormhole Typescript SDK",

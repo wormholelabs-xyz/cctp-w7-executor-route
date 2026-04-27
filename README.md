@@ -1,5 +1,30 @@
 # CCTP Executor Route
 
+## v1.0 Migration Guide (from 0.x)
+
+**Breaking change:** Auto-registration on import has been removed. Consumers must now call `register()` explicitly before using any route factories.
+
+### Before (0.x)
+
+```ts
+import { cctpExecutorRoute } from "@wormhole-labs/cctp-executor-route";
+// Protocols auto-registered on import
+const route = cctpExecutorRoute(config);
+```
+
+### After (1.x)
+
+```ts
+import {
+  register,
+  cctpExecutorRoute,
+} from "@wormhole-labs/cctp-executor-route";
+register(); // call once, at app startup
+const route = cctpExecutorRoute(config);
+```
+
+`register()` is idempotent and safe to call multiple times. For tree-shake-friendly bundling, you may also call platform-specific registers: `import { register } from '@wormhole-labs/cctp-executor-route/evm'` (also `/aptos`, `/sui`, `/svm`).
+
 ## Transfer Example
 
 This project includes a script for testing a USDC token transfer using the CCTPv1 or CCTPv2 Executor routes with a referrer fee. You can change the source and destination chains in the `examples/transfer.ts` file.
