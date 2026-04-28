@@ -1,6 +1,6 @@
 {
   "name": "@wormhole-labs/cctp-executor-route",
-  "version": "1.0.0",
+  "version": "0.0.1-beta.12",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/cjs/index.js",
