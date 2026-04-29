@@ -5,7 +5,7 @@ import {
   nativeTokenId,
   TokenId,
 } from "@wormhole-foundation/sdk-definitions";
-import { routes } from "@wormhole-foundation/sdk-connect";
+import * as routes from "@wormhole-foundation/sdk-connect/routes";
 import { CircleV2FinalityThreshold, isCircleV2Chain } from "../consts";
 import {
   CCTPv2BaseRoute,

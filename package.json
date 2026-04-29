@@ -59,15 +59,15 @@
     "test": "vitest"
   },
   "peerDependencies": {
-    "@wormhole-foundation/sdk-aptos": "^3.9.0",
-    "@wormhole-foundation/sdk-base": "^3.9.0",
-    "@wormhole-foundation/sdk-connect": "^3.9.0",
-    "@wormhole-foundation/sdk-definitions": "^3.9.0",
-    "@wormhole-foundation/sdk-evm": "^3.9.0",
-    "@wormhole-foundation/sdk-solana": "^3.9.0",
-    "@wormhole-foundation/sdk-solana-cctp": "^3.9.0",
-    "@wormhole-foundation/sdk-sui": "^3.9.0",
-    "@wormhole-foundation/sdk-sui-cctp": "^3.9.0",
+    "@wormhole-foundation/sdk-aptos": "^4.18.0",
+    "@wormhole-foundation/sdk-base": "^4.18.0",
+    "@wormhole-foundation/sdk-connect": "^4.18.0",
+    "@wormhole-foundation/sdk-definitions": "^4.18.0",
+    "@wormhole-foundation/sdk-evm": "^4.18.0",
+    "@wormhole-foundation/sdk-solana": "^4.18.0",
+    "@wormhole-foundation/sdk-solana-cctp": "^4.18.0",
+    "@wormhole-foundation/sdk-sui": "^4.18.0",
+    "@wormhole-foundation/sdk-sui-cctp": "^4.18.0",
     "axios": "^1.0.0",
     "ethers": "^6.0.0"
   },
@@ -75,7 +75,16 @@
     "@types/node": "^20.11.6",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
-    "vitest": "^3.1.1"
+    "vitest": "^3.1.1",
+    "@wormhole-foundation/sdk-aptos": "^4.18.0",
+    "@wormhole-foundation/sdk-base": "^4.18.0",
+    "@wormhole-foundation/sdk-connect": "^4.18.0",
+    "@wormhole-foundation/sdk-definitions": "^4.18.0",
+    "@wormhole-foundation/sdk-evm": "^4.18.0",
+    "@wormhole-foundation/sdk-solana": "^4.18.0",
+    "@wormhole-foundation/sdk-solana-cctp": "^4.18.0",
+    "@wormhole-foundation/sdk-sui": "^4.18.0",
+    "@wormhole-foundation/sdk-sui-cctp": "^4.18.0"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^2.0.0",

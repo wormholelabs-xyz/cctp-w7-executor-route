@@ -5,7 +5,7 @@ import {
   nativeTokenId,
   TokenId,
 } from "@wormhole-foundation/sdk-definitions";
-import { routes } from "@wormhole-foundation/sdk-connect";
+import * as routes from "@wormhole-foundation/sdk-connect/routes";
 import {
   calculateFastBurnMaxFee,
   getCircleV2FastBurnAllowance,

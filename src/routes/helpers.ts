@@ -6,7 +6,6 @@ import {
   deserializeLayout,
   encoding,
   Network,
-  routes,
   serializeLayout,
   Signer,
   signSendWait,
@@ -17,6 +16,7 @@ import {
   UniversalAddress,
   Wormhole,
 } from "@wormhole-foundation/sdk-connect";
+import * as routes from "@wormhole-foundation/sdk-connect/routes";
 import { CCTPExecutorRoute, QuoteDetails } from "./cctpV1";
 import { gasLimits, SOLANA_MSG_VALUE_BASE_FEE } from "../consts";
 import {
