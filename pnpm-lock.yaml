@@ -23,33 +23,6 @@ importers:
       '@solana/web3.js':
         specifier: ^1.95.8
         version: 1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
-      '@wormhole-foundation/sdk-aptos':
-        specifier: ^3.9.0
-        version: 3.9.0(got@11.8.6)
-      '@wormhole-foundation/sdk-base':
-        specifier: ^3.9.0
-        version: 3.9.0
-      '@wormhole-foundation/sdk-connect':
-        specifier: ^3.9.0
-        version: 3.9.0
-      '@wormhole-foundation/sdk-definitions':
-        specifier: ^3.9.0
-        version: 3.9.0
-      '@wormhole-foundation/sdk-evm':
-        specifier: ^3.9.0
-        version: 3.9.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@wormhole-foundation/sdk-solana':
-        specifier: ^3.9.0
-        version: 3.9.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
-      '@wormhole-foundation/sdk-solana-cctp':
-        specifier: ^3.9.0
-        version: 3.9.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
-      '@wormhole-foundation/sdk-sui':
-        specifier: ^3.9.0
-        version: 3.9.0(typescript@5.8.3)
-      '@wormhole-foundation/sdk-sui-cctp':
-        specifier: ^3.9.0
-        version: 3.9.0(typescript@5.8.3)
       axios:
         specifier: ^1.0.0
         version: 1.9.0
@@ -63,6 +36,33 @@ importers:
       '@types/node':
         specifier: ^20.11.6
         version: 20.17.47
+      '@wormhole-foundation/sdk-aptos':
+        specifier: ^4.18.0
+        version: 4.18.0(got@11.8.6)
+      '@wormhole-foundation/sdk-base':
+        specifier: ^4.18.0
+        version: 4.18.0
+      '@wormhole-foundation/sdk-connect':
+        specifier: ^4.18.0
+        version: 4.18.0
+      '@wormhole-foundation/sdk-definitions':
+        specifier: ^4.18.0
+        version: 4.18.0
+      '@wormhole-foundation/sdk-evm':
+        specifier: ^4.18.0
+        version: 4.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      '@wormhole-foundation/sdk-solana':
+        specifier: ^4.18.0
+        version: 4.18.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      '@wormhole-foundation/sdk-solana-cctp':
+        specifier: ^4.18.0
+        version: 4.18.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      '@wormhole-foundation/sdk-sui':
+        specifier: ^4.18.0
+        version: 4.18.0(typescript@5.8.3)
+      '@wormhole-foundation/sdk-sui-cctp':
+        specifier: ^4.18.0
+        version: 4.18.0(typescript@5.8.3)
       tsx:
         specifier: ^4.7.0
         version: 4.19.4
@@ -427,9 +427,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@scure/base@1.2.5':
-    resolution: {integrity: sha512-9rE6EOVeIQzt5TSu4v+K523F8u6DhBsoZWPGKlnCshhlDhy0kJzUX4V+tr2dWmzF1GdekvThABoEQBGBQI7xZw==}
-
   '@scure/base@1.2.6':
     resolution: {integrity: sha512-g/nm5FgUa//MCj1gV09zTJTaM6KBAHqLN907YVQqf7zC49+DcO4B1so4ZX07Ef10Twr6nuqYEH9GEggFXA4Fmg==}
 
@@ -603,38 +600,38 @@ packages:
   '@vitest/utils@3.1.3':
     resolution: {integrity: sha512-2Ltrpht4OmHO9+c/nmHtF09HWiyWdworqnHIwjfvDyWjuwKbdkcS9AnhsDn+8E2RM4x++foD1/tNuLPVvWG1Rg==}
 
-  '@wormhole-foundation/sdk-aptos@3.9.0':
-    resolution: {integrity: sha512-LGuTM4HjvnnivPPxA0C0c6HgS3jhsTGKseKHgumNxacqqLaBo3ucwYYqsmafa2dWygM45JbbTjLMhgeXUl14rA==}
+  '@wormhole-foundation/sdk-aptos@4.18.0':
+    resolution: {integrity: sha512-dhgWzWG57Rd/SwYWkz0KSu03YRLr2komCIdmHSOv01dECx1jS8+BDmR64bkpOZLQvvwiIRyXhf7jDGwzjdcBww==}
     engines: {node: '>=16'}
 
-  '@wormhole-foundation/sdk-base@3.9.0':
-    resolution: {integrity: sha512-8TEWdm9hYl7wWr09dAOQJ3vBwVhqh3LPiiwf66OLrdUUWbNUTom+JPv7ca00nmadIxOWonRVuKNNdosFg2c4jg==}
+  '@wormhole-foundation/sdk-base@4.18.0':
+    resolution: {integrity: sha512-KTFsuba2IggaS4e8asHUsvhWTTlPYWRS7Ww8zBtQXZ17FDHb+9ByBZNz4pakQeWjoZoHK10QgHmTSLjlSp+GVA==}
 
-  '@wormhole-foundation/sdk-connect@3.9.0':
-    resolution: {integrity: sha512-WWhIrMgNOf5pn1sIgVx+LJc7hb8p1aM5AzWKqo65/HRsGNDwlqKMps6FJqrQANmh/yqgn0gvhZy/qfAjetRbpQ==}
+  '@wormhole-foundation/sdk-connect@4.18.0':
+    resolution: {integrity: sha512-0n+wslxvipy71tNTQAJ94dZPOrqz9BvcHZLSnmzDkshGcPQhK3B2to2jdh5HHvDPbIqrbhQfYh0hWpu9TxgMwQ==}
     engines: {node: '>=16'}
 
-  '@wormhole-foundation/sdk-definitions@3.9.0':
-    resolution: {integrity: sha512-s+iAuYL3Nk+Tzt82lhiGs2xVY9oNvZsBOjz29pZsM68yc1v4ss8UNNClAJSZ6ZddxuFyxlETG4ZWTHp9TjKOLQ==}
+  '@wormhole-foundation/sdk-definitions@4.18.0':
+    resolution: {integrity: sha512-Zyzk1SVoGjUwWqXSt2W5NJkaB1nkNALb5qsaJUxVxFJ090t2VmTv2TXTgTKCgmgeAB+QK30TV4RzSfMeoFr4aA==}
 
-  '@wormhole-foundation/sdk-evm@3.9.0':
-    resolution: {integrity: sha512-hQMlNbYXRW31gpP5f5RnsKaFCRRQqAXQ8K3niEUUvGLRzU5ShmSQT0cv71SITMnxllhDyD0xzJe5nBEoIEsH8A==}
+  '@wormhole-foundation/sdk-evm@4.18.0':
+    resolution: {integrity: sha512-ohQsJPr7HCRh9zyFP8daXotvbTVw3b9SR7mTB+kk73DuVQBHseH1eXhuYjILzUc4FLPC1WqMxifL2r64/6IFcA==}
     engines: {node: '>=16'}
 
-  '@wormhole-foundation/sdk-solana-cctp@3.9.0':
-    resolution: {integrity: sha512-9Gd4MpJTZD8y+WjSCRAkz4DAOps5yTqZfq6RiwiW/2i2WlyOdbFUXnzj//TWIKeCWq8noeyUg6RtO18PkVxTOg==}
+  '@wormhole-foundation/sdk-solana-cctp@4.18.0':
+    resolution: {integrity: sha512-e/4+xN3iWoVXCfINH1f/urBosZKfgiOmSbpnrGjQ0VCLJYNn47bTntmyF22fODZz6hURqNrJ2wX7kk/ujU2znw==}
     engines: {node: '>=16'}
 
-  '@wormhole-foundation/sdk-solana@3.9.0':
-    resolution: {integrity: sha512-SWM+h109QnWLFZTjbHpPprbkNaunCCdAYpqyGXZpQT6u50flhR7e6LcXy9h793Z4RgWDxzc+D2FnwsQ8amrfZg==}
+  '@wormhole-foundation/sdk-solana@4.18.0':
+    resolution: {integrity: sha512-p5OuTg0vFTfpqgLz/5JZ45A2dM8dK4c/mqXXyxbakeF4F78y6NAcuof+NtpLmrmSX8QAna1VuIzQ+rieIDqwHg==}
     engines: {node: '>=16'}
 
-  '@wormhole-foundation/sdk-sui-cctp@3.9.0':
-    resolution: {integrity: sha512-/pfc0gaXGOGd4GSGf1EO+deHW1h7gsCEzxkqxkYjx/RXoX6c1tGMGANA7dmjx7bKpZLsYo6huJ0ji7YKYtCq6w==}
+  '@wormhole-foundation/sdk-sui-cctp@4.18.0':
+    resolution: {integrity: sha512-xQzjj4Nlf7g0HoHJS7pafPLb9CfvQTD4h724rP+a3Oh8fSXpQs+CyCFrQ1+m87lASExalRAQ+D9ZJ7Ee6yiedw==}
     engines: {node: '>=16'}
 
-  '@wormhole-foundation/sdk-sui@3.9.0':
-    resolution: {integrity: sha512-pvTTPvB91m0N1aNahcK8/ptrF8+ZXTNdV3ZnRtaK07KEWMtrK9aLMyt6NQc4KxiaiMVaavrrS0WJKpxkwwiRSg==}
+  '@wormhole-foundation/sdk-sui@4.18.0':
+    resolution: {integrity: sha512-s7+UnV6LJHQxyZhBqlmhAWBeGRJeDhV0EZBbiKH96fS3EeVJQkSAeBGRyu10SogQVJGQUMM6GHmWsRRgXIVbHQ==}
     engines: {node: '>=16'}
 
   aes-js@4.0.0-beta.5:
@@ -1175,6 +1172,7 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   valibot@0.36.0:
@@ -1569,20 +1567,18 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.40.2':
     optional: true
 
-  '@scure/base@1.2.5': {}
-
   '@scure/base@1.2.6': {}
 
   '@scure/bip32@1.7.0':
     dependencies:
-      '@noble/curves': 1.9.1
+      '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
 
   '@scure/bip39@1.6.0':
     dependencies:
       '@noble/hashes': 1.8.0
-      '@scure/base': 1.2.5
+      '@scure/base': 1.2.6
 
   '@sindresorhus/is@4.6.0': {}
 
@@ -1825,49 +1821,49 @@ snapshots:
       loupe: 3.1.3
       tinyrainbow: 2.0.0
 
-  '@wormhole-foundation/sdk-aptos@3.9.0(got@11.8.6)':
+  '@wormhole-foundation/sdk-aptos@4.18.0(got@11.8.6)':
     dependencies:
       '@aptos-labs/ts-sdk': 2.0.1(got@11.8.6)
-      '@wormhole-foundation/sdk-connect': 3.9.0
+      '@wormhole-foundation/sdk-connect': 4.18.0
     transitivePeerDependencies:
       - debug
       - got
 
-  '@wormhole-foundation/sdk-base@3.9.0':
+  '@wormhole-foundation/sdk-base@4.18.0':
     dependencies:
       '@scure/base': 1.2.6
       binary-layout: 1.2.2
 
-  '@wormhole-foundation/sdk-connect@3.9.0':
+  '@wormhole-foundation/sdk-connect@4.18.0':
     dependencies:
-      '@wormhole-foundation/sdk-base': 3.9.0
-      '@wormhole-foundation/sdk-definitions': 3.9.0
+      '@wormhole-foundation/sdk-base': 4.18.0
+      '@wormhole-foundation/sdk-definitions': 4.18.0
       axios: 1.9.0
     transitivePeerDependencies:
       - debug
 
-  '@wormhole-foundation/sdk-definitions@3.9.0':
+  '@wormhole-foundation/sdk-definitions@4.18.0':
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
-      '@wormhole-foundation/sdk-base': 3.9.0
+      '@wormhole-foundation/sdk-base': 4.18.0
 
-  '@wormhole-foundation/sdk-evm@3.9.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
+  '@wormhole-foundation/sdk-evm@4.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
     dependencies:
-      '@wormhole-foundation/sdk-connect': 3.9.0
+      '@wormhole-foundation/sdk-connect': 4.18.0
       ethers: 6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - debug
       - utf-8-validate
 
-  '@wormhole-foundation/sdk-solana-cctp@3.9.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)':
+  '@wormhole-foundation/sdk-solana-cctp@4.18.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
       '@solana/spl-token': 0.3.9(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
-      '@wormhole-foundation/sdk-connect': 3.9.0
-      '@wormhole-foundation/sdk-solana': 3.9.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
+      '@wormhole-foundation/sdk-connect': 4.18.0
+      '@wormhole-foundation/sdk-solana': 4.18.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -1875,13 +1871,13 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@wormhole-foundation/sdk-solana@3.9.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)':
+  '@wormhole-foundation/sdk-solana@4.18.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
       '@coral-xyz/borsh': 0.29.0(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))
       '@solana/spl-token': 0.3.9(@solana/web3.js@1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.2(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)
-      '@wormhole-foundation/sdk-connect': 3.9.0
+      '@wormhole-foundation/sdk-connect': 4.18.0
       rpc-websockets: 7.11.2
     transitivePeerDependencies:
       - bufferutil
@@ -1890,21 +1886,21 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@wormhole-foundation/sdk-sui-cctp@3.9.0(typescript@5.8.3)':
+  '@wormhole-foundation/sdk-sui-cctp@4.18.0(typescript@5.8.3)':
     dependencies:
       '@mysten/sui': 1.39.0(typescript@5.8.3)
-      '@wormhole-foundation/sdk-connect': 3.9.0
-      '@wormhole-foundation/sdk-sui': 3.9.0(typescript@5.8.3)
+      '@wormhole-foundation/sdk-connect': 4.18.0
+      '@wormhole-foundation/sdk-sui': 4.18.0(typescript@5.8.3)
     transitivePeerDependencies:
       - '@gql.tada/svelte-support'
       - '@gql.tada/vue-support'
       - debug
       - typescript
 
-  '@wormhole-foundation/sdk-sui@3.9.0(typescript@5.8.3)':
+  '@wormhole-foundation/sdk-sui@4.18.0(typescript@5.8.3)':
     dependencies:
       '@mysten/sui': 1.39.0(typescript@5.8.3)
-      '@wormhole-foundation/sdk-connect': 3.9.0
+      '@wormhole-foundation/sdk-connect': 4.18.0
     transitivePeerDependencies:
       - '@gql.tada/svelte-support'
       - '@gql.tada/vue-support'

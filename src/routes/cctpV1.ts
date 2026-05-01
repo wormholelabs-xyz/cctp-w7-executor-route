@@ -15,9 +15,9 @@ import {
   isFailed,
   isSourceFinalized,
   isSourceInitiated,
-  routes,
   TransferState,
 } from "@wormhole-foundation/sdk-connect";
+import * as routes from "@wormhole-foundation/sdk-connect/routes";
 import type { CapabilitiesResponse } from "@wormhole-foundation/sdk-definitions";
 import { RelayStatus } from "@wormhole-foundation/sdk-definitions";
 import {
