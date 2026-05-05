@@ -150,7 +150,7 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
     );
 
     const senderPk = new SolanaAddress(sender).unwrap();
-    const senderAta = getAssociatedTokenAddressSync(usdc, senderPk);
+    const senderAta = getAssociatedTokenAddressSync(usdc, senderPk, true);
     const referrer = new SolanaAddress(
       details.referrer?.address?.toString() ?? senderPk
     ).unwrap();
@@ -446,7 +446,8 @@ export class SvmCCTPv2Executor<N extends Network, C extends SolanaChains>
 
     const feeRecipientTokenAccount = getAssociatedTokenAddressSync(
       solanaUsdcAddress,
-      tokenMessengerData.feeRecipient
+      tokenMessengerData.feeRecipient,
+      true,
     );
 
     const accountMetas: AccountMeta[] = [
