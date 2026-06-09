@@ -1,4 +1,4 @@
-import type { SuiClient } from "@mysten/sui/client";
+import type { SuiGrpcClient } from "@mysten/sui/grpc";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 import { Transaction } from "@mysten/sui/transactions";
 import {
@@ -39,7 +39,7 @@ export class SuiCCTPExecutor<N extends Network, C extends SuiChains>
   constructor(
     readonly network: N,
     readonly chain: C,
-    readonly provider: SuiClient,
+    readonly provider: SuiGrpcClient,
     readonly contracts: Contracts
   ) {
     if (network === "Devnet")
@@ -90,7 +90,7 @@ export class SuiCCTPExecutor<N extends Network, C extends SuiChains>
   }
 
   static async fromRpc<N extends Network>(
-    provider: SuiClient,
+    provider: SuiGrpcClient,
     config: ChainsConfig<N, Platform>
   ): Promise<SuiCCTPExecutor<N, SuiChains>> {
     const [network, chain] = await SuiPlatform.chainFromRpc(provider);
