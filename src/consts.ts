@@ -39,6 +39,7 @@ export const shimContractsV2: Partial<
   Record<Network, Partial<Record<Chain, string>>>
 > = {
   Testnet: {
+    Arc: "0x156Be8ccA9AFD903564628466bA5fe96Db0166DB",
     ArbitrumSepolia: "0xf601f9988d62943cb842baae1e46be9b17d0b2a4",
     Avalanche: "0x10018394905f70daa1d740040d64cbed5a82301e",
     BaseSepolia: "0x1effdcfedc6d45e44b3133257debfb522adb1cae",
@@ -102,6 +103,7 @@ export const gasLimits: Partial<
 > = {
   Testnet: {
     Aptos: 50_000n,
+    Arc: 250_000n,
     ArbitrumSepolia: 800_000n,
     Avalanche: 200_000n,
     BaseSepolia: 200_000n,
@@ -142,6 +144,10 @@ export const circleV2Contracts: Partial<
   Record<Network, Partial<Record<Chain, CircleV2Contracts>>>
 > = {
   Testnet: {
+    Arc: {
+      tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+      messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    },
     ArbitrumSepolia: {
       tokenMessengerV2: "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
       messageTransmitterV2: "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
@@ -293,6 +299,7 @@ export const circleV2Domains: Partial<
     BaseSepolia: 6,
     Linea: 11,
     Sonic: 13,
+    Arc: 26,
   },
   Mainnet: {
     Ethereum: 0,
