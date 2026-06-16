@@ -3,34 +3,34 @@
   "version": "0.0.1-beta.12",
   "license": "Apache-2.0",
   "type": "module",
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/esm/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/esm/index.d.ts",
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "default": "./dist/esm/index.js"
     },
     "./aptos": {
       "types": "./dist/esm/aptos/index.d.ts",
       "import": "./dist/esm/aptos/index.js",
-      "require": "./dist/cjs/aptos/index.js"
+      "default": "./dist/esm/aptos/index.js"
     },
     "./evm": {
       "types": "./dist/esm/evm/index.d.ts",
       "import": "./dist/esm/evm/index.js",
-      "require": "./dist/cjs/evm/index.js"
+      "default": "./dist/esm/evm/index.js"
     },
     "./sui": {
       "types": "./dist/esm/sui/index.d.ts",
       "import": "./dist/esm/sui/index.js",
-      "require": "./dist/cjs/sui/index.js"
+      "default": "./dist/esm/sui/index.js"
     },
     "./svm": {
       "types": "./dist/esm/svm/index.d.ts",
       "import": "./dist/esm/svm/index.js",
-      "require": "./dist/cjs/svm/index.js"
+      "default": "./dist/esm/svm/index.js"
     }
   },
   "description": "This package implements an AutomaticRoute for use with the Wormhole Typescript SDK",
@@ -48,26 +48,25 @@
     "connect"
   ],
   "engines": {
-    "node": ">=16"
+    "node": ">=20.19"
   },
   "sideEffects": true,
   "scripts": {
-    "build:cjs": "tsc -p ./tsconfig.cjs.json",
     "build:esm": "tsc -p ./tsconfig.esm.json",
-    "build": "npm run build:cjs && npm run build:esm",
+    "build": "npm run build:esm",
     "examples:transfer": "npx tsx examples/transfer.ts",
     "test": "vitest"
   },
   "peerDependencies": {
-    "@wormhole-foundation/sdk-aptos": "^4.23.0",
-    "@wormhole-foundation/sdk-base": "^4.23.0",
-    "@wormhole-foundation/sdk-connect": "^4.23.0",
-    "@wormhole-foundation/sdk-definitions": "^4.23.0",
-    "@wormhole-foundation/sdk-evm": "^4.23.0",
-    "@wormhole-foundation/sdk-solana": "^4.23.0",
-    "@wormhole-foundation/sdk-solana-cctp": "^4.23.0",
-    "@wormhole-foundation/sdk-sui": "^4.23.0",
-    "@wormhole-foundation/sdk-sui-cctp": "^4.23.0",
+    "@wormhole-foundation/sdk-aptos": "^5.0.0",
+    "@wormhole-foundation/sdk-base": "^5.0.0",
+    "@wormhole-foundation/sdk-connect": "^5.0.0",
+    "@wormhole-foundation/sdk-definitions": "^5.0.0",
+    "@wormhole-foundation/sdk-evm": "^5.0.0",
+    "@wormhole-foundation/sdk-solana": "^5.0.0",
+    "@wormhole-foundation/sdk-solana-cctp": "^5.0.0",
+    "@wormhole-foundation/sdk-sui": "^5.0.0",
+    "@wormhole-foundation/sdk-sui-cctp": "^5.0.0",
     "axios": "^1.0.0",
     "ethers": "^6.0.0"
   },
@@ -76,20 +75,20 @@
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vitest": "^3.1.1",
-    "@wormhole-foundation/sdk-aptos": "^4.23.0",
-    "@wormhole-foundation/sdk-base": "^4.23.0",
-    "@wormhole-foundation/sdk-connect": "^4.23.0",
-    "@wormhole-foundation/sdk-definitions": "^4.23.0",
-    "@wormhole-foundation/sdk-evm": "^4.23.0",
-    "@wormhole-foundation/sdk-solana": "^4.23.0",
-    "@wormhole-foundation/sdk-solana-cctp": "^4.23.0",
-    "@wormhole-foundation/sdk-sui": "^4.23.0",
-    "@wormhole-foundation/sdk-sui-cctp": "^4.23.0"
+    "@wormhole-foundation/sdk-aptos": "^5.0.0",
+    "@wormhole-foundation/sdk-base": "^5.0.0",
+    "@wormhole-foundation/sdk-connect": "^5.0.0",
+    "@wormhole-foundation/sdk-definitions": "^5.0.0",
+    "@wormhole-foundation/sdk-evm": "^5.0.0",
+    "@wormhole-foundation/sdk-solana": "^5.0.0",
+    "@wormhole-foundation/sdk-solana-cctp": "^5.0.0",
+    "@wormhole-foundation/sdk-sui": "^5.0.0",
+    "@wormhole-foundation/sdk-sui-cctp": "^5.0.0"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^2.0.0",
     "@coral-xyz/anchor": "^0.29.0",
-    "@mysten/sui": "^1.39.0",
+    "@mysten/sui": "^2.17.0",
     "@solana/spl-token": "^0.3.9",
     "@solana/web3.js": "^1.95.8",
     "binary-layout": "^1.2.0"
