@@ -66,6 +66,7 @@ export const shimContractsV2: Partial<
     Plume: "0x9be9C6B420eAfaaC1162D680fd7E61446b38Cf29",
     Ink: "0xef0B43b49315A4aDF11bA2617Be81a304c5D6ecc",
     Monad: "0x1FdCCf65318b34CFd3F5903fFb747C17e76330ac",
+    Arc: "0x047B0C3A40757A4c97A13ADEf37d9AA0Ace99C69",
   },
 };
 
@@ -132,6 +133,7 @@ export const gasLimits: Partial<
     Plume: 250_000n,
     Ink: 250_000n,
     Monad: 500_000n,
+    Arc: 250_000n,
   },
 };
 
@@ -242,6 +244,10 @@ export const circleV2Contracts: Partial<
       tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
       messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
     },
+    Arc: {
+      tokenMessengerV2: "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+      messageTransmitterV2: "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    },
   },
 };
 
@@ -318,6 +324,7 @@ export const circleV2Domains: Partial<
     Ink: 21,
     Plume: 22,
     Monad: 15,
+    Arc: 26,
   },
 };
 
